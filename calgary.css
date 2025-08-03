@@ -1,0 +1,78 @@
+/* Calgary‑Modern – clear typography & accessible contrast    */
+
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;600;800&family=IBM+Plex+Sans+Condensed:wght@400;600&display=swap');
+
+:root{
+  /* core tokens already used by the app */
+  --main-text-color: #242424;
+  --bg-color: #ffffff;
+  --accent-color: #7A309E;              /* Calgary purple  */
+  --accent-light-color:#B685C9;
+  --h1-border-color:#E1E1E1;
+  --slide-content-bg-if-image:rgba(255,255,255,0.88);
+
+  --serif-font: 'IBM Plex Sans Condensed', sans-serif;
+  --sans-font : 'Barlow', system-ui, sans-serif;
+  --mono-font : 'Courier New', monospace;
+  --base-font-size: 1.15vw;
+}
+
+/* ---------- headings ---------- */
+.slide-content h1{
+  font-family:var(--sans-font);
+  font-weight:800;
+  font-size:4.5rem;
+  color:var(--accent-color);
+  text-transform:uppercase;
+  letter-spacing:-.03em;
+  margin-bottom:.4em;
+  border-bottom:4px solid var(--h1-border-color);
+  padding-bottom:.1em;
+}
+.slide-content h2{
+  font-family:var(--sans-font);font-weight:600;
+  font-size:3rem;margin:.6em 0 .3em;
+}
+.slide-content h3{
+  font-family:var(--sans-font);font-weight:600;
+  font-size:2rem;margin:.6em 0 .3em;
+}
+
+/* ---------- body & size directives ---------- */
+.slide-content p{max-width:65ch;font-size:1.4rem;line-height:1.55;}
+.slide-content .large, .slide-content .large p{
+  font-size:3.2rem;line-height:1.15;font-weight:600;
+}
+.slide-content .small, .slide-content .small p{font-size:.95rem;opacity:.8;}
+.slide-content .tiny , .slide-content .tiny  p{font-size:.75rem;opacity:.7;text-transform:uppercase;}
+
+/* ---------- notes ---------- */
+.slide-content .notes{
+  margin-top:1.6rem;padding:.9rem 1.2rem;
+  background:#FFF4F4;border-left:4px solid #CC0000;
+  font-size:.9rem;max-width:75ch;
+}
+
+/* ---------- tables ---------- */
+.slide-content table{border-collapse:collapse;margin:1.4rem auto;width:90%;}
+.slide-content th{
+  background:var(--accent-color);color:#fff;font-family:var(--sans-font);
+  text-transform:uppercase;font-size:.85rem;letter-spacing:.05em;
+}
+.slide-content th, .slide-content td{border:1px solid var(--h1-border-color);padding:.6rem;}
+.slide-content tbody tr:nth-child(even) td{background:#fafafa;}
+
+/* ---------- images ---------- */
+.slide-content img{max-width:100%;max-height:72vh;object-fit:contain;border-radius:4px;}
+.slide-content .caption{font-size:.9rem;font-style:italic;color:var(--accent-light-color);}
+
+/* ---------- misc ---------- */
+.slide-content .columns{gap:2rem;}
+a{color:var(--accent-color);}
+a:hover{text-decoration:none;}
+
+/* ensure good contrast on light background */
+@media (prefers-color-scheme: dark){
+  :root{--bg-color:#151515;--main-text-color:#e6e6e6;--slide-content-bg-if-image:rgba(21,21,21,0.88);}
+}

@@ -1,0 +1,2692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Modern Slideshow Editor</title>
+
+<!----- RENDER MATH CORRECTLY -->
+<!-- MathJax -->
+<script>
+  window.MathJax = {
+    tex: { 
+      inlineMath: [["$", "$"], ["\\(", "\\)"]], 
+      displayMath: [["$$", "$$"], ["\\[", "\\]"]], 
+      processEscapes: true 
+    },
+    svg: { fontCache: "global" }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+
+<style id="core-styles">
+/* ----------------------------- */
+/* --- Core Style Variables --- */
+/* ----Specific slide style set in the user-created .css files----- */
+
+/* Default variables, overridden by themes */
+:root {
+  --editor-bg-color: #fffff8;
+  --editor-text-color: #1a1a1a;
+  --editor-border-color: #d4d4d4;
+  --editor-accent-color: #333333;
+  --editor-accent-text-color: #ffffff;
+  --editor-thumb-bg: #ffffff;
+  --editor-thumb-selected-border: #333333;
+  --editor-input-bg: #ffffff;
+  --editor-input-text: #333333;
+  --editor-input-border: #d4d4d4;
+  --editor-ui-font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --editor-mono-font: "Courier New", monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; font-size: var(--base-font-size); }
+
+body {
+  line-height: 1.5;
+}
+
+/* --------------------------*/
+/* ---- Minor frontend --- */
+/* ------------------------*/
+.deckbar-spacer {
+  flex-grow: 1; /* This makes the spacer expand and push other items */
+}
+
+#editor button.primary-action {
+  --editor-accent-color: #008000; 
+}
+
+
+/* ----------------------------- */
+/* --- Slideshow Layout --- */
+/* ----------------------------- */
+
+#slideshow {
+  position: fixed; inset: 0; display: flex; align-items: center;
+  justify-content: center; background: var(--bg-color);
+}
+
+.slide {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; opacity: 0; transition: opacity 0.4s ease;
+  background-position: center; background-size: cover; background-repeat: no-repeat;
+}
+.slide.active { opacity: 1; z-index: 1; }
+.slide.hidden-in-presentation { display: none !important; }
+
+.slide.is-fullscreen-image-slide {
+  background-size: contain;
+}
+.slide.is-fullscreen-image-slide .slide-content {
+  background: transparent !important;
+}
+
+.slide-header {
+  position: absolute; top: 0; left: 0; width: 100%;
+  font-family: var(--sans-font); font-size: 0.9rem;
+  padding: 0.6rem 1rem; color: var(--accent-color);
+}
+
+.slide-content {
+  width: 100%; height: 100%; padding: 4rem;
+  display: flex; /* This is primarily for the notes positioning now */
+  position: relative; 
+}
+
+.slide-flow-content {
+  width: 100%;
+  margin: auto; 
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers block-level children like tables/images */
+}
+
+.slide[style*="background-image"] .slide-content {
+  background: var(--slide-content-bg-if-image);
+}
+
+/* ----------------------------- */
+/* --- Slide Typography --- */
+/* ----------------------------- */
+.slide-content .text-center { text-align: center; }
+
+.slide-content .columns { 
+  display: flex; gap: 2rem; align-items: flex-start; width: 100%; 
+}
+.slide-content .columns .column { flex: 1; }
+
+.slide-content table { 
+  border-collapse: collapse; margin: 1rem auto; font-size: 1.1rem; 
+}
+.slide-content th, .slide-content td { 
+  border: 1px solid var(--h1-border-color); 
+  padding: 0.5em 0.8em; 
+  text-align: left; 
+}
+.slide-content th { 
+  font-weight: bold; 
+  background-color: color-mix(in srgb, var(--bg-color) 95%, var(--main-text-color) 5%); 
+}
+
+.slide-content .img-container { 
+  text-align: center; 
+  margin-bottom: 1rem; 
+  max-width: 100%; 
+  max-height: 80vh; 
+}
+.slide-content .img-container img, .slide-content .column img {
+  max-width: 100%; 
+  display: block;
+  margin: 0 auto 0.5rem auto; 
+  border-radius: 0px; 
+  object-fit: contain;
+  width: auto; 
+  height: auto; 
+  max-height: calc(80vh - 3.5rem); 
+}
+
+.slide-content .caption { 
+  font-size: 1rem; 
+  font-style: italic; 
+  color: var(--accent-light-color); 
+}
+
+/* ----------------------------- */
+/* --- Presentation HUD --- */
+/* ----------------------------- */
+
+.company-logo { 
+  position: fixed; 
+  top: 1rem; 
+  right: 1rem; 
+  max-height: 60px; 
+  display: none; 
+  z-index: 5; 
+}
+.slide-counter { 
+  position: fixed; 
+  bottom: 1rem; 
+  left: 1rem; 
+  font-size: 0.9rem; 
+  color: color-mix(in srgb, var(--main-text-color) 70%, transparent); 
+  z-index: 5; 
+}
+#progress-bar { 
+  position: fixed; 
+  bottom: 0; 
+  left: 0; 
+  height: 4px; 
+  background: var(--accent-color); 
+  z-index: 10; 
+  transition: width 0.3s; 
+}
+
+/* ----------------------------- */
+/* --- Editor UI Layout --- */
+/* ----------------------------- */
+
+#editor {
+  position: fixed; 
+  inset: 0; 
+  z-index: 100;
+  background: var(--editor-bg-color);
+  color: var(--editor-text-color);
+  font-family: var(--editor-ui-font-family);
+  display: none; 
+  flex-direction: row; 
+  overflow: hidden;
+}
+#editor.active { display: flex; }
+#editor.active ~ #slideshow .hidden-in-presentation {
+  display: flex !important;
+  opacity: 0.3 !important;
+}
+
+#thumbs {
+  width: 240px; 
+  overflow-y: auto;
+  border-right: 1px solid var(--editor-border-color);
+  padding: 1rem; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 1rem;
+}
+#editor-main {
+  flex: 1; 
+  display: flex; 
+  flex-direction: column;
+  padding: 1rem; 
+  overflow: hidden;
+}
+
+/* ----------------------------- */
+/* --- Editor Components --- */
+/* ----------------------------- */
+
+.thumb {
+  position: relative;
+  width: 200px;
+  padding-top: 112px;
+  border: 2px solid var(--editor-border-color);
+  border-radius: 6px;
+  background: var(--editor-thumb-bg);
+  cursor: pointer;
+  pointer-events: auto;
+  overflow: hidden;
+}
+.thumb.selected {
+  border-color: var(--editor-thumb-selected-border);
+  box-shadow: 0 0 0 2px var(--editor-thumb-selected-border);
+}
+
+.thumb-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 640px;
+  height: 360px;
+  transform: scale(0.3125);
+  transform-origin: top left;
+  border: none;
+  pointer-events: none;
+}
+
+.thumb-number {
+  position: absolute; 
+  top: 4px; 
+  left: 6px; 
+  font-size: 10px;
+  font-family: var(--editor-mono-font);
+  background: var(--editor-accent-color); 
+  color: var(--editor-accent-text-color);
+  padding: 1px 5px; 
+  border-radius: 3px; 
+  z-index: 1;
+}
+.thumb.hidden-slide { opacity: 0.6; }
+.thumb.hidden-slide::after {
+  content: "HIDDEN";
+  position: absolute; 
+  bottom: 4px; 
+  right: 4px; 
+  font-family: var(--editor-mono-font);
+  font-size: 10px;
+  background-color: rgba(0,0,0,0.7); 
+  color: white;
+  padding: 2px 5px; 
+  border-radius: 3px; 
+  z-index: 2;
+}
+
+#raw-text-editor {
+  flex: 1;
+  font-size: 18px;
+  line-height: 1.7;
+  padding: 1rem;
+  border: none;
+  resize: none;
+  margin-bottom: 1rem;
+  font-family: var(--editor-ui-font-family);
+  background-color: var(--editor-input-bg);
+  color: var(--editor-input-text);
+  white-space: pre-wrap; 
+  word-wrap: break-word;
+  overflow: auto;
+}
+.ta-valid { border-color: #4caf50; }
+.ta-invalid { border-color: #f44336; }
+
+.toolbar {
+  display: flex; 
+  flex-wrap: wrap; 
+  font-family: var(--editor-ui-font-family);
+  font-size: 16px;
+  gap: 0.75rem;
+  align-items: center; 
+  margin-bottom: 1rem;
+}
+.toolbar #logo-url {
+  width: 150px;
+}
+
+#editor button {
+  padding: 8px 16px;
+  background: var(--editor-accent-color);
+  font-family: var(--editor-ui-font-family);
+  font-size: 16px;
+  color: var(--editor-accent-text-color);
+  border: none; 
+  border-radius: 4px; 
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+#editor button:hover:not(:disabled) { 
+  background: color-mix(in srgb, var(--editor-accent-color) 85%, black); 
+}
+#editor button:disabled { 
+  opacity: 0.5; 
+  cursor: not-allowed; 
+}
+
+@keyframes editor-glow {
+  from { box-shadow: 0 0 8px 2px var(--editor-accent-color); }
+  to   { box-shadow: 0 0 2px 1px color-mix(in srgb, var(--editor-accent-color) 50%, transparent); }
+}
+#editor .glow { animation: editor-glow 1.2s infinite alternate; }
+
+.toolbar label { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 0.4em; 
+}
+.toolbar select, .toolbar input[type="text"] {
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px; 
+  border: 1px solid var(--editor-input-border);
+  background-color: var(--editor-input-bg); 
+  font-size: 16px;
+  font-family: var(--editor-ui-font-family);
+  color: var(--editor-input-text);
+}
+
+/* ----------------------------- */
+/* --- Help Modal --- */
+/* ----------------------------- */
+
+.modal {
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0, 0, 0, 0.6);
+  display: none; 
+  align-items: center; 
+  justify-content: center; 
+  z-index: 250;
+}
+.modal.active { display: flex; }
+.modal-box {
+  background: var(--editor-bg-color); 
+  color: var(--editor-text-color);
+  max-width: 700px; 
+  max-height: 85vh; 
+  overflow: auto;
+  padding: 2rem; 
+  border-radius: 8px; 
+  font-family: var(--editor-ui-font-family);
+  line-height: 1.6;
+}
+.modal-box h3 { 
+  margin-bottom: 1rem; 
+  font-size: 1.5rem; 
+}
+.modal-box pre {
+  background-color: color-mix(in srgb, var(--editor-bg-color) 90%, var(--editor-text-color) 10%);
+  padding: 1em; 
+  border-radius: 4px; 
+  overflow-x: auto;
+  font-family: var(--editor-mono-font); 
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+.modal-box button {
+  padding: 0.5rem 1rem; 
+  background: var(--editor-accent-color);
+  color: var(--editor-accent-text-color); 
+  border: none;
+  border-radius: 4px; 
+  cursor: pointer; 
+  margin-top: 1rem; 
+  float: right;
+}
+
+/* ----------------------------- */
+/* --- Drag and Drop Styles --- */
+/* ----------------------------- */
+
+#thumbs {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100%;
+}
+#thumbs::-webkit-scrollbar {
+  width: 8px;
+}
+#thumbs::-webkit-scrollbar-track {
+  background: transparent;
+}
+#thumbs::-webkit-scrollbar-thumb {
+  background-color: #999;
+  border-radius: 4px;
+}
+#thumbs:hover::-webkit-scrollbar-thumb {
+  background-color: #666;
+}
+
+
+.thumb {
+  cursor: move;
+  cursor: grab;
+  transition: opacity 0.2s;
+  user-select: none;
+}
+
+.thumb:active {
+  cursor: grabbing;
+}
+
+.thumb.dragging {
+  opacity: 0.4;
+}
+
+.thumb-placeholder {
+  background: #007bff;
+  opacity: 0.2;
+  border: 2px dashed #0056b3;
+  border-radius: 4px;
+  margin: 5px;
+  box-sizing: border-box;
+}
+
+/* ----------------------------- */
+/* --- 16:9 Aspect Ratio --- */
+/* ----------------------------- */
+
+.presentation-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.presentation-scaler {
+  position: relative;
+  width: 100%;
+  max-width: 177.77vh;
+  max-height: 56.25vw;
+  aspect-ratio: 16/9;
+  box-shadow: 0 0 50px rgba(0,0,0,0.5);
+}
+
+#slideshow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-color);
+}
+
+.presentation-scaler .slide-counter {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  font-size: 16px;
+  color: #888;
+  z-index: 100;
+}
+
+.presentation-scaler #progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background-color: #007bff;
+  z-index: 100;
+}
+
+.presentation-scaler .company-logo {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  max-height: 50px;
+  max-width: 150px;
+  z-index: 100;
+}
+
+.slide {
+  width: 100%;
+  height: 100%;
+}
+
+
+@media print {
+  /* Page setup */
+  @page {
+    size: landscape;
+    margin: 0;
+  }
+
+  /* Hide UI chrome */
+  #editor,
+  #progress-bar,
+  #slide-counter {
+    display: none !important;
+  }
+
+  /* Reset document margins and overflow */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  /* Flatten viewport/scaler and slideshow containers */
+  .presentation-viewport,
+  .presentation-scaler,
+  #slideshow {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    display: block !important;
+    background: transparent !important;
+    transform: none !important;
+    box-shadow: none !important;
+    aspect-ratio: unset !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    inset: unset !important;
+  }
+
+  /* Each slide becomes a full-page white “letterbox” */
+  .slide {
+    overflow: hidden !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: calc((100vh - 56.25vw) / 2) 0 !important; 
+    background-color: #fff !important;
+    background-clip: padding-box !important; 
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: auto !important;
+    transform: none !important;
+    transition: none !important;
+    page-break-after: always;
+    page-break-inside: avoid;
+    break-after: page;
+    break-inside: avoid;
+  }
+
+  /* Don’t force a break after the last slide or show hidden slides */
+  .slide:last-child {
+    page-break-after: auto;
+  }
+  .slide.hidden-in-presentation {
+    display: none !important;
+  }
+
+  .slide[style*="background-image"] {
+    background-size: cover !important;
+    background-position: center !important;
+    background-clip: content-box !important;
+  }
+
+  /* Preserve any slide background images */
+  .slide[style*="background-image"] .slide-content {
+    background-image: inherit !important;
+    background-size: cover !important;
+    background-position: center center !important;
+  }
+  .slide[style*="background-image"] .slide-content::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--slide-content-bg-if-image);
+    pointer-events: none;
+  }
+
+  /* Inner aspect-ratio container */
+  .slide::before {
+    content: '';
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 177.78vh !important;   /* 16:9 aspect ratio */
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 56.25vw !important;
+    background-image: none !important;
+    z-index: 99999 !important;
+  }
+
+  /* Slide content box */
+  .slide-content {
+    position: relative !important;
+    display: flex !important;
+    width: 177.78vh !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 56.25vw !important;
+    padding: 4rem !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    background: var(--bg-color) !important;
+  }
+
+  /* Flow content inside slides */
+  .slide-flow-content {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: auto !important;
+  }
+
+  /* Ensure all colors and backgrounds print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  .slide.is-fullscreen-image-slide .slide-content::before {
+    background: transparent !important;
+  }
+}
+</style>
+
+<!-- Theme stylesheets will be dynamically loaded -->
+
+</head>
+<body>
+  <!-- Presentation View -->
+  <div id="slideshow"></div>
+  <img id="company-logo" class="company-logo" />
+  <div id="slide-counter" class="slide-counter">
+    <span id="cur">1</span>/<span id="tot">1</span>
+  </div>
+  <div id="progress-bar"></div>
+
+  <!-- Editor View -->
+  <div id="editor">
+    <div id="thumbs"></div>
+    <div id="editor-main">
+      <textarea id="raw-text-editor" placeholder="Enter slide content here. Click Help for syntax."></textarea>
+      <div class="toolbar">
+        <button id="add-btn"       title="New Slide">      <i class="fa-solid fa-plus"></i></button>
+        <button id="del-btn"    title="Delete Slide">   <i class="fa-solid fa-minus"></i></button>
+        <button id="toggle-hide-btn"    title="Hide/Show Slide"> <i class="fa-solid fa-eye"></i></button>
+        <!-- hidden state, still used by updateHUD() -->
+        <input type="checkbox" id="show-count" checked style="display:none">
+        <!-- toggle button -->
+        <button id="toggle-count-btn" title="Hide Slide Numbers">
+          <i class="fa-solid fa-numeric-sort-asc"></i>
+        </button>
+        <label>Logo? <input id="logo-url" type="text" /></label>
+        <label>Theme
+          <select id="theme-selector">
+          <!-- Options will be dynamically populated -->
+          </select>
+        </label>
+        <div class="deckbar-spacer"></div> 
+        <button id="help-btn" title="Help"><i class="fa-solid fa-question"></i></button> 
+        <button id="new-presentation-btn"   title="New Slideshow">  <i class="fa-solid fa-file-circle-plus"></i></button>
+        <button id="load-btn"  title="Load Slideshow"> <i class="fa-solid fa-folder-open"></i></button>
+        <button id="download-txt-btn"        title="Download Raw Presentation">       <i class="fa-solid fa-download"></i></button>
+        <button id="save-btn" class="primary-action" title="Presentation View"><i class="fa-solid fa-bullhorn"></i></button> 
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div id="help" class="modal">
+    <div class="modal-box">
+      <button id="close-help">Close</button>
+      <h3>Modern Slides | Kevin Bryan | July 2025</h3>
+      <p>This is a modern, very computationally light, slideshow maker. It completely separates style rules from content. You can edit it completely online as long as your images are urls. Otherwise, download the small zip from kevinbryanecon.com/tools.html and create your slides locally.</p> 
+      <p>Each slide is defined by directives in a Markdown type format. A directive starts a line, ends with a colon `:`, and its value is all text that follows until the next directive.</p>
+      <p>Press 'e' to toggle between edit and present, 'f' to go to full screen mode, and 'p' to open a presenter mode window.
+      <pre>
+# --- METADATA (place at the top) ---
+Background: image-url.jpg
+FullScreenImage: image-url.jpg
+Header: Small text in corner
+
+# --- CONTENT DIRECTIVES ---
+Title: The Main Title of The Slide
+  Supports $LaTeX$ and
+  manual line breaks.
+
+BigText: For large, prominent text.
+  Also supports line breaks and paragraphs.
+
+Text: For standard body text.
+  A blank line between text...
+
+  ...and a skipped line creates a new paragraph.
+
+SmallText: For smaller body text.
+
+TinyText: For footnote-sized text.
+
+Notes: For notes at the bottom of the slide.
+  These appear in a special position.
+
+SpeakerNote: For notes for yourself in presentation mode
+
+Image: image-url.jpg (or a weblink to jpg/png/gif), An optional caption for image after the comma
+
+FullScreenWebsite: https://example.com
+
+Columns:
+  This is the left column. Can contain any
+  amount of text, paragraphs, and $math$.
+  ---
+  This is the right column. You can put an
+  image here using the 'image, caption' syntax:
+  test.jpg, A caption for the image in the column.
+  ...or you can just have more text.
+  ---
+  Third column
+
+Table:
+  Header 1 & Header 2 & Header 3
+  ---
+  Cell 1.1 & Cell 1.2 & Cell 1.3
+  ---
+  Cell 2.1 & Cell 2.2 & $math$ is fine
+
+*some text* is italic, **some text** is bold, ***some text*** is bold italic.
+
+# --- NOTES ---
+# - Download Raw Deck and Load Deck give you your slides but you
+#      will still need any images referred to in the same folder
+# - If no directive is given, text defaults to `Text:`.
+# - In `Columns` and `Table`, use `---` on its own line
+#       to separate sections/rows.
+# - You cannot nest directives (e.g., a Table inside a Column).
+# - Notes appear at the bottom in a special color and shift other content up.
+# - 7 different styles are given, but you can create your own also
+</pre>
+    </div>
+  </div>
+
+<script>
+const tufteSlideshowApp = (function() {
+  'use strict';
+  
+  /* ═══════════════════════════════════════════════════════════════
+                              CONSTANTS
+     ═══════════════════════════════════════════════════════════════ */
+  
+  const DEFAULT_XML = `<presentation title="New Presentation" showSlideCount="true" theme="minimal">
+  <slide>
+    <raw><![CDATA[
+Title: Modern Slides
+Header: Header text here
+BigText: This is a slideshow.
+  Press 'E' to edit, 'F' fullscreen, 'Esc' go back
+Text: Use arrow keys to navigate.
+SmallText: smaller
+TinyText: tiny
+    ]]></raw>
+  </slide>
+  <slide>
+    <raw><![CDATA[
+Title: Raw Text Demo
+Text: This slide *demonstrates* various **features**. For example: $e = mc^2$.
+Columns:
+  Column 1
+  ---
+  This is the ***left*** column. You can have text and math like $\\alpha + \\beta$.
+  A blank line creates a new paragraph.
+
+  Like this.
+  ---
+  And column 3 here.
+    ]]></raw>
+  </slide>
+  <slide>
+    <raw><![CDATA[
+Text: This slide shows a table
+Table:
+  Header 1 & Header 2
+  ---
+  Value 1 & $\\sum_{i=0}^n i^2$
+  ---
+  Value 2 & Another Value
+Notes: And notes for later
+    ]]></raw>
+  </slide>
+  <slide>
+    <raw><![CDATA[
+FullScreenImage: https://files.worldwildlife.org/wwfcmsprod/images/Mountain_Gorilla_Silverback_WW22557/hero_full/cg47pknak_Mountain_Gorilla_Silverback_WW22557.jpg
+    ]]></raw>
+  </slide>
+  <slide>
+    <raw><![CDATA[
+Image: https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExc3p5N2UwOGppdTc4NXgzMWN1czI5eTRicGhtZzQ3ZWJ3dXUxNXF1aiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/pKf7PlSjbtJN6/giphy.gif
+Text: GIFs work too
+    ]]></raw>
+  </slide> 
+  <slide>
+    <raw><![CDATA[
+Background: https://files.worldwildlife.org/wwfcmsprod/images/Mountain_Gorilla_Silverback_WW22557/hero_full/cg47pknak_Mountain_Gorilla_Silverback_WW22557.jpg
+Title: Gorilla
+BigText: And some text.
+    ]]></raw>
+  </slide>
+</presentation>`;
+
+  const METADATA_DIRECTIVES = ["Theme", "ShowSlideCount", "LogoUrl"];
+  const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header", 
+                              "Title", "BigText", "Text", "SmallText", "TinyText", "Notes",
+                              "Image", "Columns", "Table", "FullScreenWebsite", "SpeakerNote"];
+  const ALL_DIRECTIVES = [...METADATA_DIRECTIVES, ...CONTENT_DIRECTIVES];
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          APPLICATION STATE
+     ═══════════════════════════════════════════════════════════════ */
+  
+  const state = {
+    // Mode flags
+    editMode: false,
+    wakeLock: null,
+    
+    // Presentation data
+    currentPresentationName: localStorage.getItem("currentPresentationName") || "default",
+    xmlString: null,
+    xmlDoc: null,
+    
+    // Navigation state
+    slideEls: [],
+    visibleSlideIndices: [],
+    currentVisibleSlideIndex: 0,
+    currentAbsoluteSlideIndex: 0,
+    
+    // Editor state
+    unsavedChanges: new Map(),
+    autoSaveTimeout: null,
+    hasAutoSaved: false,
+    
+    // Drag state
+    draggedThumbIndex: null,
+    placeholder: null,
+    thumbnailRefreshPromise: null,
+    
+    // Available themes
+    availableThemes: []
+  };
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          UTILITY FUNCTIONS
+     ═══════════════════════════════════════════════════════════════ */
+  
+  const $ = (id) => document.getElementById(id);
+  
+  const escapeHtml = (s) =>
+    s.replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+    );
+  
+  /* ═══════════════════════════════════════════════════════════════
+                        THEME DISCOVERY & LOADING
+     ═══════════════════════════════════════════════════════════════ */
+  
+  async function discoverThemes() {
+    // For local file system, we can't discover files dynamically
+    // So we'll check for known theme patterns
+    const knownThemes = [
+      'minimal.css',
+      'calgary.css',
+      'swiss-modern.css',
+      'david-carson.css',
+      'tufte-base.css',
+      'gradient.css', 
+      'modern-dark.css'
+    ];
+    
+    state.availableThemes = [];
+    
+    for (const filename of knownThemes) {
+      try {
+        // Try to create a link element to test if the file exists
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = filename;
+        link.id = filename.replace('.css', '-stylesheet');
+        link.disabled = true;
+        document.head.appendChild(link);
+        
+        // Extract theme name from filename
+        const themeName = filename.replace('.css', '');
+        const displayName = themeName
+          .replace('theme-', '')
+          .replace(/-/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        
+        state.availableThemes.push({
+          filename: filename,
+          id: themeName,
+          name: displayName
+        });
+      } catch (e) {
+        console.warn(`Theme ${filename} not found`);
+      }
+    }
+    
+    // Populate theme selector
+    const themeSelector = $('theme-selector');
+    themeSelector.innerHTML = '';
+    state.availableThemes.forEach(theme => {
+      const option = document.createElement('option');
+      option.value = theme.id;
+      option.textContent = theme.name;
+      themeSelector.appendChild(option);
+    });
+  }
+  
+async function applyTheme(themeId) {
+  // Disable all theme stylesheets
+  document.querySelectorAll('link[id$="-stylesheet"]').forEach(link => {
+    link.disabled = true;
+  });
+  
+  // Enable the selected theme
+  const themeLink = document.getElementById(`${themeId}-stylesheet`);
+  if (themeLink) {
+    themeLink.disabled = false;
+  }
+  
+  // Update body class
+  document.body.className = themeId;
+  
+  // No need to update XML here - it should be done in the handler
+  
+  // Refresh thumbnails if in edit mode
+  if (state.editMode) {
+    await refreshThumbnails();
+  }
+}
+  
+  /* ═══════════════════════════════════════════════════════════════
+                      TEXT PARSING & HTML GENERATION
+     ═══════════════════════════════════════════════════════════════ */
+  
+  function plainTextToHtml(text) {
+    if (!text || !text.trim()) return "";
+    let safeText = escapeHtml(text.trim());
+    
+    // Process markdown-style formatting
+    safeText = safeText.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    safeText = safeText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    safeText = safeText.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    return safeText
+      .replace(/\r\n/g, '\n')
+      .split(/\n{2,}/)
+      .map(p => `<p>${p.replace(/\n/g, '<br />')}</p>`)
+      .join('\n');
+  }
+  
+  function parseRawText(rawText) {
+    const attributes = {};
+    let innerHTML = '';
+    const lines = (rawText || '').split('\n');
+    let currentDirective = "Text";
+    let buffer = [];
+
+    function processBuffer() {
+      if (buffer.length === 0) return;
+      const content = buffer.join('\n').trim();
+      if (!content) return;
+
+      // Handle metadata directives
+      if (METADATA_DIRECTIVES.includes(currentDirective)) {
+        attributes[currentDirective.toLowerCase()] = content;
+        buffer = [];
+        return;
+      }
+
+      // Handle content directives
+      switch (currentDirective) {
+        case "Hidden": 
+          if (content.toLowerCase() === 'true') attributes.hidden = true; 
+          break;
+          
+        case "Background":
+        case "FullScreenImage":
+          attributes.background = content;
+          if (currentDirective === "FullScreenImage") attributes.isFullScreenImage = true;
+          break;
+
+	case "FullScreenWebsite":
+  	  attributes.fullscreenWebsite = content.trim();
+          break;
+          
+        case "Header": 
+          attributes.header = content; 
+          break;
+          
+        case "Title":
+          attributes.title = content.split('\n')[0].trim();
+          innerHTML += `<h1>${escapeHtml(content).replace(/\n/g, '<br />')}</h1>`;
+          break;
+          
+        case "BigText": 
+          innerHTML += `<div class="large">${plainTextToHtml(content)}</div>`; 
+          break;
+          
+        case "Text": 
+          innerHTML += plainTextToHtml(content); 
+          break;
+
+        case "SmallText":
+          innerHTML += `<div class="small">${plainTextToHtml(content)}</div>`;
+          break;
+        
+        case "TinyText":
+          innerHTML += `<div class="tiny">${plainTextToHtml(content)}</div>`;
+          break;
+        
+        case "Notes":
+          attributes.notes = content;
+          break;
+ 
+        case "SpeakerNote":
+          attributes.speakerNote = content;
+          break;
+          
+        case "Image": {
+          const [url, ...captionParts] = content.split(/,(.*)/s);
+          const caption = (captionParts[0] || '').trim();
+          const resolvedUrl = window.presentationBaseUrl ? 
+            resolveImagePath(url.trim(), window.presentationBaseUrl) : url.trim();
+          innerHTML += `<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(caption)}"><div class="caption">${plainTextToHtml(caption)}</div></div>`;
+          break;
+        }
+          
+        case "Columns": {
+          const parts = content.split(/^\s*---\s*$/m);
+          const colsHtml = parts.map(part => {
+            const trimmedPart = part.trim();
+            const [firstPart, ...restParts] = trimmedPart.split(/,(.*)/s);
+            if (/\.(png|jpe?g|gif|webp|svg)$/i.test(firstPart.trim()) || 
+                firstPart.trim().startsWith('data:')) {
+              const colCaption = (restParts[0] || '').trim();
+              const imageUrl = firstPart.trim();
+              const resolvedUrl = window.presentationBaseUrl ? 
+                resolveImagePath(imageUrl, window.presentationBaseUrl) : imageUrl;
+              return `<div class="column"><div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(colCaption)}"><div class="caption">${plainTextToHtml(colCaption)}</div></div></div>`;
+            }
+            return `<div class="column">${plainTextToHtml(trimmedPart)}</div>`;
+          }).join('');
+          innerHTML += `<div class="columns">${colsHtml}</div>`;
+          break;
+        }
+          
+        case "Table": {
+          let tableHtml = '<table>';
+          const rows = content.split(/^\s*---\s*$/m);
+          if (rows.length > 0) {
+            const headerCells = rows.shift().split('&')
+              .map(c => `<th>${plainTextToHtml(c.trim())}</th>`).join('');
+            tableHtml += `<thead><tr>${headerCells}</tr></thead>`;
+          }
+          const bodyRows = rows.map(row => {
+            const cells = row.split('&')
+              .map(c => `<td>${plainTextToHtml(c.trim())}</td>`).join('');
+            return `<tr>${cells}</tr>`;
+          }).join('');
+          tableHtml += `<tbody>${bodyRows}</tbody></table>`;
+          innerHTML += tableHtml;
+          break;
+        }
+      }
+      buffer = [];
+    }
+
+    // Process lines
+    for (const line of lines) {
+      const match = line.match(/^([A-Za-z]+):\s*(.*)/);
+      if (match && ALL_DIRECTIVES.includes(match[1])) {
+        processBuffer();
+        currentDirective = match[1];
+        buffer.push(match[2]);
+      } else {
+        buffer.push(line);
+      }
+    }
+    processBuffer();
+    
+    return { attributes, innerHTML };
+  }
+  
+function createSlideElement(rawText) {
+  const { attributes, innerHTML } = parseRawText(rawText);
+  const slideDiv = document.createElement("div");
+  slideDiv.className = "slide";
+  
+  if (attributes.hidden) slideDiv.classList.add("hidden-in-presentation");
+  
+  if (attributes.background) {
+    const resolvedUrl = window.presentationBaseUrl ? 
+      resolveImagePath(attributes.background, window.presentationBaseUrl) : 
+      attributes.background;
+    slideDiv.style.backgroundImage = `url("${escapeHtml(resolvedUrl)}")`;
+    if (attributes.isFullScreenImage) slideDiv.classList.add("is-fullscreen-image-slide");
+  }
+  
+  if (attributes.header) {
+    const headerDiv = document.createElement("div");
+    headerDiv.className = "slide-header";
+    headerDiv.innerHTML = plainTextToHtml(attributes.header);
+    slideDiv.appendChild(headerDiv);
+  }
+
+// Add iframe for FullScreenWebsite
+if (attributes.fullscreenWebsite) {
+  const iframeWrapper = document.createElement("div");
+  iframeWrapper.style.cssText = `
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 90%;
+    background: white;
+    box-shadow: 0 0 50px rgba(0,0,0,0.3);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 100;
+  `;
+  
+  const iframe = document.createElement("iframe");
+  iframe.src = attributes.fullscreenWebsite;
+  iframe.style.cssText = `
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+  `;
+  
+  iframeWrapper.appendChild(iframe);
+  slideDiv.appendChild(iframeWrapper);
+  
+  // Add click handler to the slide itself for navigation
+  slideDiv.addEventListener('click', (e) => {
+    // Get the iframe wrapper bounds
+    const wrapperBounds = iframeWrapper.getBoundingClientRect();
+    const clickX = e.clientX;
+    const clickY = e.clientY;
+    
+    // Check if click is outside the iframe
+    if (clickX < wrapperBounds.left || 
+        clickX > wrapperBounds.right || 
+        clickY < wrapperBounds.top || 
+        clickY > wrapperBounds.bottom) {
+      
+      // Navigate based on which side was clicked
+      if (clickX < window.innerWidth / 2) {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+      } else {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+      }
+    }
+  });
+}
+  
+  const contentDiv = document.createElement("div");
+  contentDiv.className = "slide-content";
+
+  // Create the dedicated wrapper for normal flow content
+  const flowContentDiv = document.createElement("div");
+  flowContentDiv.className = "slide-flow-content";
+  flowContentDiv.innerHTML = innerHTML;
+  contentDiv.appendChild(flowContentDiv);
+  
+  // Check for notes and append them OUTSIDE the flow wrapper
+  if (attributes.notes) {
+    const notesDiv = document.createElement("div");
+    notesDiv.className = "notes";
+    notesDiv.innerHTML = plainTextToHtml(attributes.notes);
+    contentDiv.appendChild(notesDiv); // Appended as a sibling to flowContentDiv
+  }
+
+  slideDiv.appendChild(contentDiv);
+
+  return slideDiv;
+}
+  
+async function getThumbnailHTML(rawText, theme) {
+  const slideElementHTML = createSlideElement(rawText).outerHTML;
+  
+  // Get the theme CSS content WITHOUT fetch
+  let themeCSS = '';
+  const themeLink = document.getElementById(`${theme}-stylesheet`);
+  if (themeLink && themeLink.sheet) {
+    try {
+      // Read from the already-loaded stylesheet
+      const cssRules = themeLink.sheet.cssRules || themeLink.sheet.rules;
+      for (let i = 0; i < cssRules.length; i++) {
+        themeCSS += cssRules[i].cssText + '\n';
+      }
+    } catch (err) {
+      console.warn(`Could not read theme CSS rules: ${err}`);
+      // Fallback: include the link tag instead
+      themeCSS = `<link rel="stylesheet" href="${themeLink.href}">`;
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <base href="${window.location.href}">
+    ${themeCSS}
+    <style>
+      ${document.getElementById('core-styles').textContent}
+      body { margin: 0; overflow: hidden; }
+      .slide { display: flex !important; opacity: 1 !important; transform: none !important; }
+    </style>
+</head>
+<body class="${theme}">
+    ${slideElementHTML}
+</body>
+</html>`;
+    }
+  }
+  
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <base href="${window.location.href}">
+    <style>
+      ${document.getElementById('core-styles').textContent}
+      ${themeCSS}
+      body { margin: 0; overflow: hidden; }
+      .slide { display: flex !important; opacity: 1 !important; transform: none !important; }
+    </style>
+</head>
+<body class="${theme}">
+    ${slideElementHTML}
+</body>
+</html>`;
+}
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          XML HANDLING
+     ═══════════════════════════════════════════════════════════════ */
+  
+  function parsePresentationXML() {
+    const parser = new DOMParser();
+    const tempDoc = parser.parseFromString(state.xmlString, "text/xml");
+    
+    if (tempDoc.getElementsByTagName("parsererror").length > 0) {
+      alert("Error parsing presentation XML. Loading default.");
+      state.xmlString = DEFAULT_XML;
+      state.xmlDoc = parser.parseFromString(state.xmlString, "text/xml");
+    } else {
+      state.xmlDoc = tempDoc;
+    }
+    
+    const theme = state.xmlDoc.documentElement.getAttribute("theme") || "minimal";
+    $("theme-selector").value = theme;
+    applyTheme(theme);
+  }
+  
+  function buildSlidesFromXMLDoc() {
+    state.slideEls = [];
+    $("slideshow").innerHTML = "";
+    let slideNodes = state.xmlDoc.querySelectorAll("presentation > slide");
+
+    if (slideNodes.length === 0) {
+      addSlide(0, "Title: Empty Slide\n\nText: Add content or load a presentation.");
+      slideNodes = state.xmlDoc.querySelectorAll("presentation > slide");
+    }
+
+    slideNodes.forEach((slideNode) => {
+      const rawText = slideNode.querySelector('raw')?.textContent || '';
+      const { attributes } = parseRawText(rawText);
+      slideNode.setAttribute('title', attributes.title || 'Untitled');
+      attributes.hidden ? 
+        slideNode.setAttribute('hidden', 'true') : 
+        slideNode.removeAttribute('hidden');
+
+      const slideDiv = createSlideElement(rawText);
+      $("slideshow").appendChild(slideDiv);
+      state.slideEls.push(slideDiv);
+    });
+
+    updateVisibleSlideIndices();
+    if (window.MathJax?.typesetPromise) {
+      MathJax.typesetPromise([$("slideshow")]);
+    }
+  }
+  
+  function updateVisibleSlideIndices() {
+    state.visibleSlideIndices = [];
+    state.xmlDoc.querySelectorAll("presentation > slide").forEach((node, index) => {
+      if (node.getAttribute("hidden") !== "true") {
+        state.visibleSlideIndices.push(index);
+      }
+    });
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          SLIDE MANIPULATION
+     ═══════════════════════════════════════════════════════════════ */
+  
+  function addSlide(index, rawContent) {
+    const newSlideNode = state.xmlDoc.createElement('slide');
+    const rawNode = state.xmlDoc.createElement('raw');
+    rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${rawContent}\n`));
+    newSlideNode.appendChild(rawNode);
+    
+    const slides = state.xmlDoc.querySelectorAll("presentation > slide");
+    state.xmlDoc.querySelector("presentation").insertBefore(
+      newSlideNode, 
+      slides[index] || null
+    );
+  }
+  
+  function updateSingleSlide(index) {
+    const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
+    if (!slideNode) return;
+    
+    const rawText = slideNode.querySelector('raw')?.textContent || '';
+    const newSlideElement = createSlideElement(rawText);
+    
+    if (state.slideEls[index]) {
+      state.slideEls[index].replaceWith(newSlideElement);
+      state.slideEls[index] = newSlideElement;
+      
+      if (index === state.currentAbsoluteSlideIndex) {
+        newSlideElement.classList.add('active');
+      }
+      
+      if (window.MathJax?.typesetPromise) {
+        MathJax.typesetPromise([newSlideElement]);
+      }
+    }
+  }
+  
+  async function updateSingleThumbnail(index) {
+    const thumb = document.querySelector(`#thumbs .thumb[data-index="${index}"]`);
+    if (!thumb) return;
+    
+    const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
+    const rawText = slideNode?.querySelector('raw')?.textContent || '';
+    const theme = $("theme-selector").value || "minimal";
+    
+    const iframe = thumb.querySelector('iframe');
+    if (iframe) {
+      iframe.srcdoc = await getThumbnailHTML(rawText, theme);
+    }
+    
+    if (slideNode?.getAttribute("hidden") === "true") {
+      thumb.classList.add("hidden-slide");
+    } else {
+      thumb.classList.remove("hidden-slide");
+    }
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          NAVIGATION & DISPLAY
+     ═══════════════════════════════════════════════════════════════ */
+  
+  function showSlide(absIndex, fromPresentationNav = false) {
+    let targetAbsIndex = absIndex;
+    
+    if (fromPresentationNav && !state.editMode) {
+      let targetVisibleIndex = Math.max(0, Math.min(absIndex, state.visibleSlideIndices.length - 1));
+      targetAbsIndex = state.visibleSlideIndices.length > 0 ? 
+        state.visibleSlideIndices[targetVisibleIndex] : 0;
+      state.currentVisibleSlideIndex = targetVisibleIndex;
+    } else {
+      targetAbsIndex = Math.max(0, Math.min(absIndex, state.slideEls.length - 1));
+    }
+    
+    if (state.editMode && state.currentAbsoluteSlideIndex !== targetAbsIndex) {
+      storeCurrentTextareaContentToUnsaved();
+    }
+    
+    state.slideEls.forEach((s, i) => s.classList.toggle("active", i === targetAbsIndex));
+    state.currentAbsoluteSlideIndex = targetAbsIndex;
+    
+    if (!fromPresentationNav || state.editMode) {
+      state.currentVisibleSlideIndex = state.visibleSlideIndices.indexOf(state.currentAbsoluteSlideIndex);
+    }
+ 
+    // This block forces GIFs to restart when a slide becomes active.
+    const activeSlide = state.slideEls[targetAbsIndex];
+    if (activeSlide) {
+      // 1. For GIFs in <img> tags
+      const imgGifs = activeSlide.querySelectorAll('img[src*=".gif"]');
+      imgGifs.forEach(gif => {
+        const originalSrc = gif.src;
+        // This trick forces the browser to reload the image and restart the animation
+        gif.src = '';
+        gif.src = originalSrc;
+      });
+
+      // 2. For GIFs used as a background-image
+      if (activeSlide.style.backgroundImage.includes('.gif')) {
+        const originalBg = activeSlide.style.backgroundImage;
+        // Temporarily remove the background, then add it back in the next frame
+        activeSlide.style.backgroundImage = 'none';
+        requestAnimationFrame(() => {
+          activeSlide.style.backgroundImage = originalBg;
+        });
+      }
+    }
+    
+    updateHUD();
+    updatePresenterView();
+    
+    if (state.editMode) {
+      highlightThumb(state.currentAbsoluteSlideIndex);
+      loadTextareaForCurrentSlide();
+      updateToggleHideButtonState();
+    }
+  }
+  
+  function updateHUD() {
+    const presNode = state.xmlDoc.querySelector("presentation");
+    if (!presNode) return;
+    
+    const showCount = presNode.getAttribute("showSlideCount") !== "false";
+    $("slide-counter").style.display = showCount ? "block" : "none";
+    $("progress-bar").style.display = showCount ? "block" : "none";
+    
+    const logoUrl = presNode.getAttribute("logoUrl");
+    const logoEl = $("company-logo");
+    logoEl.src = logoUrl || '';
+    logoEl.style.display = logoUrl ? "block" : "none";
+    
+    const numVisibleSlides = state.visibleSlideIndices.length;
+    const displayCur = numVisibleSlides > 0 ? state.currentVisibleSlideIndex + 1 : 0;
+    const displayTot = numVisibleSlides;
+    
+    $("cur").textContent = state.editMode ? 
+      state.currentAbsoluteSlideIndex + 1 : displayCur;
+    $("tot").textContent = state.editMode ? 
+      state.slideEls.length : displayTot;
+    
+    let progressPercent = 0;
+    if (state.editMode && state.slideEls.length > 0) {
+      progressPercent = ((state.currentAbsoluteSlideIndex + 1) / state.slideEls.length) * 100;
+    } else if (!state.editMode && numVisibleSlides > 0) {
+      progressPercent = ((state.currentVisibleSlideIndex + 1) / numVisibleSlides) * 100;
+    }
+    $("progress-bar").style.width = `${progressPercent}%`;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          EDITOR FUNCTIONS
+     ═══════════════════════════════════════════════════════════════ */
+  
+  function setupEditorUI() {
+    const p = state.xmlDoc.querySelector("presentation");
+    if (!p) return;
+    
+    $("show-count").checked = p.getAttribute("showSlideCount") !== "false";
+    $("logo-url").value = p.getAttribute("logoUrl") || "";
+    $("theme-selector").value = p.getAttribute("theme") || "minimal";
+    
+    refreshThumbnails();
+    loadTextareaForCurrentSlide();
+    updateSaveButtonGlow();
+  }
+  
+async function refreshThumbnails() {
+  // 1) Bail out if already running
+  if (state.thumbnailRefreshPromise) {
+    await state.thumbnailRefreshPromise;
+    return;
+  }
+
+  // 2) Capture the container and its scroll position *before* we clear it
+  const thumbsContainer = $("thumbs");
+  const scrollPos = thumbsContainer.scrollTop;
+
+  // 3) Kick off the rebuild
+  state.thumbnailRefreshPromise = (async () => {
+    // Clear old thumbnails
+    while (thumbsContainer.firstChild) {
+      thumbsContainer.removeChild(thumbsContainer.firstChild);
+    }
+
+    const slideNodes = state.xmlDoc.querySelectorAll("presentation > slide");
+    const theme = $("theme-selector").value || "minimal";
+
+    for (let i = 0; i < slideNodes.length; i++) {
+      const rawText = slideNodes[i].querySelector('raw')?.textContent || '';
+
+      const thumbDiv = document.createElement("div");
+      thumbDiv.className = "thumb" + (i === state.currentAbsoluteSlideIndex ? " selected" : "");
+      if (slideNodes[i].getAttribute("hidden") === "true") {
+        thumbDiv.classList.add("hidden-slide");
+      }
+      thumbDiv.dataset.index = i;
+
+      const num = document.createElement('div');
+      num.className = 'thumb-number';
+      num.textContent = i + 1;
+
+      const iframe = document.createElement('iframe');
+      iframe.className = 'thumb-iframe';
+      iframe.scrolling = "no";
+      iframe.loading = "lazy";
+      iframe.srcdoc = await getThumbnailHTML(rawText, theme);
+
+      thumbDiv.append(num, iframe);
+      thumbsContainer.appendChild(thumbDiv);
+      thumbDiv.onclick = () => showSlide(i);
+    }
+
+    makeThumbnailsDraggable();
+  })();
+
+  try {
+    await state.thumbnailRefreshPromise;
+  } finally {
+    state.thumbnailRefreshPromise = null;
+  }
+  
+  // 4) Restore scroll position AFTER everything is done
+  // Use requestAnimationFrame to ensure DOM has been painted
+  requestAnimationFrame(() => {
+    thumbsContainer.scrollTop = scrollPos;
+  });
+}
+
+
+  
+  function highlightThumb(index) {
+    document.querySelectorAll("#thumbs .thumb").forEach((t, i) => 
+      t.classList.toggle("selected", i === index)
+    );
+  }
+  
+  function getRawTextForSlide(index) {
+    const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
+    return slideNode?.querySelector("raw")?.textContent.trim() || "";
+  }
+  
+  function loadTextareaForCurrentSlide() {
+    const unsaved = state.unsavedChanges.get(state.currentAbsoluteSlideIndex);
+    $("raw-text-editor").value = unsaved ? 
+      unsaved.text : getRawTextForSlide(state.currentAbsoluteSlideIndex);
+    validateAndUpdateTextarea();
+  }
+  
+  function storeCurrentTextareaContentToUnsaved() {
+    const newText = $("raw-text-editor").value;
+    const originalText = getRawTextForSlide(state.currentAbsoluteSlideIndex);
+    
+    if (newText.trim() !== originalText.trim()) {
+      state.unsavedChanges.set(state.currentAbsoluteSlideIndex, { text: newText });
+    } else {
+      state.unsavedChanges.delete(state.currentAbsoluteSlideIndex);
+    }
+    updateSaveButtonGlow();
+  }
+  
+  async function validateAndUpdateTextarea() {
+    const thumbIframe = document.querySelector(
+      `#thumbs .thumb[data-index="${state.currentAbsoluteSlideIndex}"] iframe`
+    );
+    if (thumbIframe) {
+      const theme = $("theme-selector").value || 'minimal';
+      thumbIframe.srcdoc = await getThumbnailHTML($("raw-text-editor").value, theme);
+    }
+    updateSaveButtonGlow();
+  }
+  
+  function commitAllUnsavedChanges() {
+    let madeChanges = false;
+    state.unsavedChanges.forEach((change, index) => {
+      const rawNode = state.xmlDoc.querySelectorAll("presentation > slide")[index]?.querySelector("raw");
+      if (rawNode) {
+        rawNode.textContent = '';
+        rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${change.text}\n`));
+        madeChanges = true;
+      }
+    });
+    state.unsavedChanges.clear();
+    return madeChanges;
+  }
+  
+  function updateDeckPropertiesInXmlDoc() {
+    const presNode = state.xmlDoc.querySelector("presentation");
+    let changed = false;
+    
+    const checkAndSet = (attr, val) => {
+      if (presNode.getAttribute(attr) !== val) {
+        presNode.setAttribute(attr, val);
+        changed = true;
+      }
+    };
+    
+    checkAndSet("showSlideCount", $("show-count").checked ? "true" : "false");
+    checkAndSet("logoUrl", $("logo-url").value.trim());
+    checkAndSet("theme", $("theme-selector").value);
+    
+    return changed;
+  }
+  
+  function updateSaveButtonGlow() {
+    const p = state.xmlDoc.querySelector("presentation");
+    const deckPropsChanged = 
+      (p.getAttribute("theme") || 'minimal') !== $("theme-selector").value ||
+      (p.getAttribute("showSlideCount") !== 'false') !== $("show-count").checked ||
+      (p.getAttribute("logoUrl") || '') !== $("logo-url").value.trim();
+      
+    $("save-btn").classList.toggle("glow", state.unsavedChanges.size > 0 || deckPropsChanged);
+  }
+  
+  function updateToggleHideButtonState() {
+    const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
+    const btn = $("toggle-hide-btn");
+    const isHidden = slideNode?.getAttribute("hidden") === "true";
+    btn.innerHTML = isHidden
+      ? '<i class="fa-solid fa-eye"></i>'
+      : '<i class="fa-solid fa-eye-slash"></i>';
+    btn.title = isHidden ? "Show Slide" : "Hide Slide";
+    $("toggle-hide-btn").disabled = !slideNode;
+  }
+
+function updateToggleCountButtonState() {
+  const btn = $("toggle-count-btn");
+  const isOn = $("show-count").checked;
+  btn.innerHTML = isOn
+    ? '<i class="fa-solid fa-sort-numeric-asc"></i>'
+    : '<i class="fa-solid fa-sort-numeric-asc" style="opacity:0.3;"></i>';
+  btn.title = isOn ? "Hide Slide Numbers" : "Show Slide Numbers";
+}
+
+$("toggle-count-btn").onclick = () => {
+  const cb = $("show-count");
+  cb.checked = !cb.checked;
+  saveWithoutExiting();
+  updateToggleCountButtonState();
+  updateHUD();
+};
+
+// make sure it’s inited on load
+updateToggleCountButtonState();
+  
+function saveWithoutExiting() {
+  storeCurrentTextareaContentToUnsaved();
+  
+  const changedIndices = new Set();
+  state.unsavedChanges.forEach((change, index) => {
+    const rawNode = state.xmlDoc.querySelectorAll("presentation > slide")[index]?.querySelector("raw");
+    if (rawNode) {
+      rawNode.textContent = '';
+      rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${change.text}\n`));
+      changedIndices.add(index);
+    }
+  });
+  
+  const deckPropsChanged = updateDeckPropertiesInXmlDoc();
+  
+  if (changedIndices.size > 0 || deckPropsChanged) {
+    state.xmlString = new XMLSerializer().serializeToString(state.xmlDoc);
+    localStorage.setItem(`tufteSlideshowXML_${state.currentPresentationName}`, state.xmlString);
+    
+    // If theme changed, refresh ALL thumbnails
+    const presNode = state.xmlDoc.querySelector("presentation");
+    const currentTheme = presNode?.getAttribute("theme") || "minimal";
+    if (currentTheme !== document.body.className) {
+      refreshThumbnails(); // Refresh all thumbnails for theme change
+    } else {
+      // Otherwise just update changed slides
+      changedIndices.forEach(index => {
+        updateSingleSlide(index);
+        updateSingleThumbnail(index);
+      });
+    }
+    
+    if (deckPropsChanged) {
+      updateHUD();
+    }
+    
+    state.unsavedChanges.clear();
+    updateSaveButtonGlow();
+  }
+}
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          DRAG AND DROP
+     ═══════════════════════════════════════════════════════════════ */
+  
+function makeThumbnailsDraggable() {
+  const thumbsContainer = document.getElementById('thumbs');
+  
+  // Clean up any existing placeholder completely
+  const existingPlaceholders = thumbsContainer.querySelectorAll('.thumb-placeholder');
+  existingPlaceholders.forEach(p => p.remove());
+  
+  // Reset the placeholder reference
+  if (state.placeholder) {
+    if (state.placeholder.parentNode) {
+      state.placeholder.parentNode.removeChild(state.placeholder);
+    }
+    state.placeholder = null;
+  }
+  
+  // Create new placeholder
+  state.placeholder = document.createElement('div');
+  state.placeholder.className = 'thumb-placeholder';
+  state.placeholder.style.display = 'none';
+  
+  // Remove any existing event listeners before adding new ones
+  const thumbs = thumbsContainer.querySelectorAll('.thumb');
+  thumbs.forEach((thumb) => {
+    // Clone node to remove all event listeners
+    const newThumb = thumb.cloneNode(true);
+    thumb.parentNode.replaceChild(newThumb, thumb);
+    
+    // Add fresh event listeners
+    newThumb.draggable = true;
+    newThumb.addEventListener('dragstart', handleDragStart);
+    newThumb.addEventListener('dragend', handleDragEnd);
+    
+    // Re-attach click handler
+    const index = parseInt(newThumb.dataset.index);
+    newThumb.onclick = () => showSlide(index);
+  });
+  
+  // Remove old container event listeners and add fresh ones
+  const newContainer = thumbsContainer.cloneNode(false);
+  while (thumbsContainer.firstChild) {
+    newContainer.appendChild(thumbsContainer.firstChild);
+  }
+  thumbsContainer.parentNode.replaceChild(newContainer, thumbsContainer);
+  
+  // Add container event listeners
+  newContainer.addEventListener('dragover', handleDragOver);
+  newContainer.addEventListener('drop', handleDrop);
+}
+  
+  function handleDragStart(e) {
+    const thumbsContainer = document.getElementById('thumbs');
+    state.draggedThumbIndex = Array.from(thumbsContainer.querySelectorAll('.thumb')).indexOf(e.target);
+    
+    e.target.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');
+    
+    state.placeholder.style.height = e.target.offsetHeight + 'px';
+    state.placeholder.style.width = e.target.offsetWidth + 'px';
+  }
+  
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    if (state.draggedThumbIndex === null) return;
+    
+    const thumbsContainer = e.currentTarget;
+    const afterElement = getDragAfterElement(thumbsContainer, e.clientY);
+    
+    if (state.placeholder.style.display === 'none') {
+      state.placeholder.style.display = 'block';
+    }
+    
+    if (afterElement == null) {
+      thumbsContainer.appendChild(state.placeholder);
+    } else {
+      thumbsContainer.insertBefore(state.placeholder, afterElement);
+    }
+    
+    const rect = thumbsContainer.getBoundingClientRect();
+    const scrollSpeed = 5;
+    const scrollMargin = 50;
+    
+    if (e.clientY < rect.top + scrollMargin) {
+      thumbsContainer.scrollTop -= scrollSpeed;
+    } else if (e.clientY > rect.bottom - scrollMargin) {
+      thumbsContainer.scrollTop += scrollSpeed;
+    }
+  }
+  
+  function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (state.draggedThumbIndex === null) return;
+    
+    const thumbsContainer = document.getElementById('thumbs');
+    const allChildren = Array.from(thumbsContainer.children);
+    const placeholderIndex = allChildren.indexOf(state.placeholder);
+    
+    if (placeholderIndex === -1) return;
+    
+    const thumbsBeforePlaceholder = allChildren.slice(0, placeholderIndex)
+      .filter(el => el.classList.contains('thumb')).length;
+    
+    let newIndex = thumbsBeforePlaceholder;
+    
+    if (state.draggedThumbIndex < newIndex) {
+      newIndex--;
+    }
+    
+    if (state.draggedThumbIndex !== newIndex) {
+      reorderSlides(state.draggedThumbIndex, newIndex);
+    }
+    
+    cleanupDrag();
+  }
+  
+  function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+    cleanupDrag();
+  }
+  
+function cleanupDrag() {
+  // Remove placeholder from DOM completely
+  if (state.placeholder && state.placeholder.parentNode) {
+    state.placeholder.parentNode.removeChild(state.placeholder);
+  }
+  
+  // Hide it just in case
+  if (state.placeholder) {
+    state.placeholder.style.display = 'none';
+  }
+  
+  // Reset drag state
+  state.draggedThumbIndex = null;
+  
+  // Remove dragging class from any thumb that might still have it
+  document.querySelectorAll('.thumb.dragging').forEach(thumb => {
+    thumb.classList.remove('dragging');
+  });
+}
+  
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.thumb:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+  
+  function reorderSlides(fromIndex, toIndex) {
+	if (fromIndex === toIndex) return;
+
+        // Capture scroll position before changes
+        const thumbsContainer = $("thumbs");
+        const scrollPos = thumbsContainer.scrollTop;
+
+	// Commit any unsaved changes to ensure XML is up to date
+	storeCurrentTextareaContentToUnsaved();
+	commitAllUnsavedChanges();
+
+	const presentationNode = state.xmlDoc.querySelector("presentation");
+	const slides = presentationNode.querySelectorAll("slide");
+	const slideArray = Array.from(slides);
+
+	const [movedSlide] = slideArray.splice(fromIndex, 1);
+	slideArray.splice(toIndex, 0, movedSlide);
+
+	// Clear the existing slide nodes
+	while (presentationNode.firstChild) {
+		presentationNode.removeChild(presentationNode.firstChild);
+	}
+
+	// Append reordered slides
+	slideArray.forEach(slide => presentationNode.appendChild(slide));
+
+	// Update current slide index
+	let newCurrentIndex = state.currentAbsoluteSlideIndex;
+	if (state.currentAbsoluteSlideIndex === fromIndex) {
+		newCurrentIndex = toIndex;
+	} else if (
+		fromIndex < state.currentAbsoluteSlideIndex &&
+		toIndex >= state.currentAbsoluteSlideIndex
+	) {
+		newCurrentIndex--;
+	} else if (
+		fromIndex > state.currentAbsoluteSlideIndex &&
+		toIndex <= state.currentAbsoluteSlideIndex
+	) {
+		newCurrentIndex++;
+	}
+
+	// Clear unsaved changes and update storage
+	state.unsavedChanges.clear();
+	state.xmlString = new XMLSerializer().serializeToString(state.xmlDoc);
+	localStorage.setItem(
+		`tufteSlideshowXML_${state.currentPresentationName}`,
+		state.xmlString
+	);
+
+	// Rebuild and refresh UI
+	buildSlidesFromXMLDoc();
+	refreshThumbnails().then(() => {
+          requestAnimationFrame(() => {
+            thumbsContainer.scrollTop = scrollPos;
+          });
+        });
+	showSlide(newCurrentIndex);
+	updateSaveButtonGlow();
+}
+
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          PERSISTENCE
+     ═══════════════════════════════════════════════════════════════ */
+  
+  function saveDeckState() {
+    const deckState = {
+      xml: state.xmlString,
+      currentSlide: state.currentAbsoluteSlideIndex,
+      theme: $("theme-selector").value,
+      logoUrl: $('logo-url').value.trim()
+    };
+    localStorage.setItem(`tufteDeck_${state.currentPresentationName}`, JSON.stringify(deckState));
+  }
+  
+  function loadDeckState() {
+    const raw = localStorage.getItem(`tufteDeck_${state.currentPresentationName}`);
+    if (!raw) return false;
+    
+    const { xml, currentSlide, theme, logoUrl } = JSON.parse(raw);
+    state.xmlString = xml;
+    parsePresentationXML();
+    buildSlidesFromXMLDoc();
+    $("theme-selector").value = theme;
+    $('logo-url').value = logoUrl;
+    showSlide(currentSlide ?? 0, true);
+    return true;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          IMPORT
+     ═══════════════════════════════════════════════════════════════ */
+  
+  function convertTxtToXML(txtContent, filename) {
+    let title = filename.replace(/\.(txt|xml)$/i, '') || "Imported Presentation";
+    let theme = "minimal";
+    let showSlideCount = "true";
+    let logoUrl = "";
+    
+    let contentToProcess = txtContent;
+    if (txtContent.trim().startsWith('# METADATA:')) {
+      const metadataEndIndex = txtContent.indexOf('\n# Slide(');
+      if (metadataEndIndex !== -1) {
+        const metadataSection = txtContent.substring(0, metadataEndIndex);
+        contentToProcess = txtContent.substring(metadataEndIndex);
+        
+        const metadataLines = metadataSection.split('\n');
+        metadataLines.forEach(line => {
+          const match = line.match(/^(\w+):\s*(.*)$/);
+          if (match) {
+            const [, key, value] = match;
+            switch(key) {
+              case 'Title': title = value.trim(); break;
+              case 'Theme': theme = value.trim(); break;
+              case 'ShowSlideCount': showSlideCount = value.trim(); break;
+              case 'LogoUrl': logoUrl = value.trim(); break;
+            }
+          }
+        });
+      }
+    }
+    
+    const parts = contentToProcess.split(/^# Slide\(\d+\):\s*$/m);
+    const slideMatches = parts.filter(part => part.trim() !== '');
+    
+    let xml = `<presentation title="${escapeHtml(title)}" showSlideCount="${showSlideCount}" theme="${theme}"`;
+    if (logoUrl) {
+      xml += ` logoUrl="${escapeHtml(logoUrl)}"`;
+    }
+    xml += `>`;
+    
+    slideMatches.forEach(slideContent => {
+      const cleanContent = slideContent.trim();
+      if (cleanContent) {
+        xml += `\n  <slide>\n    <raw><![CDATA[\n${cleanContent}\n    ]]></raw>\n  </slide>`;
+      }
+    });
+    
+    xml += '\n</presentation>';
+    return xml;
+  }
+  
+  async function convertImageToDataURL(url) {
+    return new Promise((resolve, reject) => {
+      fetch(url)
+        .then(response => {
+          if (!response.ok) throw new Error(`Network response was not ok for ${url}`);
+          return response.blob();
+        })
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        })
+        .catch(err => reject(`Failed to fetch blob for ${url}: ${err}`));
+    });
+  }
+ 
+/* ==================================================================
+                      PRESENTER MODE
+================================================================= */
+
+function openPresenterMode() {
+  // Open a new window for presenter view
+  const presenterWindow = window.open('', 'presenter', 'width=1200,height=800');
+  
+  if (!presenterWindow) {
+    alert('Please allow popups to use presenter mode');
+    return;
+  }
+  
+  // Set up presenter view HTML
+  presenterWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Presenter View</title>
+      <style>
+        body {
+          margin: 0;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: #1a1a1a;
+          color: #fff;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          grid-template-rows: 1fr auto;
+          height: 100vh;
+          gap: 20px;
+          padding: 20px;
+          box-sizing: border-box;
+        }
+        .slide-container {
+          background: #000;
+          border-radius: 8px;
+          overflow: hidden;
+          position: relative;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .slide-container iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+        .slide-label {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          background: rgba(0,0,0,0.7);
+          padding: 5px 10px;
+          border-radius: 4px;
+          font-size: 14px;
+          z-index: 10;
+        }
+        .notes-section {
+          grid-column: 1 / -1;
+          background: #2a2a2a;
+          border-radius: 8px;
+          padding: 20px;
+          max-height: 200px;
+          overflow-y: auto;
+        }
+        .notes-section h3 {
+          margin-top: 0;
+          color: #ffa500;
+        }
+        .timer-section {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          text-align: right;
+          background: rgba(0,0,0,0.7);
+          padding: 10px 15px;
+          border-radius: 4px;
+        }
+        .timer {
+          font-size: 32px;
+          font-family: monospace;
+          color: #0f0;
+        }
+        .controls {
+          position: absolute;
+          bottom: 20px;
+          right: 20px;
+          display: flex;
+          gap: 10px;
+        }
+        .controls button {
+          padding: 10px 20px;
+          background: #333;
+          color: #fff;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 16px;
+        }
+        .controls button:hover {
+          background: #555;
+        }
+        .slide-info {
+          position: absolute;
+          bottom: 20px;
+          left: 20px;
+          font-size: 18px;
+          background: rgba(0,0,0,0.7);
+          padding: 10px 15px;
+          border-radius: 4px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="slide-container">
+        <div class="slide-label">Current Slide</div>
+        <iframe id="current-slide"></iframe>
+      </div>
+      <div class="slide-container">
+        <div class="slide-label">Next Slide</div>
+        <iframe id="next-slide"></iframe>
+      </div>
+      <div class="notes-section">
+        <h3>Speaker Notes</h3>
+        <div id="notes-content">No notes for this slide</div>
+      </div>
+      <div class="timer-section">
+        <div>Elapsed Time</div>
+        <div class="timer" id="timer">00:00</div>
+      </div>
+      <!-- <div class="slide-info" id="slide-info">
+        Slide 1 of 10
+      </div> -->
+      <div class="controls">
+        <button onclick="window.opener.prevSlide()">Previous</button>
+        <button onclick="window.opener.nextSlide()">Next</button>
+      </div>
+    </body>
+    </html>
+  `);
+  
+  // Store reference to presenter window
+  state.presenterWindow = presenterWindow;
+  
+  // Start timer
+  let startTime = Date.now();
+  setInterval(() => {
+    if (presenterWindow.closed) return;
+    const elapsed = Date.now() - startTime;
+    const minutes = Math.floor(elapsed / 60000);
+    const seconds = Math.floor((elapsed % 60000) / 1000);
+    presenterWindow.document.getElementById('timer').textContent = 
+      `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }, 1000);
+  
+  // Update presenter view when slides change
+  updatePresenterView();
+}
+
+function updatePresenterView() {
+  if (!state.presenterWindow || state.presenterWindow.closed) return;
+  
+  const currentIndex = state.currentAbsoluteSlideIndex;
+  const nextIndex = Math.min(currentIndex + 1, state.slideEls.length - 1);
+  
+  // Get current and next slide HTML
+  const currentSlideHTML = state.slideEls[currentIndex].outerHTML;
+  const nextSlideHTML = state.slideEls[nextIndex].outerHTML;
+  
+  // Get theme CSS
+  const themeId = document.body.className;
+  const themeLink = document.getElementById(`${themeId}-stylesheet`);
+  const themeHref = themeLink ? themeLink.href : '';
+  
+  // Create standalone HTML for iframes
+  const slideTemplate = (slideHTML) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <link rel="stylesheet" href="${themeHref}">
+      <style>
+        ${document.getElementById('core-styles').textContent}
+        body { margin: 0; overflow: hidden; }
+        .slide { 
+          display: flex !important; 
+          opacity: 1 !important; 
+          width: 100vw;
+          height: 100vh;
+        }
+      </style>
+    </head>
+    <body class="${themeId}">
+      <div id="slideshow">${slideHTML}</div>
+    </body>
+    </html>
+  `;
+  
+  // Update iframes
+  state.presenterWindow.document.getElementById('current-slide').srcdoc = slideTemplate(currentSlideHTML);
+  state.presenterWindow.document.getElementById('next-slide').srcdoc = slideTemplate(nextSlideHTML);
+  
+  // Update notes
+  const rawText = getRawTextForSlide(currentIndex);
+  const { attributes } = parseRawText(rawText);
+  const notesElement = state.presenterWindow.document.getElementById('notes-content');
+  notesElement.textContent = attributes.speakerNote || 'No notes for this slide';
+  
+  // Update slide counter
+  const slideInfo = state.presenterWindow.document.getElementById('slide-info');
+  slideInfo.textContent = `Slide ${currentIndex + 1} of ${state.slideEls.length}`;
+}
+
+// Add these helper functions to expose navigation to presenter window
+window.nextSlide = function() {
+  const nextIndex = state.editMode ? 
+    state.currentAbsoluteSlideIndex + 1 : 
+    state.currentVisibleSlideIndex + 1;
+  showSlide(nextIndex, !state.editMode);
+};
+
+window.prevSlide = function() {
+  const prevIndex = state.editMode ? 
+    state.currentAbsoluteSlideIndex - 1 : 
+    state.currentVisibleSlideIndex - 1;
+  showSlide(prevIndex, !state.editMode);
+}; 
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          WAKE LOCK
+     ═══════════════════════════════════════════════════════════════ */
+  
+  async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+      try {
+        state.wakeLock = await navigator.wakeLock.request('screen');
+        console.log('Wake lock acquired');
+        
+        state.wakeLock.addEventListener('release', () => {
+          console.log('Wake lock released');
+        });
+      } catch (err) {
+        console.log(`Wake lock error: ${err.name}, ${err.message}`);
+      }
+    }
+  }
+
+  async function releaseWakeLock() {
+    if (state.wakeLock) {
+      await state.wakeLock.release();
+      state.wakeLock = null;
+    }
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          EVENT HANDLERS
+     ═══════════════════════════════════════════════════════════════ */
+  
+  function setupEventHandlers() {
+    // Keyboard navigation
+    document.addEventListener("keydown", (e) => {
+      if (e.target.closest("textarea, input, select") && e.key !== "Escape") return;
+      
+      const navAction = { 
+        "ArrowRight": 1, " ": 1, "PageDown": 1, 
+        "ArrowLeft": -1, "PageUp": -1 
+      }[e.key];
+      
+      if (navAction) {
+        e.preventDefault();
+        const nextIndex = state.editMode ? 
+          state.currentAbsoluteSlideIndex + navAction : 
+          state.currentVisibleSlideIndex + navAction;
+        showSlide(nextIndex, !state.editMode);
+      } else if (e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        if (state.editMode && state.unsavedChanges.size > 0) {
+          saveWithoutExiting();
+        }
+        state.editMode = !state.editMode;
+        $("editor").classList.toggle("active", state.editMode);
+        if (state.editMode) {
+          setupEditorUI();
+          releaseWakeLock();
+        } else {
+          requestWakeLock();
+        }
+        showSlide(state.currentAbsoluteSlideIndex, !state.editMode);
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullscreen();
+      } else if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        openPresenterMode();
+      } else if (e.key === "Escape") {
+        if ($("help").classList.contains("active")) {
+          $("help").classList.remove("active");
+        } else if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else if (state.editMode) {
+          state.editMode = false;
+          $("editor").classList.remove("active");
+          showSlide(state.currentAbsoluteSlideIndex, true);
+        }
+      }
+    });
+    
+    // Editor buttons
+    $("save-btn").onclick = () => {
+      storeCurrentTextareaContentToUnsaved();
+      const changesCommitted = commitAllUnsavedChanges();
+      const deckPropsChanged = updateDeckPropertiesInXmlDoc();
+      
+      if (changesCommitted || deckPropsChanged) {
+        if (state.currentPresentationName === "default") {
+          const newName = prompt("Enter a name for this presentation:", "My Presentation");
+          if (newName && newName.trim()) {
+            state.currentPresentationName = newName.trim().replace(/[^a-zA-Z0-9-_]/g, '_');
+            localStorage.setItem("currentPresentationName", state.currentPresentationName);
+          }
+        }
+        state.xmlString = new XMLSerializer().serializeToString(state.xmlDoc);
+        localStorage.setItem(`tufteSlideshowXML_${state.currentPresentationName}`, state.xmlString);
+        buildSlidesFromXMLDoc();
+        saveDeckState();
+      }
+      
+      state.editMode = false;
+      $("editor").classList.remove("active");
+      showSlide(state.currentAbsoluteSlideIndex, true);
+      
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log('Could not enter fullscreen:', err);
+        });
+      }
+    };
+    
+    $("add-btn").onclick = () => {
+      storeCurrentTextareaContentToUnsaved();
+      commitAllUnsavedChanges();
+      addSlide(state.currentAbsoluteSlideIndex + 1, "Title: New Slide\n\nText: Edit this content.");
+      buildSlidesFromXMLDoc();
+      refreshThumbnails();
+      showSlide(state.currentAbsoluteSlideIndex + 1);
+    };
+    
+    $("del-btn").onclick = () => {
+      if (state.slideEls.length <= 1) {
+        alert("Cannot delete the last slide.");
+        return;
+      }
+      if (!confirm("Are you sure you want to delete this slide?")) {
+        return;
+      }
+
+      const delIdx = state.currentAbsoluteSlideIndex;
+      state.xmlDoc.querySelectorAll("presentation > slide")[delIdx].remove();
+      
+      const newUnsaved = new Map();
+      for (const [key, value] of state.unsavedChanges.entries()) {
+        if (key < delIdx) {
+          newUnsaved.set(key, value);
+        } else if (key > delIdx) {
+          newUnsaved.set(key - 1, value);
+        }
+      }
+      state.unsavedChanges.clear();
+      for (const [key, value] of newUnsaved.entries()) {
+        state.unsavedChanges.set(key, value);
+      }
+
+      buildSlidesFromXMLDoc();
+      refreshThumbnails();
+      showSlide(Math.max(0, state.currentAbsoluteSlideIndex - 1));
+    };
+    
+    $("toggle-hide-btn").onclick = () => {
+      const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
+      if (!slideNode) return;
+      
+      const isCurrentlyHidden = slideNode.getAttribute("hidden") === "true";
+      if (isCurrentlyHidden) {
+        slideNode.removeAttribute("hidden");
+      } else {
+        slideNode.setAttribute("hidden", "true");
+      }
+      
+      state.slideEls[state.currentAbsoluteSlideIndex].classList.toggle("hidden-in-presentation", !isCurrentlyHidden);
+      
+      updateVisibleSlideIndices();
+      refreshThumbnails();
+      updateToggleHideButtonState();
+      updateSaveButtonGlow();
+    };
+    
+    $("download-txt-btn").onclick = () => {
+      const title = state.xmlDoc.documentElement.getAttribute("title") || "presentation";
+      const theme = state.xmlDoc.documentElement.getAttribute("theme") || "minimal";
+      const showSlideCount = state.xmlDoc.documentElement.getAttribute("showSlideCount") || "true";
+      const logoUrl = state.xmlDoc.documentElement.getAttribute("logoUrl") || "";
+      
+      let fullText = `# METADATA:\nTitle: ${title}\nTheme: ${theme}\nShowSlideCount: ${showSlideCount}\nLogoUrl: ${logoUrl}\n`;
+      
+      state.xmlDoc.querySelectorAll("presentation > slide").forEach((slideNode, i) => {
+        fullText += `\n\n# Slide(${i + 1}):\n\n${(slideNode.querySelector('raw')?.textContent || '').trim()}`;
+      });
+      
+      const blob = new Blob([fullText.trim()], { type: "text/plain" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${state.currentPresentationName}.slides`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+    
+    $("new-presentation-btn").onclick = () => {
+      if (state.unsavedChanges.size > 0 && !confirm("You have unsaved changes that will be lost. Continue?")) return;
+      const newName = prompt("Enter a name for the new presentation:", "");
+      if (newName && newName.trim()) {
+        state.currentPresentationName = newName.trim().replace(/[^a-zA-Z0-9-_]/g, '_');
+        localStorage.setItem("currentPresentationName", state.currentPresentationName);
+        state.xmlString = DEFAULT_XML;
+        state.unsavedChanges.clear();
+        init();
+        if (state.editMode) setupEditorUI();
+      }
+    };
+    
+$("load-btn").onclick = () => {
+  if (state.unsavedChanges.size > 0 && !confirm("You have unsaved changes that will be lost. Continue?")) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.slides,.txt,text/xml,text/plain';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = re => {
+      const content = re.target.result;
+      
+      let newXML;
+      if (content.trim().startsWith('<?xml') || content.trim().startsWith('<presentation')) {
+        newXML = content;
+      } else {
+        newXML = convertTxtToXML(content, file.name);
+      }
+      
+      localStorage.setItem('tufteSlideshowXML_' + state.currentPresentationName, state.xmlString);
+      state.unsavedChanges.clear();
+      init(newXML);
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+};
+    
+    $("help-btn").onclick = () => $("help").classList.add("active");
+    $("close-help").onclick = () => $("help").classList.remove("active");
+    
+    // Text editor
+    $("raw-text-editor").addEventListener('input', () => {
+      validateAndUpdateTextarea();
+      storeCurrentTextareaContentToUnsaved();
+    });
+    
+    // Theme and deck properties
+$("theme-selector").onchange = async () => { 
+  const newTheme = $("theme-selector").value;
+  
+  // Update XML immediately
+  const presNode = state.xmlDoc.querySelector("presentation");
+  if (presNode) {
+    presNode.setAttribute("theme", newTheme);
+  }
+  
+  // Apply theme visually
+  applyTheme(newTheme);
+  
+  // Save to storage
+  state.xmlString = new XMLSerializer().serializeToString(state.xmlDoc);
+  localStorage.setItem(`tufteSlideshowXML_${state.currentPresentationName}`, state.xmlString);
+
+  if (state.editMode) {
+    // Introduce a small delay to allow the CSS to be parsed by the browser
+    setTimeout(async () => {
+      await refreshThumbnails();
+    }, 100); // 100ms is usually more than enough
+  }  
+
+  // Update UI
+  updateSaveButtonGlow();
+};
+
+    $("show-count").onchange = () => { 
+      updateSaveButtonGlow(); 
+      saveWithoutExiting(); 
+    };
+    $("logo-url").oninput = () => { 
+      updateSaveButtonGlow(); 
+      saveWithoutExiting(); 
+    };
+  }
+  
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.log(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          URL PARAMETER HANDLING
+     ═══════════════════════════════════════════════════════════════ */
+  
+  function handleURLParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const inputUrl = urlParams.get('xml');
+    if (!inputUrl) return init();
+
+    let textFileUrl;
+    let baseFolderUrl;
+
+    if (inputUrl.match(/dropbox\.com\/sh\//)) {
+      const clean = inputUrl.split('?')[0];
+      baseFolderUrl = clean.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+      textFileUrl = `${baseFolderUrl}/Slides.txt?dl=1`;
+    } else if (inputUrl.match(/drive\.google\.com\/drive\/folders\//)) {
+      alert('Google Drive folders aren\'t directly fetchable. Please link to your Slides.txt file, not to the folder.');
+      return init();
+    } else {
+      const absoluteInputUrl = new URL(inputUrl, window.location.href).href;
+      textFileUrl = absoluteInputUrl;
+      baseFolderUrl = absoluteInputUrl.substring(0, absoluteInputUrl.lastIndexOf('/') + 1);
+    }
+
+    const absoluteXmlUrl = new URL(textFileUrl, window.location.href).href;
+    const fetchUrl = 'proxy.php?url=' + encodeURIComponent(absoluteXmlUrl);
+
+    window.presentationBaseUrl = baseFolderUrl;
+
+    fetch(fetchUrl)
+      .then(res => {
+        if (!res.ok) throw new Error(`Load failed: ${res.status}`);
+        return res.text();
+      })
+      .then(txt => {
+        const newXml = convertTxtToXML(txt, textFileUrl.split('/').pop());
+        localStorage.setItem(`tufteSlideshowXML_${state.currentPresentationName}`, newXml);
+        init(newXml);
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Failed to load presentation.');
+        init();
+      });
+  }
+  
+  window.resolveImagePath = function(imageSrc, baseUrl) {
+    if (!baseUrl || imageSrc.startsWith('http://') || 
+        imageSrc.startsWith('https://') || imageSrc.startsWith('data:')) {
+      return imageSrc;
+    }
+    return new URL(imageSrc, baseUrl).href;
+  };
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          16:9 ASPECT RATIO SETUP
+     ═══════════════════════════════════════════════════════════════ */
+  
+  function wrapSlideshowFor16x9() {
+    const slideshow = $("slideshow");
+    if (!slideshow.parentElement.classList.contains('presentation-scaler')) {
+      const viewport = document.createElement('div');
+      viewport.className = 'presentation-viewport';
+      
+      const scaler = document.createElement('div');
+      scaler.className = 'presentation-scaler';
+      
+      slideshow.parentNode.insertBefore(viewport, slideshow);
+      viewport.appendChild(scaler);
+      scaler.appendChild(slideshow);
+
+      scaler.appendChild($("slide-counter"));
+      scaler.appendChild($("progress-bar"));
+      const logo = $("company-logo");
+      if (logo) scaler.appendChild(logo);
+    }
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════
+                          INITIALIZATION
+     ═══════════════════════════════════════════════════════════════ */
+  
+  function init(newXmlString) {
+    if (newXmlString) {
+      state.xmlString = newXmlString;
+    } else {
+      state.xmlString = localStorage.getItem(`tufteSlideshowXML_${state.currentPresentationName}`) || DEFAULT_XML;
+    }
+    
+    if (!newXmlString && loadDeckState()) return;
+    
+    parsePresentationXML();
+    buildSlidesFromXMLDoc();
+    showSlide(0, true);
+    updateHUD();
+    if (!state.editMode) requestWakeLock();
+    if (state.editMode && $("editor").classList.contains("active")) {
+      setupEditorUI();
+    }
+  }
+  
+  // Main entry point
+  return async function() {
+    // Discover and load themes
+    await discoverThemes();
+    
+    // Setup event handlers
+    setupEventHandlers();
+    
+    // Setup 16:9 aspect ratio
+    wrapSlideshowFor16x9();
+    
+    // Handle URL parameters or initialize normally
+    handleURLParameters();
+    
+    // Setup editor if in edit mode
+    if (state.editMode) {
+      $("editor").classList.add("active");
+      setupEditorUI();
+    }
+  };
+})();
+
+// Start the application
+tufteSlideshowApp();
+</script>
+</body>
+</html>

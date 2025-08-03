@@ -1,0 +1,194 @@
+/* ===================================================================
+   EXAMPLE THEME FOR MODERN SLIDES
+   
+   HOW TO USE:
+   1. Copy this file and rename it (e.g., 'my-custom-style.css').
+   2. Place the new file in the same directory as slides.html.
+   3. Search for const knownThemes in your index.html and add the new style name
+   3. Open the editor and select your new theme from the dropdown.
+   
+   KEY CONCEPT: SCALABLE TYPOGRAPHY
+   This theme uses 'vw' (viewport width) units for the base font size.
+   This is ESSENTIAL. It means all text will scale proportionally to the
+   size of the presentation window, ensuring a consistent look on any
+   screen. Other units like 'rem' and 'em' are then used to create a
+   typographic hierarchy relative to this scalable base.
+   =================================================================== */
+
+
+/* -------------------------------------------------------------------
+   [1] GLOBAL VARIABLES - The main control panel for your theme
+   ------------------------------------------------------------------- */
+:root {
+  /* --- Colors --- */
+  --main-text-color: #111;                      /* Main text color for paragraphs */
+  --bg-color: #fffff8;                           /* The default background color of slides */
+  --accent-color: #111;                          /* Accent color used for progress bar, special text, etc. */
+  --accent-light-color: #777;                  /* A lighter, secondary accent, often for footnotes or captions */
+  --h1-border-color: #ddd;                       /* Color of the underline for H1 titles */
+  
+  /* Color of the semi-transparent overlay when a slide has a background image */
+  --slide-content-bg-if-image: rgba(255, 255, 248, 0.85);
+
+  /* --- Fonts --- */
+  /* Get more fonts from fonts.google.com */
+  --serif-font: "et-book", Georgia, serif;        /* For classic, book-like text */
+  --sans-font: "Gill Sans", Calibri, sans-serif; /* For modern, clean text */
+  --mono-font: Consolas, Monaco, monospace;      /* For code or technical text */
+
+  /* --- Typography --- */
+  /* THIS IS THE MOST IMPORTANT SETTING. */
+  /* 1.2vw is a good starting point for a 16:9 presentation. */
+  --base-font-size: 1.2vw;
+}
+
+
+/* -------------------------------------------------------------------
+   [2] GENERAL BODY & ELEMENT STYLES
+   ------------------------------------------------------------------- */
+
+body {
+  font-family: var(--serif-font);
+  color: var(--main-text-color);
+  background-color: var(--bg-color);
+}
+
+.slide-header {
+  font-family: var(--sans-font);
+  font-size: 0.9rem;
+  color: var(--accent-color);
+}
+
+/* -------------------------------------------------------------------
+   [3] CORE TYPOGRAPHY - Define the look of your text
+   ------------------------------------------------------------------- */
+
+.slide-content h1, 
+.slide-content h2, 
+.slide-content h3, 
+.slide-content h4 {
+  font-family: var(--serif-font); /* Try changing to --sans-font */
+  font-weight: 400;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  color: var(--main-text-color);
+  /* You can add transforms for a wilder style, e.g., transform: rotate(-1deg); */
+}
+
+.slide-content h1 { 
+  font-size: 3rem; 
+  border-bottom: 1px solid var(--h1-border-color); 
+  padding-bottom: 0.5rem; 
+  text-align: center; 
+}
+
+.slide-content h2 { 
+  font-size: 2.5rem; 
+  margin-top: 1.5rem; 
+  /* Example: Add a background to H2s */
+  /* background: var(--accent-color); */
+  /* color: var(--bg-color); */
+  /* display: inline-block; */
+  /* padding: 0.5rem 1rem; */
+}
+
+.slide-content p { 
+  font-size: 1.4rem; 
+  line-height: 1.6; 
+  margin-bottom: 1.4rem; 
+  max-width: 50ch; /* Limit paragraph width for readability */
+}
+
+
+/* -------------------------------------------------------------------
+   [4] DIRECTIVE-SPECIFIC STYLES - Customize each content type
+   ------------------------------------------------------------------- */
+
+/* --- Large, Small, and Tiny Text --- */
+.slide-content .large { 
+  font-size: 1.5em; /* 1.5 times the size of standard <p> text */
+  text-align: center;
+}
+.slide-content .large p {
+   font-size: 1em; /* Inherit the size from the .large container */
+}
+
+
+.slide-content .small { 
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin-bottom: 1.1rem;
+}
+.slide-content .small p { 
+  font-size: 1em; /* Inherit from .small container */
+}
+
+.slide-content .tiny { 
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--accent-light-color);
+  margin-bottom: 0.8rem;
+}
+.slide-content .tiny p { 
+  font-size: 1em; /* Inherit from .tiny container */
+}
+
+/* --- Notes Directive --- */
+/* The core CSS handles positioning, this file handles the look. */
+.slide-content .notes { 
+  position: absolute; 
+  bottom: 3rem; 
+  font-family: var(--sans-font);
+  left: 6rem;
+  right: 6rem;
+  font-size: 1.1rem;
+  color: #d00;
+  font-weight: 400;
+  color: var(--accent-color);
+  text-transform: uppercase;
+}
+.slide-content .notes p {
+  font-size: 1em; /* Inherit from .notes container */
+  margin: 0;
+}
+
+
+/* --- Image & Caption --- */
+.slide-content .caption { 
+  font-size: 1rem; 
+  font-style: italic; 
+  color: var(--accent-light-color); 
+}
+/* You could add borders or shadows to images here */
+/* .slide-content .img-container img {
+  border: 5px solid black;
+  box-shadow: 10px 10px 0px var(--accent-color);
+} */
+
+
+/* --- Tables --- */
+.slide-content table { 
+  border-collapse: collapse; 
+  margin: 1rem auto; 
+  font-size: 1.1rem; 
+  /* For a deconstructed look, try: */
+  /* border-collapse: separate; border-spacing: 4px; transform: rotate(-1deg); */
+}
+
+.slide-content th, 
+.slide-content td { 
+  border: 1px solid var(--h1-border-color); 
+  padding: 0.5em 0.8em; 
+  text-align: left; 
+}
+
+.slide-content th { 
+  font-family: var(--sans-font);
+  font-weight: bold; 
+  background-color: color-mix(in srgb, var(--bg-color) 95%, var(--main-text-color) 5%); 
+}
+
+.slide-content tbody tr:nth-child(even) td {
+  /* Example: Zebra striping for table rows */
+  /* background-color: color-mix(in srgb, var(--bg-color) 98%, var(--main-text-color) 2%); */
+}

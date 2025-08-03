@@ -1,0 +1,74 @@
+/* academic-light.css */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700&family=Source+Serif+4:opsz,wght@8..30,400;8..30,600&display=swap');
+
+:root {
+  --main-text-color: #333d42;
+  --bg-color: #fbfbfb;
+  --accent-color: #005f73; /* Muted Teal/Blue */
+  --accent-light-color: #586f7c;
+  --h1-border-color: #e0e0e0;
+  --slide-content-bg-if-image: rgba(251, 251, 251, 0.92);
+
+  --serif-font: "Source Serif 4", Georgia, serif;
+  --sans-font: "Roboto Slab", "Helvetica Neue", sans-serif;
+  --mono-font: "Courier New", monospace;
+  --base-font-size: 1.2vw;
+}
+
+body { font-family: var(--serif-font); background: var(--bg-color); color: var(--main-text-color); }
+
+.slide-header { font-family: var(--serif-font); font-size: 0.9rem; font-style: italic; color: var(--accent-light-color); }
+
+.slide-content h1 {
+  font-family: var(--sans-font);
+  font-weight: 700;
+  font-size: 3rem;
+  line-height: 1.2;
+  color: var(--accent-color);
+  text-align: center;
+  border-bottom: 1px solid var(--h1-border-color);
+  padding-bottom: 1rem;
+}
+
+.slide-content h2 { font-size: 2rem; color: var(--main-text-color); font-family: var(--sans-font); }
+
+.slide-content p { font-size: 1.4rem; line-height: 1.8; max-width: 50ch; }
+
+/* --- DIRECTIVE-SPECIFIC STYLES --- */
+
+.slide-content .large { text-align: center; }
+.slide-content .large p {
+  font-family: var(--sans-font);
+  font-size: 2.5rem;
+  color: var(--main-text-color);
+  line-height: 1.3;
+}
+
+.slide-content .small { font-size: 1.1rem; }
+.slide-content .small p { font-size: 1em; }
+
+.slide-content .tiny { font-size: 0.9rem; color: var(--accent-light-color); }
+.slide-content .tiny p { font-size: 1em; }
+
+.slide-content .notes {
+  position: absolute; bottom: 1.5rem; left: 4rem; right: 4rem;
+  font-family: var(--serif-font);
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--accent-color);
+  text-align: center;
+  border-top: 1px dotted var(--h1-border-color);
+  padding-top: 1rem;
+}
+.slide-content .notes p { font-size: 1em; margin: 0; }
+
+.slide-content table { border-collapse: collapse; margin: 1rem auto; font-size: 1.1rem; }
+.slide-content th, .slide-content td { border: 1px solid var(--h1-border-color); padding: 0.5em 0.8em; text-align: left; }
+.slide-content th {
+  font-family: var(--sans-font);
+  font-weight: 700;
+  background-color: color-mix(in srgb, var(--bg-color) 95%, var(--main-text-color) 5%);
+}
+.slide-content tbody tr:nth-child(even) td { background-color: color-mix(in srgb, var(--bg-color) 98%, var(--main-text-color) 2%); }
+
+.slide-content .caption { font-size: 1rem; font-style: italic; color: var(--accent-light-color); }

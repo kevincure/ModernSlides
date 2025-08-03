@@ -1,0 +1,98 @@
+/* david-carson.css - David Carson inspired 90s deconstructed design */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:wght@400;700&display=swap');
+
+:root {
+  --main-text-color: #000;
+  --bg-color: #f5f5f0;
+  --accent-color: #ff0066;
+  --accent-light-color: #666;
+  --serif-font: 'Courier Prime', 'Courier New', monospace;
+  --sans-font: 'Bebas Neue', Impact, sans-serif;
+  --mono-font: 'Courier Prime', monospace;
+  --base-font-size: 1.25vw;
+  --h1-border-color: transparent;
+  --slide-content-bg-if-image: rgba(245, 245, 240, 0.85);
+}
+
+/* Chaotic typography */
+.slide-content h1 { 
+  font-family: var(--sans-font); 
+  font-size: 6rem; 
+  transform: rotate(-2deg);
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  color: var(--accent-color);
+  text-shadow: 3px 3px 0 #000;
+  margin-left: -2rem;
+}
+.slide-content h2 { 
+  font-family: var(--serif-font); 
+  font-weight: 700; 
+  transform: rotate(1deg);
+  background: #000;
+  color: #fff;
+  display: inline-block;
+  padding: 0.5rem 1rem;
+}
+.slide-content p { 
+  font-family: var(--serif-font); 
+  font-size: 1.4rem; 
+  line-height: 1.6;
+  max-width: 50ch;
+}
+.slide-content .large { font-size: 4rem; }
+.slide-content .large p { 
+  font-family: var(--sans-font); 
+  font-size: 4rem;
+  transform: skewX(-5deg);
+  line-height: 0.9;
+}
+
+/* SmallText directive */
+.slide-content .small { font-size: 1.1rem; }
+.slide-content .small p { font-size: 1.1rem; letter-spacing: 0.2em; }
+
+/* TinyText directive */
+.slide-content .tiny { font-size: 0.8rem; }
+.slide-content .tiny p { 
+  font-size: 0.8rem; 
+  text-transform: uppercase; 
+  letter-spacing: 0.3em;
+  opacity: 0.7;
+}
+
+/* Notes directive */
+.slide-content .notes { 
+  position: absolute; 
+  bottom: 3rem; 
+  font-family: var(--sans-font);
+  left: 6rem;
+  right: 6rem;
+  font-size: 1.1rem;
+  color: #d00;
+  font-weight: 400;
+  color: var(--accent-color);
+  text-transform: uppercase;
+}
+.slide-content .notes p { font-size: 1.5rem; margin: 0; }
+
+/* Deconstructed tables */
+.slide-content table { border-collapse: separate; border-spacing: 4px; transform: rotate(-1deg); }
+.slide-content th { 
+  background: var(--accent-color); 
+  color: #fff; 
+  font-family: var(--sans-font);
+  text-transform: uppercase;
+  transform: skewX(-10deg);
+}
+.slide-content td { 
+  background: #fff; 
+  border: 2px solid #000;
+  font-weight: 700;
+}
+.slide-content tbody tr:nth-child(even) td { background: #000; color: #fff; }
+
+/* Random positioning effects */
+.slide-content .img-container { transform: rotate(1deg); }
+.slide-content .columns { gap: 3rem; }
+.slide-content .columns .column:nth-child(2) { margin-top: 2rem; }
