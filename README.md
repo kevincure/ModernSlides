@@ -10,6 +10,7 @@ Each slide is defined by directives in a Markdown type format. A directive start
 Press 'e' to toggle between edit and present, 'f' to go to full screen mode, and 'p' to open a presenter mode window. Left/right scrolls through slides.
 
 --- METADATA (place at the top on a slide) ---
+
 Hidden: true (hides the slide, can be set with eye open/closed button)
 Background: image-url.jpg (image made light so you can read text on top)
 FullScreenImage: image-url.jpg (image made full screen, expanded to fit shortest dimension)
@@ -17,6 +18,7 @@ Header: Small text in corner
 
 
 --- CONTENT DIRECTIVES ---
+
 Title: The Main Title of The Slide 
   Supports $LaTeX$ and
   manual line breaks.
@@ -42,30 +44,27 @@ Image: image-url.jpg (or a weblink to jpg/png/gif), An optional caption for imag
 
 FullScreenWebsite: https://example.com (operable websites embedded in slides)
 
-```Columns:
+Columns:
   Left column, with text, paragraphs, $math$
-  
-
-  This is the left column. Can contain any
-  amount of text, paragraphs, and $math$.
-  ---
+  &#45;&#45;&#45;
   This is the right column. You can put an
   image here using the 'image, caption' syntax:
   test.jpg, A caption for the image in the column.
   ...or you can just have more text.
-  ---
+  &#45;&#45;&#45;
   Third column
 
 Table:
   Header 1 & Header 2 & Header 3
-  ---
+  &#45;&#45;&#45;
   Cell 1.1 & Cell 1.2 & Cell 1.3
-  ---
+  &#45;&#45;&#45;
   Cell 2.1 & Cell 2.2 & $math$ is fine
 
 *some text* is italic, **some text** is bold, ***some text*** is bold italic.
 
---- NOTES ---```
+--- NOTES ---
+
 - Download Raw Deck and Load Deck give you your slides but you will still need any images referred to in the same folder, or else pointed to using a fixed url
 - If no directive is given, text defaults to `Text:`.
 - In `Columns` and `Table`, use ```---``` on its own line to separate sections/rows.
