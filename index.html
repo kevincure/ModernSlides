@@ -712,7 +712,7 @@ body {
     <div class="modal-box">
       <button id="close-help">Close</button>
       <h3>Modern Slides | Kevin Bryan | July 2025</h3>
-      <p>This is a modern, very computationally light, slideshow maker. It completely separates style rules from content. You can edit it completely online as long as your images are urls. Otherwise, download the small zip from kevinbryanecon.com/tools.html and create your slides locally.</p> 
+      <p>This is a modern, very computationally light, slideshow maker. It completely separates style rules from content. You can edit it completely online or download the code from <a href="https://github.com/kevincure/ModernSlides">github.com/kevincure/ModernSlides</a> or find more similar tools at <a href="https://kevinbryanecon.com/tools.html">kevinbryanecon.com/tools.html</a> and create your slides locally in your browser. Once your slides are set, click download. You can upload that text file to anywhere you like, then open it with a url query of the form ?xml=...: e.g., <a href="https://kevinbryanecon.com/ModernSlides/?xml=http://www.inastrangetown.com/testslides.txt">this one here</a></p> 
       <p>Each slide is defined by directives in a Markdown type format. A directive starts a line, ends with a colon `:`, and its value is all text that follows until the next directive.</p>
       <p>Press 'e' to toggle between edit and present, 'f' to go to full screen mode, and 'p' to open a presenter mode window.
       <pre>
@@ -832,6 +832,12 @@ Notes: And notes for later
   <slide>
     <raw><![CDATA[
 FullScreenImage: https://files.worldwildlife.org/wwfcmsprod/images/Mountain_Gorilla_Silverback_WW22557/hero_full/cg47pknak_Mountain_Gorilla_Silverback_WW22557.jpg
+    ]]></raw>
+  </slide>
+  <slide>
+    <raw><![CDATA[
+FullScreenWebsite: https://www.kevinbryanecon.com
+SpeakerNote: Press p to create a presenter mode window and you'll see your note
     ]]></raw>
   </slide>
   <slide>
@@ -1015,6 +1021,29 @@ BigText: And some text.
       await refreshThumbnails();
       showSlide(Math.max(0, state.currentAbsoluteSlideIndex - 1));
     };
+
+// Add touch navigation for mobile
+$("slideshow").addEventListener('click', (e) => {
+  // Don't navigate if in edit mode or clicking on interactive elements
+  if (state.editMode) return;
+  
+  // Check if we clicked on an iframe or inside an iframe wrapper
+  if (e.target.closest('iframe') || e.target.closest('[style*="z-index: 100"]')) return;
+  
+  // Navigate based on which side was clicked
+  const clickX = e.clientX;
+  const screenWidth = window.innerWidth;
+  
+  if (clickX < screenWidth / 2) {
+    // Left side - go to previous slide
+    const prevIndex = state.currentVisibleSlideIndex - 1;
+    showSlide(prevIndex, true);
+  } else {
+    // Right side - go to next slide
+    const nextIndex = state.currentVisibleSlideIndex + 1;
+    showSlide(nextIndex, true);
+  }
+});
 
 $("toggle-hide-btn").onclick = () => {
   const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
