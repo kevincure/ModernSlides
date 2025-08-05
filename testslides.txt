@@ -1,0 +1,56 @@
+# METADATA:
+Title: New Presentation
+Theme: david-carson
+ShowSlideCount: true
+LogoUrl: 
+
+# Slide(1):
+
+Title: Modern Slides
+Header: Header text here
+BigText: This is a slideshow.
+  Press 'E' to edit, 'F' fullscreen, 'Esc' go back
+Text: Use arrow keys to navigate.
+SmallText: smaller
+TinyText: tiny
+
+# Slide(2):
+
+Text: This slide shows a table
+Table:
+  Header 1 & Header 2
+  ---
+  Value 1 & $\sum_{i=0}^n i^2$
+  ---
+  Value 2 & Another Value
+Notes: And notes for later
+
+# Slide(3):
+
+Hidden: true
+FullScreenImage: https://files.worldwildlife.org/wwfcmsprod/images/Mountain_Gorilla_Silverback_WW22557/hero_full/cg47pknak_Mountain_Gorilla_Silverback_WW22557.jpg
+
+# Slide(4):
+
+Title: Raw Text Demo Double After Gorilla
+Text: This slide *demonstrates* various **features**. For example: $e = mc^2$.
+Columns:
+  Column 1
+  ---
+  This is the ***left*** column. You can have text and math like $\alpha + \beta$.
+  A blank line creates a new paragraph.
+
+  Like this.
+  ---
+  And column 3 here.
+
+# Slide(5):
+
+Image: https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExc3p5N2UwOGppdTc4NXgzMWN1czI5eTRicGhtZzQ3ZWJ3dXUxNXF1aiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/pKf7PlSjbtJN6/giphy.gif
+Text: GIFs work too
+
+# Slide(6):
+
+Background: zuck3.jpg
+Title: Zuck
+BigText: And some text.
