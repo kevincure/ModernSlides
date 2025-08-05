@@ -9,14 +9,14 @@ Each slide is defined by directives in a Markdown type format. A directive start
 
 Press 'e' to toggle between edit and present, 'f' to go to full screen mode, and 'p' to open a presenter mode window. Left/right scrolls through slides.
 
-# --- METADATA (place at the top on a slide) ---
+--- METADATA (place at the top on a slide) ---
 Hidden: true (hides the slide, can be set with eye open/closed button)
 Background: image-url.jpg (image made light so you can read text on top)
 FullScreenImage: image-url.jpg (image made full screen, expanded to fit shortest dimension)
 Header: Small text in corner
 
 
-# --- CONTENT DIRECTIVES ---
+--- CONTENT DIRECTIVES ---
 Title: The Main Title of The Slide 
   Supports $LaTeX$ and
   manual line breaks.
@@ -42,7 +42,10 @@ Image: image-url.jpg (or a weblink to jpg/png/gif), An optional caption for imag
 
 FullScreenWebsite: https://example.com (operable websites embedded in slides)
 
-Columns:
+```Columns:
+  Left column, with text, paragraphs, $math$
+  
+
   This is the left column. Can contain any
   amount of text, paragraphs, and $math$.
   ---
@@ -62,10 +65,10 @@ Table:
 
 *some text* is italic, **some text** is bold, ***some text*** is bold italic.
 
---- NOTES ---
+--- NOTES ---```
 - Download Raw Deck and Load Deck give you your slides but you will still need any images referred to in the same folder, or else pointed to using a fixed url
 - If no directive is given, text defaults to `Text:`.
-- In `Columns` and `Table`, use `---` on its own line to separate sections/rows.
+- In `Columns` and `Table`, use ```---``` on its own line to separate sections/rows.
 - You cannot nest directives (e.g., a Table inside a Column).
 - Notes appear at the bottom in a special color and shift other content up.
 - 7 different styles are given, but you can create your own also. The David Carson 90s look is the fun one!
