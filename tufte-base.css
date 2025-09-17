@@ -22,31 +22,30 @@ body { font-family: var(--serif-font); background: var(--bg-color); color: var(-
 .slide-content h1 {
   font-family: var(--serif-font);
   font-weight: 600;
-  font-size: 2.8rem;
+  font-size: 7rem;
   line-height: 1.2;
   text-align: center;
   border-bottom: 1px solid var(--h1-border-color);
   padding-bottom: 0.5rem;
 }
 
-.slide-content p { font-size: 1.5rem; line-height: 1.6; max-width: 45ch; }
+.slide-content p { font-size: 3rem; line-height: 1.6; max-width: 45ch; }
 
 /* --- DIRECTIVE-SPECIFIC STYLES --- */
 
 .slide-content .large p {
   font-family: var(--serif-font);
-  font-size: 2rem;
+  font-size: 5rem;
   text-align: center;
-  font-style: italic;
   max-width: 30ch;
   margin: 1rem auto;
 }
 
-.slide-content .small { font-size: 1.2rem; }
-.slide-content .small p { font-size: 1em; }
+.slide-content .small { font-size: 2rem; }
+.slide-content .small p { font-size: 2rem; }
 
 .slide-content .tiny { font-size: 1rem; }
-.slide-content .tiny p { font-size: 1em; }
+.slide-content .tiny p { font-size: 1rem; }
 
 /* Sidenote style for Notes */
 .slide-content .notes {
