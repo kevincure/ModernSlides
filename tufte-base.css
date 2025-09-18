@@ -29,7 +29,7 @@ body { font-family: var(--serif-font); background: var(--bg-color); color: var(-
   padding-bottom: 0.5rem;
 }
 
-.slide-content p { font-size: 3rem; line-height: 1.6; max-width: 45ch; }
+.slide-content p { font-size: 3rem; line-height: 1.6; max-width: 70rem; }
 
 /* --- DIRECTIVE-SPECIFIC STYLES --- */
 
@@ -37,7 +37,7 @@ body { font-family: var(--serif-font); background: var(--bg-color); color: var(-
   font-family: var(--serif-font);
   font-size: 5rem;
   text-align: center;
-  max-width: 30ch;
+  max-width: 70rem;
   margin: 1rem auto;
 }
 
@@ -68,4 +68,4 @@ body { font-family: var(--serif-font); background: var(--bg-color); color: var(-
 .slide-content th { font-family: var(--sans-font); font-weight: 700; border-bottom: 1px solid var(--accent-color); }
 .slide-content tbody tr:nth-child(even) td { background: transparent; }
 
-.slide-content .caption { font-size: 1rem; font-style: italic; color: var(--accent-light-color); max-width: 45ch; margin: 0 auto; }
+.slide-content .caption { font-size: 1rem; font-style: italic; color: var(--accent-light-color); max-width: 70rem; margin: 0 auto; }

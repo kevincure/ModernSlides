@@ -1,0 +1,170 @@
+/* japanese-minimal.css - Inspired by Japanese minimalist design and academic presentations */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;700&display=swap');
+
+:root {
+  --main-text-color: #2b2b2b;
+  --bg-color: #fafaf8;
+  --accent-color: #c41230;  /* Japanese red */
+  --accent-light-color: #6b6b6b;
+  --h1-border-color: #e5e5e5;
+  --slide-content-bg-if-image: rgba(250, 250, 248, 0.88);
+
+  --serif-font: "Noto Serif", "Minion Pro", serif;
+  --sans-font: "DM Sans", "Helvetica Neue", sans-serif;
+  --mono-font: "SF Mono", "Monaco", monospace;
+  --base-font-size: 1.1vw;
+}
+
+body { 
+  font-family: var(--serif-font); 
+  background: var(--bg-color); 
+  color: var(--main-text-color); 
+}
+
+.slide-header { 
+  font-family: var(--sans-font); 
+  font-size: 0.9rem; 
+  font-weight: 500;
+  color: var(--accent-light-color);
+  letter-spacing: 0.2em;
+}
+
+.slide-content h1 {
+  font-family: var(--serif-font);
+  font-weight: 400;
+  font-size: 8rem;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--main-text-color);
+  border: none;
+  padding-bottom: 2rem;
+  margin-bottom: 3rem;
+  position: relative;
+}
+
+/* Minimal accent mark instead of full border */
+.slide-content h1:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4rem;
+  height: 2px;
+  background: var(--accent-color);
+}
+
+.slide-content p { 
+  font-size: 3rem; 
+  line-height: 1.7;
+  max-width: 62rem;
+  text-align: left;
+  font-weight: 400;
+}
+
+/* --- DIRECTIVE-SPECIFIC STYLES --- */
+
+.slide-content .large { text-align: center; }
+.slide-content .large p {
+  font-family: var(--serif-font);
+  font-size: 5rem;
+  font-weight: 400;
+  max-width: 65rem;
+  margin: 2rem auto;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.slide-content .small { }
+.slide-content .small p { 
+  font-size: 2.2rem; 
+  max-width: 62rem;
+  color: var(--accent-light-color);
+}
+
+.slide-content .tiny { }
+.slide-content .tiny p { 
+  font-size: 1.2rem; 
+  max-width: 62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-family: var(--sans-font);
+  font-weight: 500;
+  color: var(--accent-light-color);
+}
+
+/* Vertical side notes - Japanese style */
+.slide-content .notes {
+  position: absolute; 
+  top: 50%; 
+  right: 2rem;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: var(--serif-font);
+  font-size: 1.4rem;
+  line-height: 1.8;
+  color: var(--accent-color);
+  max-height: 50vh;
+}
+.slide-content .notes p { 
+  font-size: 1.4rem; 
+  margin: 0;
+}
+
+/* Fallback for better readability */
+@supports not (writing-mode: vertical-rl) {
+  .slide-content .notes {
+    writing-mode: initial;
+    text-orientation: initial;
+    position: absolute;
+    bottom: 2rem;
+    left: 4rem;
+    right: 4rem;
+    transform: none;
+    max-height: auto;
+    text-align: center;
+    border-top: 1px solid var(--h1-border-color);
+    padding-top: 1rem;
+  }
+}
+
+.slide-content table {
+  border-collapse: collapse;
+  font-size: 2rem;
+  margin: 2rem auto;
+  border: none;
+}
+.slide-content th, .slide-content td { 
+  border: none;
+  border-bottom: 1px solid var(--h1-border-color);
+  padding: 1em 1.5em; 
+  text-align: left; 
+}
+.slide-content th { 
+  font-family: var(--sans-font); 
+  font-weight: 700;
+  font-size: 1.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--accent-color);
+}
+.slide-content tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.slide-content .caption { 
+  font-size: 1.6rem; 
+  color: var(--accent-light-color); 
+  max-width: 62rem; 
+  margin: 1rem auto;
+  text-align: center;
+  font-family: var(--sans-font);
+  font-weight: 400;
+}
+
+/* Clean column layout with more spacing */
+.slide-content .columns { 
+  gap: 4rem; 
+  align-items: flex-start;
+}

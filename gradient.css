@@ -1,18 +1,18 @@
-/* gradient.css */
+/* gradient.css - Rewritten with consistent rem sizing */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
 :root {
   --main-text-color: #ffffff;
-  --bg-color: #121212; /* Fallback */
-  --accent-color: #00f5d4; /* Bright Cyan */
-  --accent-light-color: #adb5bd; /* Light gray for secondary text */
+  --bg-color: #121212;
+  --accent-color: #00f5d4;
+  --accent-light-color: #adb5bd;
   --h1-border-color: #495057;
   --slide-content-bg-if-image: rgba(18, 18, 18, 0.85);
 
   --serif-font: "Poppins", sans-serif;
   --sans-font: "Poppins", sans-serif;
   --mono-font: "Courier New", monospace;
-  --base-font-size: 1.3vw;
+  --base-font-size: 1.1vw;
 }
 
 body {
@@ -21,16 +21,14 @@ body {
   color: var(--main-text-color);
 }
 
-/* Override core slideshow background */
 #slideshow { background: linear-gradient(45deg, #22223b, #4a4e69); }
 .thumb-iframe body { background: linear-gradient(45deg, #22223b, #4a4e69); }
 
-
-.slide-header { text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-light-color); }
+.slide-header { text-transform: uppercase; letter-spacing: 0.1em; font-size: 1rem; color: var(--accent-light-color); }
 
 .slide-content h1 {
   font-weight: 700;
-  font-size: 3.8rem;
+  font-size: 7rem;
   line-height: 1.2;
   color: var(--main-text-color);
   text-shadow: 0 0 15px rgba(0, 245, 212, 0.3);
@@ -39,22 +37,25 @@ body {
   padding-bottom: 1rem;
 }
 
-.slide-content p { font-size: 1.5rem; line-height: 1.7; max-width: 50ch; }
+.slide-content p { font-size: 2.8rem; line-height: 1.7; max-width: 60rem; }
 
 /* --- DIRECTIVE-SPECIFIC STYLES --- */
 
+.slide-content .large { text-align: center; }
 .slide-content .large p {
-  font-size: 3rem;
+  font-size: 5.5rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--accent-color);
+  max-width: 65rem;
+  margin: 1rem auto;
 }
 
-.slide-content .small { font-size: 1.1rem; color: var(--accent-light-color); }
-.slide-content .small p { font-size: 1em; }
+.slide-content .small { font-size: 2rem; color: var(--accent-light-color); }
+.slide-content .small p { font-size: 2rem; max-width: 60rem; }
 
-.slide-content .tiny { font-size: 0.9rem; color: var(--accent-light-color); opacity: 0.8; }
-.slide-content .tiny p { font-size: 1em; }
+.slide-content .tiny { font-size: 1.2rem; color: var(--accent-light-color); opacity: 0.8; }
+.slide-content .tiny p { font-size: 1.2rem; max-width: 60rem; }
 
 .slide-content .notes {
   position: absolute; bottom: 3rem; left: 4rem; right: 4rem;
@@ -62,12 +63,12 @@ body {
   color: #000;
   text-align: center;
   padding: 0.5rem;
-  font-size: 1.1rem;
+  font-size: 2rem;
   font-weight: 700;
 }
-.slide-content .notes p { font-size: 1em; margin: 0; }
+.slide-content .notes p { font-size: 2rem; margin: 0; }
 
-.slide-content table { border-collapse: collapse; font-size: 1.1rem; }
+.slide-content table { border-collapse: collapse; font-size: 2rem; margin: 1.5rem auto; }
 .slide-content th, .slide-content td {
   border: 1px solid var(--h1-border-color);
   padding: 0.8em;
@@ -76,4 +77,4 @@ body {
 .slide-content th { color: var(--accent-color); font-weight: 700; }
 .slide-content tbody tr:nth-child(even) td { background: rgba(0,0,0,0.3); }
 
-.slide-content .caption { font-size: 1rem; font-style: normal; color: var(--accent-light-color); }
+.slide-content .caption { font-size: 1.5rem; font-style: normal; color: var(--accent-light-color); max-width: 60rem; margin: 0 auto; }

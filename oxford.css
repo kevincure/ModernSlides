@@ -1,0 +1,135 @@
+/* oxford-classical.css - Traditional Oxford academic presentation style */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;700&display=swap');
+
+:root {
+  --main-text-color: #1a1a1a;
+  --bg-color: #fcfcfa;
+  --accent-color: #002147;  /* Oxford Blue */
+  --accent-light-color: #708090;
+  --h1-border-color: #d4d4d4;
+  --slide-content-bg-if-image: rgba(252, 252, 250, 0.94);
+
+  --serif-font: "EB Garamond", "Times New Roman", serif;
+  --sans-font: "Montserrat", "Arial", sans-serif;
+  --mono-font: "Monaco", "Consolas", monospace;
+  --base-font-size: 1.1vw;
+}
+
+body { 
+  font-family: var(--serif-font); 
+  background: var(--bg-color); 
+  color: var(--main-text-color); 
+}
+
+.slide-header { 
+  font-family: var(--serif-font); 
+  font-size: 1rem; 
+  font-style: italic;
+  color: var(--accent-light-color); 
+}
+
+.slide-content h1 {
+  font-family: var(--serif-font);
+  font-weight: 600;
+  font-size: 5.5rem;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--accent-color);
+  border-bottom: 2px double var(--accent-color);
+  padding-bottom: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.slide-content p { 
+  font-size: 2.6rem; 
+  line-height: 1.65;
+  max-width: 68rem;
+  text-align: left;
+}
+
+/* --- DIRECTIVE-SPECIFIC STYLES --- */
+
+.slide-content .large { text-align: center; }
+.slide-content .large p {
+  font-family: var(--serif-font);
+  font-size: 4.2rem;
+  font-weight: 600;
+  max-width: 70rem;
+  margin: 1.5rem auto;
+  line-height: 1.35;
+  color: var(--accent-color);
+}
+
+.slide-content .small { }
+.slide-content .small p { 
+  font-size: 2rem; 
+  max-width: 68rem;
+  line-height: 1.6;
+}
+
+.slide-content .tiny { }
+.slide-content .tiny p { 
+  font-size: 1.3rem; 
+  max-width: 68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-light-color);
+}
+
+/* Footnote-style notes */
+.slide-content .notes {
+  position: absolute; 
+  bottom: 2rem; 
+  left: 4rem; 
+  right: 4rem;
+  font-family: var(--serif-font);
+  font-size: 1.4rem;
+  line-height: 1.5;
+  color: var(--accent-light-color);
+  border-top: 1px solid var(--h1-border-color);
+  padding-top: 1rem;
+  font-style: italic;
+}
+.slide-content .notes p { font-size: 1.4rem; margin: 0.5em 0; }
+
+.slide-content table {
+  border-collapse: collapse;
+  font-size: 2rem;
+  margin: 2rem auto;
+  width: 85%;
+}
+.slide-content th, .slide-content td { 
+  border: 1px solid var(--h1-border-color); 
+  padding: 0.7em 1em; 
+  text-align: left; 
+}
+.slide-content th { 
+  font-family: var(--sans-font); 
+  font-weight: 700;
+  background: var(--accent-color);
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.7rem;
+}
+.slide-content tbody tr:nth-child(even) td { 
+  background-color: rgba(0, 33, 71, 0.03); 
+}
+
+.slide-content .caption { 
+  font-size: 1.5rem; 
+  font-style: italic; 
+  color: var(--accent-light-color); 
+  max-width: 68rem; 
+  margin: 0.8rem auto;
+  text-align: center;
+}
+
+/* Scholarly quotation style */
+.slide-content blockquote {
+  margin: 2rem 3rem;
+  font-style: italic;
+  color: var(--accent-color);
+  border-left: 3px solid var(--accent-color);
+  padding-left: 2rem;
+}

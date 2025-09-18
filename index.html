@@ -514,6 +514,9 @@ body {
   height: 100%;
 }
 
+/* Hide injected print notes on screen */
+.print-notes-content { display: none; }
+
 
 @media print {
   /* Page setup */
@@ -651,6 +654,15 @@ body {
     margin: auto !important;
   }
 
+.slide-flow-content > h1,
+.slide-flow-content > .large,
+.slide-flow-content > .small,
+.slide-flow-content > .tiny,
+.slide-flow-content > .columns,
+.slide-flow-content > p {
+  width: 100%;
+}
+
   /* Ensure all colors and backgrounds print */
   * {
     -webkit-print-color-adjust: exact !important;
@@ -661,6 +673,63 @@ body {
   .slide.is-fullscreen-image-slide .slide-content::before {
     background: transparent !important;
   }
+
+/* When using the "Print with Notes" button */
+body.print-with-notes .slide {
+  /* move the slide to the top instead of centered */
+  align-items: flex-start !important;
+  justify-content: center !important;
+  padding: 0 !important; /* remove letterbox padding that centers vertically */
+}
+
+/* Kill the high-z pseudo element that otherwise sits above everything */
+body.print-with-notes .slide::before { 
+  content: none !important; 
+}
+
+/* 16:9 box: limit to the 16:9 height so the area below is free for notes */
+body.print-with-notes .slide-content {
+  height: 56.25vw !important;     /* 9/16 of page width */
+  max-height: 56.25vw !important; /* enforce 16:9 height */
+}
+
+/* Show and place PrintNote at the bottom of the page */
+body.print-with-notes .print-notes-content {
+  display: block !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important; 
+  top: 56.25vw !important;         
+  padding: 1rem 1vw !important;         /* horizontal margins without gaps */
+  background: #fff !important;           /* cover Background/FullScreenImage */
+  font-size: 2rem !important;
+  line-height: 1.4 !important;
+  z-index: 2147483647 !important;
+  color: #cc0000 !important;       /* match your presenter style */
+}
+
+body.print-with-notes .slide iframe {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+body.print-with-notes .slide::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  top: 56.25vw !important;      /* matches the 16:9 content height */
+  background: #fff !important;  /* opaque bar */
+  z-index: 2147483646 !important; /* under .print-notes-content, above bg */
+}
+
+/* Optional: simple auto-shrink if many paragraphs (same as in presenter CSS) */
+body.print-with-notes .print-notes-content:has(p:nth-child(2)) { font-size: 1.1rem !important; }
+body.print-with-notes .print-notes-content:has(p:nth-child(3)) { font-size: 0.9rem !important; }
+body.print-with-notes .print-notes-content:has(p:nth-child(5)) { font-size: 0.8rem !important; }
+
 }
 </style>
 
@@ -702,6 +771,7 @@ body {
         <button id="new-presentation-btn"   title="New Slideshow">  <i class="fa-solid fa-file-circle-plus"></i></button>
         <button id="load-btn"  title="Load Slideshow"> <i class="fa-solid fa-folder-open"></i></button>
         <button id="download-txt-btn"        title="Download Raw Presentation">       <i class="fa-solid fa-download"></i></button>
+        <button id="print-notes-btn" title="Print with Notes"><i class="fa-solid fa-print"></i></button>
         <button id="save-btn" class="primary-action" title="Presentation View"><i class="fa-solid fa-bullhorn"></i></button> 
       </div>
     </div>
@@ -712,7 +782,7 @@ body {
     <div class="modal-box">
       <button id="close-help">Close</button>
       <h3>Modern Slides | Kevin Bryan | July 2025</h3>
-      <p>This is a modern, very computationally light, slideshow maker. It completely separates style rules from content. You can edit it completely online or download the code from <a href="https://github.com/kevincure/ModernSlides">github.com/kevincure/ModernSlides</a> or find more similar tools at <a href="https://kevinbryanecon.com/tools.html">kevinbryanecon.com/tools.html</a> and create your slides locally in your browser. Once your slides are set, click download. You can upload that text file to anywhere you like, then open it with a url query of the form ?xml=...: e.g., <a href="https://kevinbryanecon.com/ModernSlides/?xml=http://www.inastrangetown.com/testslides.txt">this one here</a></p> 
+      <p>This is a modern, very computationally light, slideshow maker. It completely separates style rules from content. You can edit it completely online or download the code from <a href="https://github.com/kevincure/ModernSlides">github.com/kevincure/ModernSlides</a> or find more similar tools at <a href="https://kevinbryanecon.com/tools.html">kevinbryanecon.com/tools.html</a> and create your slides locally in your browser. Once your slides are set, click download. You can upload that text file to anywhere you like, then open it with a url query of the form ?xml=...: e.g., <a href="https://kevinbryanecon.com/ModernSlides?xml=Progress2025Class1/Class1Slides.txt">this one here</a></p> 
       <p>Each slide is defined by directives in a Markdown type format. A directive starts a line, ends with a colon `:`, and its value is all text that follows until the next directive.</p>
       <p>Press 'e' to toggle between edit and present, 'f' to go to full screen mode, and 'p' to open a presenter mode window.
       <pre>
@@ -728,8 +798,10 @@ Title: The Main Title of The Slide
   Supports $LaTeX$ and
   manual line breaks.
 
-BigText: For large, prominent text.
-  Also supports line breaks and paragraphs.
+BigText: For large, prominent text.  Within all standard text 
+<<< Text on Left <<<, 
+>>> Text on Right >>>, and 
+||| Text is centered ||| can be used.
 
 Text: For standard body text.
   A blank line between text...
@@ -740,10 +812,14 @@ SmallText: For smaller body text.
 
 TinyText: For footnote-sized text.
 
+Break: 1 (or 2.2 or .7), provides a break of a set size
+
 Notes: For notes at the bottom of the slide.
   These appear in a special position.
 
 SpeakerNote: For notes for yourself in presentation mode
+
+PrintNote: notes about the slide to appear only when printed from the 'print' button in Edit (if you print from the slides, you won't get these)
 
 Image: image-url.jpg (or a weblink to jpg/png/gif), An optional caption for image after the comma
 
@@ -790,14 +866,15 @@ const tufteSlideshowApp = (function() {
                               CONSTANTS
      ═══════════════════════════════════════════════════════════════ */
   
-  const DEFAULT_XML = `<presentation title="New Presentation" showSlideCount="true" theme="minimal">
+  const DEFAULT_XML = `<presentation title="New Presentation" showSlideCount="true" theme="tufte-base">
   <slide>
     <raw><![CDATA[
 Title: Modern Slides
 Header: Header text here
 BigText: This is a slideshow.
-  Press 'E' to edit, 'F' fullscreen, 'Esc' go back
-Text: Use arrow keys to navigate.
+Text: Press 'E' to edit, 'F' fullscreen, 'Esc' go back
+Break: 1.2
+Use arrow keys to navigate.
 SmallText: smaller
 TinyText: tiny
     ]]></raw>
@@ -807,14 +884,14 @@ TinyText: tiny
 Title: Raw Text Demo
 Text: This slide *demonstrates* various **features**. For example: $e = mc^2$.
 Columns:
-  Column 1
+  Left column.
   ---
-  This is the ***left*** column. You can have text and math like $\\alpha + \\beta$.
+  Center column. Math like $\\alpha + \\beta$.
   A blank line creates a new paragraph.
 
   Like this.
   ---
-  And column 3 here.
+  Image: https://upload.wikimedia.org/wikipedia/commons/3/3b/BlkStdSchnauzer2.jpg, And column 3 here.
     ]]></raw>
   </slide>
   <slide>
@@ -826,7 +903,8 @@ Table:
   Value 1 & $\\sum_{i=0}^n i^2$
   ---
   Value 2 & Another Value
-Notes: And notes for later
+Notes: And small notes
+PrintNote: These notes will only appear if you click print from Edit mode; if you print from the slideshow, the print preview will not show these notes.
     ]]></raw>
   </slide>
   <slide>
@@ -850,7 +928,10 @@ Text: GIFs work too
     <raw><![CDATA[
 Background: https://files.worldwildlife.org/wwfcmsprod/images/Mountain_Gorilla_Silverback_WW22557/hero_full/cg47pknak_Mountain_Gorilla_Silverback_WW22557.jpg
 Title: Gorilla
-BigText: And some text.
+Text: And some text.
+<<< Text left justified <<<
+>>> And here's a paragraph of text justified on right >>>
+||| Text centered |||
     ]]></raw>
   </slide>
 </presentation>`;
@@ -858,7 +939,8 @@ BigText: And some text.
   const METADATA_DIRECTIVES = ["Theme", "ShowSlideCount", "LogoUrl"];
   const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header", 
                               "Title", "BigText", "Text", "SmallText", "TinyText", "Notes",
-                              "Image", "Columns", "Table", "FullScreenWebsite", "SpeakerNote"];
+                              "Image", "Columns", "Table", "FullScreenWebsite", "SpeakerNote",
+                              "PrintNote", "Break"];
   const ALL_DIRECTIVES = [...METADATA_DIRECTIVES, ...CONTENT_DIRECTIVES];
   
 /* ═══════════════════════════════════════════════════════════════
@@ -1155,7 +1237,41 @@ $("toggle-hide-btn").onclick = () => {
       }
     };
 
+    $("print-notes-btn").onclick = () => {
 
+      //  Save the current textarea 
+      updateGroundTruth('SAVE');          
+      buildSlidesFromXMLDoc();  
+
+      // Add print notes class to body
+      document.body.classList.add('print-with-notes');
+      
+      // Inject print notes into slides
+      state.slideEls.forEach((slideEl, index) => {
+        const rawText = getRawTextForSlide(index);
+        const { attributes } = parseRawText(rawText);
+        
+        // Remove any existing print notes div
+        const existingNotes = slideEl.querySelector('.print-notes-content');
+        if (existingNotes) existingNotes.remove();
+        
+        if (attributes.printNotes) {
+          const printNotesDiv = document.createElement('div');
+          printNotesDiv.className = 'print-notes-content';
+          printNotesDiv.innerHTML = plainTextToHtml(attributes.printNotes);
+          slideEl.appendChild(printNotesDiv);
+        }
+      });
+      
+      // Trigger print
+      window.print();
+      
+      // Clean up after print
+      setTimeout(() => {
+        document.body.classList.remove('print-with-notes');
+        document.querySelectorAll('.print-notes-content').forEach(el => el.remove());
+      }, 1000);
+    };
 
     $("new-presentation-btn").onclick = () => {
       if (state.hasChanges && !confirm("You have unsaved changes that will be lost unless you download the slides. Continue?")) return;
@@ -1234,7 +1350,7 @@ $("toggle-hide-btn").onclick = () => {
   
   function convertTxtToXML(txtContent, filename) {
     let title = filename.replace(/\.(txt|xml)$/i, '') || "Imported Presentation";
-    let theme = "minimal";
+    let theme = "tufte-base";
     let showSlideCount = "true";
     let logoUrl = "";
     
@@ -1407,6 +1523,54 @@ $("toggle-hide-btn").onclick = () => {
             padding: 10px 15px;
             border-radius: 4px;
           }
+
+/* Print with notes styles */
+.print-notes-content {
+  display: none;
+}
+
+@media print {
+  body.print-with-notes .slide {
+    padding: calc((100vh - 56.25vw) / 4) 0 !important;
+  }
+  
+  body.print-with-notes .slide-content {
+    height: 56.25vw !important;
+    max-height: 60vh !important;
+  }
+  
+  body.print-with-notes .print-notes-content {
+    display: block !important;
+    position: absolute !important;
+    bottom: 5vh !important;
+    left: 10vw !important;
+    right: 10vw !important;
+    color: #cc0000 !important;
+    font-size: 1.2rem !important;
+    line-height: 1.4 !important;
+    max-height: 25vh !important;
+    overflow: hidden !important;
+    font-family: var(--serif-font) !important;
+  }
+  
+  body.print-with-notes .print-notes-content p {
+    margin: 0.5em 0 !important;
+    color: #cc0000 !important;
+  }
+  
+  /* Auto-scale text if too much content */
+  body.print-with-notes .print-notes-content:has(p:nth-child(3)) {
+    font-size: 1rem !important;
+  }
+  
+  body.print-with-notes .print-notes-content:has(p:nth-child(5)) {
+    font-size: 0.9rem !important;
+  }
+  
+  body.print-with-notes .print-notes-content:has(p:nth-child(7)) {
+    font-size: 0.8rem !important;
+  }
+}
         </style>
       </head>
       <body>
@@ -1704,7 +1868,7 @@ async function reorderSlides(fromIndex, toIndex) {
 
     $("show-count").checked = p.getAttribute("showSlideCount") !== "false";
     $("logo-url").value = p.getAttribute("logoUrl") || "";
-    $("theme-selector").value = p.getAttribute("theme") || "minimal";
+    $("theme-selector").value = p.getAttribute("theme") || "tufte-base";
 
     refreshThumbnails();
     loadTextareaForCurrentSlide();
@@ -1725,7 +1889,7 @@ async function reorderSlides(fromIndex, toIndex) {
       thumbsContainer.innerHTML = ''; 
       
       const slideNodes = state.xmlDoc.querySelectorAll("presentation > slide");
-      const theme = $("theme-selector").value || "minimal";
+      const theme = $("theme-selector").value || "tufte-base";
 
       // 3) Rebuild the DOM elements
       for (let i = 0; i < slideNodes.length; i++) {
@@ -1794,7 +1958,7 @@ function buildRawDeck() {
   const p = state.xmlDoc.documentElement;
   let txt = `# METADATA:
 Title: ${p.getAttribute('title')            || ''}
-Theme: ${p.getAttribute('theme')            || 'minimal'}
+Theme: ${p.getAttribute('theme')            || 'tufte-base'}
 ShowSlideCount: ${p.getAttribute('showSlideCount') || 'true'}
 LogoUrl: ${p.getAttribute('logoUrl')        || ''}`;
 
@@ -1826,7 +1990,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       `#thumbs .thumb[data-index="${state.currentAbsoluteSlideIndex}"] iframe`
     );
     if (thumbIframe) {
-      const theme = $("theme-selector").value || 'minimal';
+      const theme = $("theme-selector").value || 'tufte-base';
       thumbIframe.srcdoc = await getThumbnailHTML($("raw-text-editor").value, theme);
     }
   }
@@ -2198,7 +2362,7 @@ async function updateSingleThumbnail(index) {
   
   const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
   const rawText = slideNode?.querySelector('raw')?.textContent || '';
-  const theme = $("theme-selector").value || "minimal";
+  const theme = $("theme-selector").value || "tufte-base";
   
   const iframe = thumb.querySelector('iframe');
   if (iframe) {
@@ -2219,7 +2383,7 @@ async function updateSingleThumbnail(index) {
     
     const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
     const rawText = slideNode?.querySelector('raw')?.textContent || '';
-    const theme = $("theme-selector").value || "minimal";
+    const theme = $("theme-selector").value || "tufte-base";
     
     const iframe = thumb.querySelector('iframe');
     if (iframe) {
@@ -2311,7 +2475,7 @@ async function updateSingleThumbnail(index) {
       state.xmlDoc = tempDoc;
     }
     
-    const theme = state.xmlDoc.documentElement.getAttribute("theme") || "minimal";
+    const theme = state.xmlDoc.documentElement.getAttribute("theme") || "tufte-base";
     $("theme-selector").value = theme;
     applyTheme(theme);
   }  
@@ -2426,10 +2590,105 @@ async function updateSingleThumbnail(index) {
     return safeText
       .replace(/\r\n/g, '\n')
       .split(/\n{2,}/)
-      .map(p => `<p>${p.replace(/\n/g, '<br />')}</p>`)
+      .map(p => {
+        // Don't wrap our alignment divs in paragraph tags
+        if (p.trim().startsWith('__ALIGN_')) return p; 
+        return `<p>${p.replace(/\n/g, '<br />')}</p>`;
+      })
       .join('\n');
   }
-  
+
+function formatWithJustify(text) {
+  if (!text || !text.trim()) return "";
+
+  // Map markers to text-align styles
+  const INLINE_ALIGN = {
+    "<<<": "text-align:left;",
+    ">>>": "text-align:right;",
+    "|||": "text-align:center;",
+  };
+
+  // 1) Turn inline pairs like <<<text<<< into placeholders
+  //    that will later become <p style="..."> (not <div>)
+  const inlineMarkers = [];
+  const withInlinePlaceholders = text.replace(/(<<<|>>>|\|\|\|)([^\n]*?)\1/g, (_, tok, body) => {
+    const key = `__ALIGN_${inlineMarkers.length}__`;
+    inlineMarkers.push({
+      key,
+      // p + width:100% keeps BigText size (.large p) and spans the slide in flex
+      html: `<p style="width:100%; ${INLINE_ALIGN[tok]}">${escapeHtml(body)}</p>`,
+    });
+    return key;
+  });
+
+  // 2) Support block fences on their own lines
+  const FENCES = new Set(["<<<", ">>>", "|||"]);
+  const BLOCK_ALIGN_STYLE = INLINE_ALIGN;
+
+  const lines = withInlinePlaceholders.split(/\r?\n/);
+  const out = [];
+  let mode = null;
+  let buf = [];
+
+  const replaceInlineKeys = (html) => {
+    let s = html;
+    for (const { key, html: frag } of inlineMarkers) {
+      s = s.split(key).join(frag);
+    }
+    return s;
+  };
+
+  const flushNormal = () => {
+    if (buf.length === 0) return;
+    const html = plainTextToHtml(buf.join("\n"));
+    out.push(replaceInlineKeys(html));
+    buf = [];
+  };
+
+  const flushBlock = (token) => {
+    const bodyRaw = buf.join("\n");
+    // Allow inline markers inside blocks too
+    const bodyWithPlaceholders = bodyRaw.replace(/(<<<|>>>|\|\|\|)([^\n]*?)\1/g, (_, tok, body) => {
+      const key = `__ALIGN_${inlineMarkers.length}__`;
+      inlineMarkers.push({
+        key,
+        html: `<p style="${INLINE_ALIGN[tok]}">${escapeHtml(body)}</p>`,
+      });
+      return key;
+    });
+    const bodyHtml = replaceInlineKeys(plainTextToHtml(bodyWithPlaceholders));
+    // Make the block span the slide so text-align is meaningful in flex layout
+    out.push(`<div style="${BLOCK_ALIGN_STYLE[token]}">${bodyHtml}</div>`);
+    buf = [];
+  };
+
+  for (const raw of lines) {
+    const trimmed = raw.trim();
+    if (FENCES.has(trimmed)) {
+      if (mode === null) {
+        flushNormal();
+        mode = trimmed;
+        buf = [];
+      } else if (trimmed === mode) {
+        flushBlock(mode);
+        mode = null;
+      } else {
+        buf.push(raw);
+      }
+      continue;
+    }
+    buf.push(raw);
+  }
+
+  if (mode === null) {
+    flushNormal();
+  } else {
+    flushBlock(mode);
+  }
+
+  return out.join("\n");
+}
+ 
   function parseRawText(rawText) {
     const attributes = {};
     let innerHTML = '';
@@ -2461,6 +2720,12 @@ async function updateSingleThumbnail(index) {
           if (currentDirective === "FullScreenImage") attributes.isFullScreenImage = true;
           break;
 
+        case "Break": {
+          const lines = Math.max(0, parseFloat(content) || 1);
+          innerHTML += `<div aria-hidden="true" style="display:block;height:calc(${lines} * 1lh);"></div>`;
+          break;
+        }
+
         case "FullScreenWebsite":
           attributes.fullscreenWebsite = content.trim();
           break;
@@ -2475,19 +2740,19 @@ async function updateSingleThumbnail(index) {
           break;
           
         case "BigText": 
-          innerHTML += `<div class="large">${plainTextToHtml(content)}</div>`; 
+          innerHTML += `<div class="large">${formatWithJustify(content)}</div>`; 
           break;
           
         case "Text": 
-          innerHTML += plainTextToHtml(content); 
+          innerHTML += formatWithJustify(content); 
           break;
 
         case "SmallText":
-          innerHTML += `<div class="small">${plainTextToHtml(content)}</div>`;
+          innerHTML += `<div class="small">${formatWithJustify(content)}</div>`;
           break;
         
         case "TinyText":
-          innerHTML += `<div class="tiny">${plainTextToHtml(content)}</div>`;
+          innerHTML += `<div class="tiny">${formatWithJustify(content)}</div>`;
           break;
         
         case "Notes":
@@ -2496,6 +2761,10 @@ async function updateSingleThumbnail(index) {
  
         case "SpeakerNote":
           attributes.speakerNote = content;
+          break;
+
+        case "PrintNote":
+          attributes.printNotes = content;
           break;
           
         case "Image": {
@@ -2507,24 +2776,45 @@ async function updateSingleThumbnail(index) {
           break;
         }
           
-        case "Columns": {
-          const parts = content.split(/^\s*---\s*$/m);
-          const colsHtml = parts.map(part => {
-            const trimmedPart = part.trim();
-            const [firstPart, ...restParts] = trimmedPart.split(/,(.*)/s);
-            if (/\.(png|jpe?g|gif|webp|svg)$/i.test(firstPart.trim()) || 
-                firstPart.trim().startsWith('data:')) {
-              const colCaption = (restParts[0] || '').trim();
-              const imageUrl = firstPart.trim();
-              const resolvedUrl = window.presentationBaseUrl ? 
-                resolveImagePath(imageUrl, window.presentationBaseUrl) : imageUrl;
-              return `<div class="column"><div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(colCaption)}"><div class="caption">${plainTextToHtml(colCaption)}</div></div></div>`;
-            }
-            return `<div class="column">${plainTextToHtml(trimmedPart)}</div>`;
-          }).join('');
-          innerHTML += `<div class="columns">${colsHtml}</div>`;
-          break;
+case "Columns": {
+  // Split into column parts with --- separators
+  const parts = content.split(/^\s*---\s*$/m);
+
+  // Allow extensions with optional ?query, and data: URLs
+  const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+)\s*(?:,\s*(.*))?$/i;
+
+  const colsHtml = parts.map(part => {
+    const lines = part.trim().split(/\r?\n+/).filter(Boolean);
+
+    // If any line in this column looks like an image, render line-by-line
+    if (lines.some(l => imgLineRe.test(l))) {
+      const items = lines.map(line => {
+        const m = line.match(imgLineRe);
+        if (m) {
+          const imageUrl   = m[1].trim();
+          const colCaption = (m[2] || '').trim();
+          const resolvedUrl = window.presentationBaseUrl
+            ? resolveImagePath(imageUrl, window.presentationBaseUrl)
+            : imageUrl;
+          return `<div class="img-container">
+                    <img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(colCaption)}">
+                    <div class="caption">${plainTextToHtml(colCaption)}</div>
+                  </div>`;
         }
+        // Non-image line: render as text paragraph(s)
+        return plainTextToHtml(line);
+      }).join('');
+      return `<div class="column">${items}</div>`;
+    }
+
+    // Fallback: column is pure text
+    return `<div class="column">${plainTextToHtml(part.trim())}</div>`;
+  }).join('');
+
+  innerHTML += `<div class="columns">${colsHtml}</div>`;
+  break;
+}
+
           
         case "Table": {
           let tableHtml = '<table>';
@@ -2581,13 +2871,15 @@ async function updateSingleThumbnail(index) {
     // For local file system, we can't discover files dynamically
     // So we'll check for known theme patterns
     const knownThemes = [
-      'minimal.css',
+      'tufte-base.css',
+      'oxford.css',
+      'bringhurst.css',
       'calgary.css',
       'swiss-modern.css',
       'david-carson.css',
-      'tufte-base.css',
       'gradient.css', 
-      'modern-dark.css'
+      'modern-dark.css',
+      'japan-minimal.css'
     ];
     
     state.availableThemes = [];
@@ -2739,7 +3031,7 @@ async function updateSingleThumbnail(index) {
 function init(newXmlString) {
   updateGroundTruth('INIT', { xmlString: newXmlString });
   
-  const theme = state.xmlDoc.documentElement.getAttribute("theme") || "minimal";
+  const theme = state.xmlDoc.documentElement.getAttribute("theme") || "tufte-base";
   $("theme-selector").value = theme;
   applyTheme(theme);
   
