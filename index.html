@@ -56,7 +56,7 @@ body {
 }
 
 #editor button.primary-action {
-  --editor-accent-color: #008000; 
+  --editor-accent-color: #008000;
 }
 
 
@@ -93,12 +93,12 @@ body {
 .slide-content {
   width: 100%; height: 100%; padding: 4rem;
   display: flex; /* This is primarily for the notes positioning now */
-  position: relative; 
+  position: relative;
 }
 
 .slide-flow-content {
   width: 100%;
-  margin: auto; 
+  margin: auto;
   display: flex;
   flex-direction: column;
   align-items: center; /* Centers block-level children like tables/images */
@@ -113,75 +113,75 @@ body {
 /* ----------------------------- */
 .slide-content .text-center { text-align: center; }
 
-.slide-content .columns { 
-  display: flex; gap: 2rem; align-items: flex-start; width: 100%; 
+.slide-content .columns {
+  display: flex; gap: 2rem; align-items: flex-start; width: 100%;
 }
 .slide-content .columns .column { flex: 1; }
 
-.slide-content table { 
-  border-collapse: collapse; margin: 1rem auto; font-size: 1.1rem; 
+.slide-content table {
+  border-collapse: collapse; margin: 1rem auto; font-size: 1.1rem;
 }
-.slide-content th, .slide-content td { 
-  border: 1px solid var(--h1-border-color); 
-  padding: 0.5em 0.8em; 
-  text-align: left; 
+.slide-content th, .slide-content td {
+  border: 1px solid var(--h1-border-color);
+  padding: 0.5em 0.8em;
+  text-align: left;
 }
-.slide-content th { 
-  font-weight: bold; 
-  background-color: color-mix(in srgb, var(--bg-color) 95%, var(--main-text-color) 5%); 
+.slide-content th {
+  font-weight: bold;
+  background-color: color-mix(in srgb, var(--bg-color) 95%, var(--main-text-color) 5%);
 }
 
-.slide-content .img-container { 
-  text-align: center; 
-  margin-bottom: 1rem; 
-  max-width: 100%; 
-  max-height: 80vh; 
+.slide-content .img-container {
+  text-align: center;
+  margin-bottom: 1rem;
+  max-width: 100%;
+  max-height: 80vh;
 }
 .slide-content .img-container img, .slide-content .column img {
-  max-width: 100%; 
+  max-width: 100%;
   display: block;
-  margin: 0 auto 0.5rem auto; 
-  border-radius: 0px; 
+  margin: 0 auto 0.5rem auto;
+  border-radius: 0px;
   object-fit: contain;
-  width: auto; 
-  height: auto; 
-  max-height: calc(80vh - 3.5rem); 
+  width: auto;
+  height: auto;
+  max-height: calc(80vh - 3.5rem);
 }
 
-.slide-content .caption { 
-  font-size: 1rem; 
-  font-style: italic; 
-  color: var(--accent-light-color); 
+.slide-content .caption {
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--accent-light-color);
 }
 
 /* ----------------------------- */
 /* --- Presentation HUD --- */
 /* ----------------------------- */
 
-.company-logo { 
-  position: fixed; 
-  top: 1rem; 
-  right: 1rem; 
-  max-height: 60px; 
-  display: none; 
-  z-index: 5; 
+.company-logo {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  max-height: 60px;
+  display: none;
+  z-index: 5;
 }
-.slide-counter { 
-  position: fixed; 
-  bottom: 1rem; 
-  left: 1rem; 
-  font-size: 0.9rem; 
-  color: color-mix(in srgb, var(--main-text-color) 70%, transparent); 
-  z-index: 5; 
+.slide-counter {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--main-text-color) 70%, transparent);
+  z-index: 5;
 }
-#progress-bar { 
-  position: fixed; 
-  bottom: 0; 
-  left: 0; 
-  height: 4px; 
-  background: var(--accent-color); 
-  z-index: 10; 
-  transition: width 0.3s; 
+#progress-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: var(--accent-color);
+  z-index: 10;
+  transition: width 0.3s;
 }
 
 /* ----------------------------- */
@@ -189,14 +189,14 @@ body {
 /* ----------------------------- */
 
 #editor {
-  position: fixed; 
-  inset: 0; 
+  position: fixed;
+  inset: 0;
   z-index: 100;
   background: var(--editor-bg-color);
   color: var(--editor-text-color);
   font-family: var(--editor-ui-font-family);
-  display: none; 
-  flex-direction: row; 
+  display: none;
+  flex-direction: row;
   overflow: hidden;
 }
 #editor.active { display: flex; }
@@ -206,19 +206,19 @@ body {
 }
 
 #thumbs {
-  width: 240px; 
+  width: 240px;
   overflow-y: auto;
   border-right: 1px solid var(--editor-border-color);
-  padding: 1rem; 
-  display: flex; 
-  flex-direction: column; 
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
 }
 #editor-main {
-  flex: 1; 
-  display: flex; 
+  flex: 1;
+  display: flex;
   flex-direction: column;
-  padding: 1rem; 
+  padding: 1rem;
   overflow: hidden;
 }
 
@@ -255,29 +255,29 @@ body {
 }
 
 .thumb-number {
-  position: absolute; 
-  top: 4px; 
-  left: 6px; 
+  position: absolute;
+  top: 4px;
+  left: 6px;
   font-size: 10px;
   font-family: var(--editor-mono-font);
-  background: var(--editor-accent-color); 
+  background: var(--editor-accent-color);
   color: var(--editor-accent-text-color);
-  padding: 1px 5px; 
-  border-radius: 3px; 
+  padding: 1px 5px;
+  border-radius: 3px;
   z-index: 1;
 }
 .thumb.hidden-slide { opacity: 0.6; }
 .thumb.hidden-slide::after {
   content: "HIDDEN";
-  position: absolute; 
-  bottom: 4px; 
-  right: 4px; 
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
   font-family: var(--editor-mono-font);
   font-size: 10px;
-  background-color: rgba(0,0,0,0.7); 
+  background-color: rgba(0,0,0,0.7);
   color: white;
-  padding: 2px 5px; 
-  border-radius: 3px; 
+  padding: 2px 5px;
+  border-radius: 3px;
   z-index: 2;
 }
 
@@ -292,7 +292,7 @@ body {
   font-family: var(--editor-ui-font-family);
   background-color: var(--editor-input-bg);
   color: var(--editor-input-text);
-  white-space: pre-wrap; 
+  white-space: pre-wrap;
   word-wrap: break-word;
   overflow: auto;
 }
@@ -300,12 +300,12 @@ body {
 .ta-invalid { border-color: #f44336; }
 
 .toolbar {
-  display: flex; 
-  flex-wrap: wrap; 
+  display: flex;
+  flex-wrap: wrap;
   font-family: var(--editor-ui-font-family);
   font-size: 16px;
   gap: 0.75rem;
-  align-items: center; 
+  align-items: center;
   margin-bottom: 1rem;
 }
 .toolbar #logo-url {
@@ -318,17 +318,17 @@ body {
   font-family: var(--editor-ui-font-family);
   font-size: 16px;
   color: var(--editor-accent-text-color);
-  border: none; 
-  border-radius: 4px; 
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
-#editor button:hover:not(:disabled) { 
-  background: color-mix(in srgb, var(--editor-accent-color) 85%, black); 
+#editor button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--editor-accent-color) 85%, black);
 }
-#editor button:disabled { 
-  opacity: 0.5; 
-  cursor: not-allowed; 
+#editor button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @keyframes editor-glow {
@@ -337,16 +337,16 @@ body {
 }
 #editor .glow { animation: editor-glow 1.2s infinite alternate; }
 
-.toolbar label { 
-  display: inline-flex; 
-  align-items: center; 
-  gap: 0.4em; 
+.toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
 }
 .toolbar select, .toolbar input[type="text"] {
   padding: 0.3rem 0.5rem;
-  border-radius: 4px; 
+  border-radius: 4px;
   border: 1px solid var(--editor-input-border);
-  background-color: var(--editor-input-bg); 
+  background-color: var(--editor-input-bg);
   font-size: 16px;
   font-family: var(--editor-ui-font-family);
   color: var(--editor-input-text);
@@ -357,47 +357,47 @@ body {
 /* ----------------------------- */
 
 .modal {
-  position: fixed; 
-  inset: 0; 
+  position: fixed;
+  inset: 0;
   background: rgba(0, 0, 0, 0.6);
-  display: none; 
-  align-items: center; 
-  justify-content: center; 
+  display: none;
+  align-items: center;
+  justify-content: center;
   z-index: 250;
 }
 .modal.active { display: flex; }
 .modal-box {
-  background: var(--editor-bg-color); 
+  background: var(--editor-bg-color);
   color: var(--editor-text-color);
-  max-width: 700px; 
-  max-height: 85vh; 
+  max-width: 700px;
+  max-height: 85vh;
   overflow: auto;
-  padding: 2rem; 
-  border-radius: 8px; 
+  padding: 2rem;
+  border-radius: 8px;
   font-family: var(--editor-ui-font-family);
   line-height: 1.6;
 }
-.modal-box h3 { 
-  margin-bottom: 1rem; 
-  font-size: 1.5rem; 
+.modal-box h3 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
 }
 .modal-box pre {
   background-color: color-mix(in srgb, var(--editor-bg-color) 90%, var(--editor-text-color) 10%);
-  padding: 1em; 
-  border-radius: 4px; 
+  padding: 1em;
+  border-radius: 4px;
   overflow-x: auto;
-  font-family: var(--editor-mono-font); 
+  font-family: var(--editor-mono-font);
   font-size: 0.9rem;
   white-space: pre-wrap;
 }
 .modal-box button {
-  padding: 0.5rem 1rem; 
+  padding: 0.5rem 1rem;
   background: var(--editor-accent-color);
-  color: var(--editor-accent-text-color); 
+  color: var(--editor-accent-text-color);
   border: none;
-  border-radius: 4px; 
-  cursor: pointer; 
-  margin-top: 1rem; 
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1rem;
   float: right;
 }
 
@@ -516,7 +516,8 @@ body {
 
 /* Hide injected print notes on screen */
 .print-notes-content { display: none; }
-
+/* Hide the website placeholder on screen */
+.website-print-placeholder { display: none; }
 
 @media print {
   /* Page setup */
@@ -573,9 +574,9 @@ body {
     width: 100vw !important;
     height: 100vh !important;
     margin: 0 !important;
-    padding: calc((100vh - 56.25vw) / 2) 0 !important; 
+    padding: calc((100vh - 56.25vw) / 2) 0 !important;
     background-color: #fff !important;
-    background-clip: padding-box !important; 
+    background-clip: padding-box !important;
     opacity: 1 !important;
     visibility: visible !important;
     z-index: auto !important;
@@ -596,7 +597,7 @@ body {
   }
 
   .slide[style*="background-image"] {
-    background-size: cover !important;
+    background-size: 0 0 !important;
     background-position: center !important;
     background-clip: content-box !important;
   }
@@ -604,8 +605,9 @@ body {
   /* Preserve any slide background images */
   .slide[style*="background-image"] .slide-content {
     background-image: inherit !important;
-    background-size: cover !important;
+    background-size: contain !important;
     background-position: center center !important;
+    background-repeat: no-repeat !important; 
   }
   .slide[style*="background-image"] .slide-content::before {
     content: '';
@@ -654,6 +656,38 @@ body {
     margin: auto !important;
   }
 
+  /* Prevent tall images from being clipped */
+  .slide-content .img-container,
+  .slide-content .img-container img {
+    max-height: 100% !important; /* Forces image & container to fit inside slide-content's height */
+    object-fit: contain !important; /* Ensures the image scales down, maintaining aspect ratio */
+  }
+
+  /* Hide embedded websites and show a placeholder to keep PDF size small */
+  .slide iframe {
+    display: none !important; /* Hide the heavy iframe */
+  }
+  .website-print-placeholder {
+    display: flex !important; /* Show the placeholder */
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    font-size: 1.5rem;
+    color: #666;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+    z-index: 10;
+  }
+
+  /************************************************************/
+  /******************* END: PRINT FIXES ***********************/
+  /************************************************************/
+
+
   /* Ensure all colors and backgrounds print */
   * {
     -webkit-print-color-adjust: exact !important;
@@ -674,8 +708,8 @@ body.print-with-notes .slide {
 }
 
 /* Kill the high-z pseudo element that otherwise sits above everything */
-body.print-with-notes .slide::before { 
-  content: none !important; 
+body.print-with-notes .slide::before {
+  content: none !important;
 }
 
 /* 16:9 box: limit to the 16:9 height so the area below is free for notes */
@@ -690,8 +724,8 @@ body.print-with-notes .print-notes-content {
   position: absolute !important;
   left: 0 !important;
   right: 0 !important;
-  bottom: 0 !important; 
-  top: 56.25vw !important;         
+  bottom: 0 !important;
+  top: 56.25vw !important;
   padding: 1rem 1vw !important;         /* horizontal margins without gaps */
   background: #fff !important;           /* cover Background/FullScreenImage */
   font-size: 2rem !important;
@@ -701,6 +735,7 @@ body.print-with-notes .print-notes-content {
 }
 
 body.print-with-notes .slide iframe {
+  /* This rule is overridden by the general .slide iframe { display: none !important; } */
   position: relative !important;
   z-index: 1 !important;
 }
@@ -999,6 +1034,21 @@ Text: And some text.
      ═══════════════════════════════════════════════════════════════ */
 
   function setupEventHandlers() {
+// ensure print is small pdf w/ embedded websites
+window.addEventListener('beforeprint', () => {
+  document.querySelectorAll('.slide iframe').forEach((f) => {
+    f.dataset.src = f.src;        // remember
+    f.src = 'about:blank';        // blank it so nothing gets rasterized
+  });
+});
+
+window.addEventListener('afterprint', () => {
+  document.querySelectorAll('.slide iframe[data-src]').forEach((f) => {
+    f.src = f.dataset.src;        // restore
+    delete f.dataset.src;
+  });
+});
+
     // Keyboard navigation
     document.addEventListener("keydown", (e) => {
       if (e.target.closest("textarea, input, select") && e.key !== "Escape") return;
@@ -1523,6 +1573,34 @@ $("toggle-hide-btn").onclick = () => {
 }
 
 @media print {
+  .slide iframe {
+    display: none !important;
+  }
+  /* Show the lightweight placeholder text when printing */
+  .website-print-placeholder {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    font-size: 1.5rem;
+    color: #666;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+  }
+
+/* Make the website wrapper invisible, leaving only the placeholder */
+.slide div:has(> .website-print-placeholder) {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  position: static !important;
+  transform: none !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
   body.print-with-notes .slide {
     padding: calc((100vh - 56.25vw) / 4) 0 !important;
   }
@@ -2520,6 +2598,13 @@ async function updateSingleThumbnail(index) {
         border-radius: 8px;
       `;
       
+
+      // Create a print-only placeholder
+      const placeholder = document.createElement("div");
+      placeholder.className = "website-print-placeholder";
+      placeholder.innerHTML = `<p><strong>Embedded Website:</strong><br>${escapeHtml(attributes.fullscreenWebsite)}</p>`;
+      iframeWrapper.appendChild(placeholder);
+
       iframeWrapper.appendChild(iframe);
       slideDiv.appendChild(iframeWrapper);
       
