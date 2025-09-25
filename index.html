@@ -1,12 +1,37 @@
 <!DOCTYPE html>
+<!--
+Modern Slideshow Application
+============================
+Details at https://github.com/kevincure/ModernSlides/
+
+This is a single-file HTML application that creates an interactive slideshow system.
+The application allows users to create, edit, and present slides using a simple 
+text-based markup language.
+
+File Structure:
+- HTML structure with slideshow container and editor UI
+- CSS styles for themes and responsive design - you can create you own and add it in const AVAILABLE_THEMES
+- JavaScript application logic in a single IIFE module
+
+Key Features:
+- Multiple built-in themes (Tufte, Oxford, Bringhurst, etc.)
+- Live editing with real-time preview
+- Support for math equations (MathJax), images, tables, columns
+- Keyboard navigation and fullscreen presentation mode
+- Import/export functionality for slide decks
+- Responsive 16:9 aspect ratio design
+
+The slideshow content is stored as XML with CDATA sections containing
+the raw text markup that gets parsed into slide elements.
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Modern Slideshow Editor</title>
+<title>Modern Slideshows</title>
 
-<!----- RENDER MATH CORRECTLY -->
+<!--------------------------------------- RENDER MATH CORRECTLY --------------------------------------------------------->
 <!-- MathJax -->
 <script>
   window.MathJax = {
@@ -20,12 +45,17 @@
 </script>
 <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
 
+
+
+
+<!---------------------------------------STYLESHEETS SHARED ACROSS FILES ------------------------------------------------>
 <style id="core-styles">
 /* ----------------------------- */
 /* --- Core Style Variables --- */
 /* ----Specific slide style set in the user-created .css files----- */
+/* ---- Theme stylesheets are dynamically loaded -------------------*/
 
-/* Default variables, overridden by themes */
+/* Editor style */
 :root {
   --editor-bg-color: #fffff8;
   --editor-text-color: #1a1a1a;
@@ -48,11 +78,8 @@ body {
   line-height: 1.5;
 }
 
-/* --------------------------*/
-/* ---- Minor frontend --- */
-/* ------------------------*/
 .deckbar-spacer {
-  flex-grow: 1; /* This makes the spacer expand and push other items */
+  flex-grow: 1; 
 }
 
 #editor button.primary-action {
@@ -113,10 +140,18 @@ body {
 /* ----------------------------- */
 .slide-content .text-center { text-align: center; }
 
-.slide-content .columns {
-  display: flex; gap: 2rem; align-items: flex-start; width: 100%;
-}
+/* Columns: horizontal layout */
+.slide-content .columns { display: flex; gap: 2rem; align-items: stretch; width: 100%; }
 .slide-content .columns .column { flex: 1; }
+
+/* Vertically center when a column has only images and more than one */
+.slide-content .columns .column.images-only[data-imgcount]:not([data-imgcount="1"]) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.slide-content .columns .column.images-only > .img-container { margin: 0.5rem 0; }
+
 
 .slide-content table {
   border-collapse: collapse; margin: 1rem auto; font-size: 1.1rem;
@@ -296,8 +331,6 @@ body {
   word-wrap: break-word;
   overflow: auto;
 }
-.ta-valid { border-color: #4caf50; }
-.ta-invalid { border-color: #f44336; }
 
 .toolbar {
   display: flex;
@@ -307,9 +340,6 @@ body {
   gap: 0.75rem;
   align-items: center;
   margin-bottom: 1rem;
-}
-.toolbar #logo-url {
-  width: 150px;
 }
 
 #editor button {
@@ -514,6 +544,103 @@ body {
   height: 100%;
 }
 
+/* ----------------------------- */
+/* --- Presenter Mode Styles --- */
+/* ----------------------------- */
+
+.presenter-body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #1a1a1a;
+  color: #fff;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr auto;
+  height: 100vh;
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.presenter-slide-container {
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.presenter-slide-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.presenter-slide-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.7);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 10;
+}
+
+.presenter-notes-section {
+  grid-column: 1 / -1;
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 20px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.presenter-notes-section h3 {
+  margin-top: 0;
+  color: #ffa500;
+}
+
+.presenter-timer-section {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  text-align: right;
+  background: rgba(0,0,0,0.7);
+  padding: 10px 15px;
+  border-radius: 4px;
+}
+
+.presenter-timer {
+  font-size: 32px;
+  font-family: monospace;
+  color: #0f0;
+}
+
+.presenter-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.presenter-controls button {
+  padding: 10px 20px;
+  background: #333;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.presenter-controls button:hover {
+  background: #555;
+}
+
+/* ----- PRINT styles ----- */
+
 /* Hide injected print notes on screen */
 .print-notes-content { display: none; }
 /* Hide the website placeholder on screen */
@@ -683,11 +810,6 @@ body {
     z-index: 10;
   }
 
-  /************************************************************/
-  /******************* END: PRINT FIXES ***********************/
-  /************************************************************/
-
-
   /* Ensure all colors and backgrounds print */
   * {
     -webkit-print-color-adjust: exact !important;
@@ -700,68 +822,72 @@ body {
   }
 
 /* When using the "Print with Notes" button */
-body.print-with-notes .slide {
-  /* move the slide to the top instead of centered */
-  align-items: flex-start !important;
-  justify-content: center !important;
-  padding: 0 !important; /* remove letterbox padding that centers vertically */
-}
+  body.print-with-notes .slide {
+    /* move the slide to the top instead of centered */
+    align-items: flex-start !important;
+    justify-content: center !important;
+    padding: 0 !important; /* remove letterbox padding that centers vertically */
+  }
 
-/* Kill the high-z pseudo element that otherwise sits above everything */
-body.print-with-notes .slide::before {
-  content: none !important;
-}
+  /* Kill the high-z pseudo element that otherwise sits above everything */
+  body.print-with-notes .slide::before {
+    content: none !important;
+  }
 
-/* 16:9 box: limit to the 16:9 height so the area below is free for notes */
-body.print-with-notes .slide-content {
-  height: 56.25vw !important;     /* 9/16 of page width */
-  max-height: 56.25vw !important; /* enforce 16:9 height */
-}
+  /* 16:9 box: limit to the 16:9 height so the area below is free for notes */
+  body.print-with-notes .slide-content {
+    height: 56.25vw !important;     /* 9/16 of page width */
+    max-height: 56.25vw !important; /* enforce 16:9 height */
+  }
 
-/* Show and place PrintNote at the bottom of the page */
-body.print-with-notes .print-notes-content {
-  display: block !important;
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  top: 56.25vw !important;
-  padding: 1rem 1vw !important;         /* horizontal margins without gaps */
-  background: #fff !important;           /* cover Background/FullScreenImage */
-  font-size: 2rem !important;
-  line-height: 1.4 !important;
-  z-index: 2147483647 !important;
-  color: #cc0000 !important;       /* match your presenter style */
-}
+  /* Show and place PrintNote at the bottom of the page */
+  body.print-with-notes .print-notes-content {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: 56.25vw !important;
+    padding: 1rem 1vw !important;         /* horizontal margins without gaps */
+    background: #fff !important;           /* cover Background/FullScreenImage */
+    font-size: 2rem !important;
+    line-height: 1.4 !important;
+    z-index: 2147483647 !important;
+    color: #cc0000 !important;       /* match your presenter style */
+  }
 
-body.print-with-notes .slide iframe {
-  /* This rule is overridden by the general .slide iframe { display: none !important; } */
-  position: relative !important;
-  z-index: 1 !important;
-}
+  body.print-with-notes .slide iframe {
+    /* This rule is overridden by the general .slide iframe { display: none !important; } */
+    position: relative !important;
+    z-index: 1 !important;
+  }
 
-body.print-with-notes .slide::after {
-  content: '' !important;
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  top: 56.25vw !important;      /* matches the 16:9 content height */
-  background: #fff !important;  /* opaque bar */
-  z-index: 2147483646 !important; /* under .print-notes-content, above bg */
-}
+  body.print-with-notes .slide::after {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: 56.25vw !important;      /* matches the 16:9 content height */
+    background: #fff !important;  /* opaque bar */
+    z-index: 2147483646 !important; /* under .print-notes-content, above bg */
+  }
 
-/* Optional: simple auto-shrink if many paragraphs (same as in presenter CSS) */
-body.print-with-notes .print-notes-content:has(p:nth-child(2)) { font-size: 1.1rem !important; }
-body.print-with-notes .print-notes-content:has(p:nth-child(3)) { font-size: 0.9rem !important; }
-body.print-with-notes .print-notes-content:has(p:nth-child(5)) { font-size: 0.8rem !important; }
-
+  /* simple auto-shrink if many paragraphs in printeded note */
+  body.print-with-notes .print-notes-content:has(p:nth-child(2)) { font-size: 1.1rem !important; }
+  body.print-with-notes .print-notes-content:has(p:nth-child(3)) { font-size: 0.9rem !important; }
+  body.print-with-notes .print-notes-content:has(p:nth-child(5)) { font-size: 0.8rem !important; }
 }
 </style>
-
-<!-- Theme stylesheets will be dynamically loaded -->
-
 </head>
+
+
+
+
+
+
+
+<!---------------------------------------------------- HTML BODY FOR PRESENTATION AND EDITOR VIEW ------------------->
 <body>
   <!-- Presentation View -->
   <div id="slideshow"></div>
@@ -779,14 +905,13 @@ body.print-with-notes .print-notes-content:has(p:nth-child(5)) { font-size: 0.8r
       <div class="toolbar">
         <button id="add-btn"       title="New Slide">      <i class="fa-solid fa-plus"></i></button>
         <button id="del-btn"    title="Delete Slide">   <i class="fa-solid fa-minus"></i></button>
-        <button id="toggle-hide-btn"    title="Hide/Show Slide"> <i class="fa-solid fa-eye"></i></button>
+        <button id="dup-btn"    title="Duplicate Slide"><i class="fa-solid fa-copy"></i></button>              <button id="toggle-hide-btn"    title="Hide/Show Slide"> <i class="fa-solid fa-eye"></i></button>
         <!-- hidden state, still used by updateHUD() -->
         <input type="checkbox" id="show-count" checked style="display:none">
         <!-- toggle button -->
         <button id="toggle-count-btn" title="Hide Slide Numbers">
           <i class="fa-solid fa-numeric-sort-asc"></i>
         </button>
-        <label>Logo? <input id="logo-url" type="text" /></label>
         <label>Theme
           <select id="theme-selector">
           <!-- Options will be dynamically populated -->
@@ -809,94 +934,100 @@ body.print-with-notes .print-notes-content:has(p:nth-child(5)) { font-size: 0.8r
       <button id="close-help">Close</button>
       <h3>Modern Slides | Kevin Bryan | July 2025</h3>
       <p>This is a modern, very computationally light, slideshow maker. It completely separates style rules from content. You can edit it completely online or download the code from <a href="https://github.com/kevincure/ModernSlides">github.com/kevincure/ModernSlides</a> or find more similar tools at <a href="https://kevinbryanecon.com/tools.html">kevinbryanecon.com/tools.html</a> and create your slides locally in your browser. Once your slides are set, click download. You can upload that text file to anywhere you like, then open it with a url query of the form ?xml=...: e.g., <a href="https://kevinbryanecon.com/ModernSlides?xml=Progress2025Class1/Class1Slides.txt">this one here</a></p> 
-      <p>Each slide is defined by directives in a Markdown type format. A directive starts a line, ends with a colon `:`, and its value is all text that follows until the next directive.</p>
+      <p>Each slide is defined by directives in a Markdown type format. A directive starts a line, ends with a colon `:`, and its value is all text that follows until the next directive. In the text editor, you can use abbrevations, noted like [B:]. That is, if you type B: at the start of a line, Background: will automatically pop up.</p>
       <p>Press 'e' to toggle between edit and present, 'f' to go to full screen mode, and 'p' to open a presenter mode window.
       <pre>
-# --- METADATA (place at the top) ---
-Hidden: true (hides the slide, can be set with eye open/closed button)
-Background: image-url.jpg
-FullScreenImage: image-url.jpg
-Header: Small text in corner
+      # --- METADATA (place at the top) ---
+      Background: image-url.jpg (B:)
+      FullScreenImage: image-url.jpg (F:)
 
+      # --- CONTENT DIRECTIVES ---
+      Title: The Main Title of The Slide (t:)
+        Supports $LaTeX$ and
+        manual line breaks.
 
-# --- CONTENT DIRECTIVES ---
-Title: The Main Title of The Slide
-  Supports $LaTeX$ and
-  manual line breaks.
+      Header: Small text in corner (h:)
 
-BigText: For large, prominent text.  Within all standard text 
-<<< Text on Left <<<, 
->>> Text on Right >>>, and 
-||| Text is centered ||| can be used.
+      BigText: For large, prominent text.  Within all standard text (b:)
+      <<< Text on Left <<<, 
+      >>> Text on Right >>>, and 
+      ||| Text is centered ||| can be used.
 
-Text: For standard body text.
-  A blank line between text...
+      Text: For standard body text. (x:)
+        A blank line between text...
 
-  ...and a skipped line creates a new paragraph.
+        ...and a skipped line creates a new paragraph.
 
-SmallText: For smaller body text.
+      SmallText: For smaller body text. (s:)
 
-TinyText: For footnote-sized text.
+      TinyText: For footnote-sized text. (t:)
 
-Break: 1 (or 2.2 or .7), provides a break of a set size
+      Break: 1 (or 2.2 or .7), provides a break of a set size
 
-Notes: For notes at the bottom of the slide.
-  These appear in a special position.
+      Notes: For notes at the bottom of the slide. (n:)
+        These appear in a special position.
 
-SpeakerNote: For notes for yourself in presentation mode
+      SpeakerNote: For notes for yourself in presentation mode (S:)
 
-PrintNote: notes about the slide to appear only when printed from the 'print' button in Edit (if you print from the slides, you won't get these)
+      PrintNote: notes about the slide to appear only when printed from the 'print' button in Edit (if you print from the slides, you won't get these) (P:)
 
-Image: image-url.jpg (or a weblink to jpg/png/gif), An optional caption for image after the comma
+      Image: image-url.jpg (or a weblink to jpg/png/gif), An optional caption for image after the comma (I:)
 
-FullScreenWebsite: https://example.com
+      FullScreenWebsite: https://example.com. If the website shows as broken, it is being blocked on the other website's end. Your personal website should work fine. You can use this to embed a Youtube video including the start time by clicking 'share' and then 'embed' and copying the embed url on Youtube. (F:)
 
-Columns:
-  This is the left column. Can contain any
-  amount of text, paragraphs, and $math$.
-  ---
-  This is the right column. You can put an
-  image here using the 'image, caption' syntax:
-  test.jpg, A caption for the image in the column.
-  ...or you can just have more text.
-  ---
-  Third column
+      Columns: (C:)
+        This is the left column. Can contain any
+        amount of text, paragraphs, and $math$.
+        ---
+        This is the right column. You can put an
+        image here using the 'image, caption' syntax:
+        test.jpg, A caption for the image in the column.
+        ...or you can just have more text.
+        ---
+        Third column
 
-Table:
-  Header 1 & Header 2 & Header 3
-  ---
-  Cell 1.1 & Cell 1.2 & Cell 1.3
-  ---
-  Cell 2.1 & Cell 2.2 & $math$ is fine
+      Table: (T:)
+        Header 1 & Header 2 & Header 3
+        ---
+        Cell 1.1 & Cell 1.2 & Cell 1.3
+        ---
+        Cell 2.1 & Cell 2.2 & $math$ is fine
 
-*some text* is italic, **some text** is bold, ***some text*** is bold italic.
+      *some text* is italic, **some text** is bold, ***some text*** is bold italic.
 
-# --- NOTES ---
-# - Download Raw Deck and Load Deck give you your slides but you
-#      will still need any images referred to in the same folder
-# - If you print from your browser, it will give slides with PrintNotes. 
-# - If you print from the print icon in Edit mode, it will show the PrintNotes.
-# - If no directive is given, text defaults to `Text:`.
-# - In `Columns` and `Table`, use `---` on its own line
-#       to separate sections/rows.
-# - You cannot nest directives (e.g., a Table inside a Column).
-# - Notes appear at the bottom in a special color and shift other content up.
-# - 9 different styles are given, but you can create your own also
-</pre>
+      # --- NOTES ---
+      # - Download Raw Deck and Load Deck give you your slides but you
+      #      will still need any images referred to in the same folder
+      # - If you print from your browser, it will give slides with PrintNotes. 
+      # - If you print from the print icon in Edit mode, it will show the PrintNotes.
+      # - If no directive is given, text defaults to `Text:`.
+      # - In `Columns` and `Table`, use `---` on its own line
+      #       to separate sections/rows.
+      # - You cannot nest some directives (e.g., a Table inside a Column).
+      # - As you edit, your most-recently-edited slides are stored in LocalStorage via your browser, and can be recovered by reopening ModernSlides
+      # - 9 different styles are given, but you can create your own also
+      </pre>
     </div>
   </div>
 
+
+
+
+
+
+<!---------------------------------------------------- SCRIPT TAGS ------------------------------------------>
 <script>
-const tufteSlideshowApp = (function() {
+const ModernSlideshow = (function() {
   'use strict';
   
   /* ═══════════════════════════════════════════════════════════════
                               CONSTANTS
      ═══════════════════════════════════════════════════════════════ */
-  
-  const DEFAULT_XML = `<presentation title="New Presentation" showSlideCount="true" theme="tufte-base">
-  <slide>
-    <raw><![CDATA[
+  const DEFAULT_THEME = 'tufte-base';
+  const AVAILABLE_THEMES = ['tufte-base', 'oxford', 'bringhurst', 'calgary', 'swiss-modern', 'david-carson', 'gradient', 'modern-dark','japan-minimal'];
+  const DEFAULT_XML = `<presentation title="New Presentation" showSlideCount="true" theme="${DEFAULT_THEME}">
+    <slide>
+      <raw><![CDATA[
 Title: Modern Slides
 Header: Header text here
 BigText: This is a slideshow.
@@ -960,16 +1091,16 @@ Text: And some text.
 <<< Text left justified <<<
 >>> And here's a paragraph of text justified on right >>>
 ||| Text centered |||
-    ]]></raw>
-  </slide>
-</presentation>`;
-
+      ]]></raw>
+    </slide>
+  </presentation>`;
   const METADATA_DIRECTIVES = ["Theme", "ShowSlideCount", "LogoUrl"];
   const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header", 
-                              "Title", "BigText", "Text", "SmallText", "TinyText", "Notes",
-                              "Image", "Columns", "Table", "FullScreenWebsite", "SpeakerNote",
-                              "PrintNote", "Break"];
+                                "Title", "BigText", "Text", "SmallText", "TinyText", "Notes",
+                                "Image", "Columns", "Table", "FullScreenWebsite", "SpeakerNote",
+                                "PrintNote", "Break", "Logo"];
   const ALL_DIRECTIVES = [...METADATA_DIRECTIVES, ...CONTENT_DIRECTIVES];
+
   
 /* ═══════════════════════════════════════════════════════════════
                           APPLICATION STATE
@@ -1004,7 +1135,7 @@ Text: And some text.
   };
 
 /* ═══════════════════════════════════════════════════════════════
-                          WAKE LOCK
+      WAKE LOCK TO KEEP SCREEN FROM FALLING ASLEEP IN PRESENTATIONS
      ═══════════════════════════════════════════════════════════════ */
   
   async function requestWakeLock() {
@@ -1034,22 +1165,27 @@ Text: And some text.
      ═══════════════════════════════════════════════════════════════ */
 
   function setupEventHandlers() {
-// ensure print is small pdf w/ embedded websites
-window.addEventListener('beforeprint', () => {
-  document.querySelectorAll('.slide iframe').forEach((f) => {
-    f.dataset.src = f.src;        // remember
-    f.src = 'about:blank';        // blank it so nothing gets rasterized
-  });
-});
+    // ensure print is small pdf w/ embedded websites
+    window.addEventListener('beforeprint', () => {
+      document.querySelectorAll('.slide iframe').forEach((f) => {
+        f.dataset.src = f.src;        // remember
+        f.src = 'about:blank';        // blank it so nothing gets rasterized
+      });
+    });
 
-window.addEventListener('afterprint', () => {
-  document.querySelectorAll('.slide iframe[data-src]').forEach((f) => {
-    f.src = f.dataset.src;        // restore
-    delete f.dataset.src;
-  });
-});
+    window.addEventListener('afterprint', () => {
+      document.querySelectorAll('.slide iframe[data-src]').forEach((f) => {
+        f.src = f.dataset.src;        // restore
+        delete f.dataset.src;
+      });
+    });
 
     // Keyboard navigation
+    // Navigate between slides using arrow keys or page up/down
+    // Toggle edit mode using e
+    // Go to full screen using f
+    // Open presenter mode window using p
+    // Exit full screen using escape
     document.addEventListener("keydown", (e) => {
       if (e.target.closest("textarea, input, select") && e.key !== "Escape") return;
 
@@ -1078,7 +1214,7 @@ window.addEventListener('afterprint', () => {
           buildSlidesFromXMLDoc();
           requestWakeLock();
         }
-  showSlide(state.currentAbsoluteSlideIndex, !state.editMode);
+        showSlide(state.currentAbsoluteSlideIndex, !state.editMode);
       } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         toggleFullscreen();
@@ -1098,14 +1234,13 @@ window.addEventListener('afterprint', () => {
       }
     });
 
-    // Editor buttons
+    // -------------------- EDITOR BUTTONS --------------------
+    // Save button
     $("save-btn").onclick = () => {
       updateGroundTruth('SAVE');
-
       if (state.hasChanges) {
         buildSlidesFromXMLDoc(); // Re-render slides to reflect all changes
       }
-
       state.hasChanges = false;
       updateSaveButtonGlow();
       state.editMode = false;
@@ -1119,6 +1254,7 @@ window.addEventListener('afterprint', () => {
       }
     };
 
+    // Add slide button
     $("add-btn").onclick =  async () => {
       updateGroundTruth('ADD_SLIDE', { 
          index: state.currentAbsoluteSlideIndex + 1, 
@@ -1130,112 +1266,132 @@ window.addEventListener('afterprint', () => {
       showSlide(state.currentAbsoluteSlideIndex + 1);
     };
 
-
+    // Delete slides
     $("del-btn").onclick = async () => {
       if (state.slideEls.length <= 1) {
         alert("Cannot delete the last slide.");
         return;
       }
-      if (!confirm("Are you sure you want to delete this slide?")) {
-        return;
-      }
+      if (!confirm("Are you sure you want to delete this slide?")) return;
 
-      updateGroundTruth('DELETE_SLIDE', { index: state.currentAbsoluteSlideIndex });
+      const i = state.currentAbsoluteSlideIndex;
+      // Stay on the same absolute index unless we're deleting the last slide.
+      const newIndex = (i === state.slideEls.length - 1) ? i - 1 : i;
+
+      updateGroundTruth('DELETE_SLIDE', { index: i }); // removes slide i in XML
+      buildSlidesFromXMLDoc();                         // rebuild DOM from XML
+      state.currentAbsoluteSlideIndex = newIndex;      // keep indices aligned to avoid NAVIGATE
+      await refreshThumbnails();
+      showSlide(newIndex);                             
+    };
+
+    // Duplicate slide
+    $("dup-btn").onclick = async () => {
+      const currentRawText = getRawTextForSlide(state.currentAbsoluteSlideIndex);
+      const newIndex = state.currentAbsoluteSlideIndex + 1;
+      
+      updateGroundTruth('ADD_SLIDE', { 
+        index: newIndex, 
+        content: currentRawText
+      });
 
       buildSlidesFromXMLDoc();
       await refreshThumbnails();
-      showSlide(Math.max(0, state.currentAbsoluteSlideIndex - 1));
+      showSlide(newIndex);
     };
 
-// Add touch navigation for mobile
-$("slideshow").addEventListener('click', (e) => {
-  // Don't navigate if in edit mode or clicking on interactive elements
-  if (state.editMode) return;
-  
-  // Check if we clicked on an iframe or inside an iframe wrapper
-  if (e.target.closest('iframe') || e.target.closest('[style*="z-index: 100"]')) return;
-  
-  // Navigate based on which side was clicked
-  const clickX = e.clientX;
-  const screenWidth = window.innerWidth;
-  
-  if (clickX < screenWidth / 2) {
-    // Left side - go to previous slide
-    const prevIndex = state.currentVisibleSlideIndex - 1;
-    showSlide(prevIndex, true);
-  } else {
-    // Right side - go to next slide
-    const nextIndex = state.currentVisibleSlideIndex + 1;
-    showSlide(nextIndex, true);
-  }
-});
 
-$("toggle-hide-btn").onclick = () => {
-  const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
-  if (!slideNode) return;
-
-  const rawNode = slideNode.querySelector('raw');
-  if (!rawNode) return;
-
-  const rawText = rawNode.textContent || '';
-  const lines = rawText.split('\n');
-  let hiddenLineIndex = -1;
-  let isCurrentlyHidden = false;
-
-  // Check if Hidden directive exists
-  for (let i = 0; i < lines.length; i++) {
-    const match = lines[i].match(/^Hidden:\s*(.*)/i);
-    if (match) {
-      hiddenLineIndex = i;
-      isCurrentlyHidden = match[1].trim().toLowerCase() === 'true';
-      break;
-    }
-  }
-
-  // Toggle the hidden state
-  let newLines;
-  if (isCurrentlyHidden) {
-    // Currently hidden, so unhide by removing the line
-    if (hiddenLineIndex >= 0) {
-      newLines = lines.filter((_, index) => index !== hiddenLineIndex);
-    } else {
-      newLines = lines;
-    }
-  } else {
-    // Currently visible, so hide by adding/updating the line
-    if (hiddenLineIndex >= 0) {
-      lines[hiddenLineIndex] = 'Hidden: true';
-      newLines = lines;
-    } else {
-      // Add Hidden: true at the beginning (after any empty lines)
-      let insertIndex = 0;
-      while (insertIndex < lines.length && lines[insertIndex].trim() === '') {
-        insertIndex++;
+    // Touch navigation on left/right for mobile
+    $("slideshow").addEventListener('click', (e) => {
+      // Don't navigate if in edit mode or clicking on interactive elements
+      if (state.editMode) return;
+      
+      // Check if we clicked on an iframe or inside an iframe wrapper
+      if (e.target.closest('iframe') || e.target.closest('[style*="z-index: 100"]')) return;
+      
+      // Navigate based on which side was clicked
+      const clickX = e.clientX;
+      const screenWidth = window.innerWidth;
+      
+      if (clickX < screenWidth / 2) {
+        // Left side - go to previous slide
+        const prevIndex = state.currentVisibleSlideIndex - 1;
+        showSlide(prevIndex, true);
+      } else {
+        // Right side - go to next slide
+        const nextIndex = state.currentVisibleSlideIndex + 1;
+        showSlide(nextIndex, true);
       }
-      lines.splice(insertIndex, 0, 'Hidden: true');
-      newLines = lines;
-    }
-  }
+    });
 
-  // Update the raw text in XML - trim to avoid extra newlines
-  const newRawText = newLines.join('\n').trim();
-  rawNode.textContent = '';
-  rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${newRawText}\n`));
+    // toggle show/hide slide button    
+    $("toggle-hide-btn").onclick = () => {
+      const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
+      if (!slideNode) return;
 
-  // Update the UI
-  state.hasChanges = true;
-  state.slideEls[state.currentAbsoluteSlideIndex].classList.toggle("hidden-in-presentation", !isCurrentlyHidden);
-  updateVisibleSlideIndices();
-  updateToggleHideButtonState();
-  updateSingleThumbnail(state.currentAbsoluteSlideIndex);
-  updateSaveButtonGlow();
+      const rawNode = slideNode.querySelector('raw');
+      if (!rawNode) return;
 
-  // Update the textarea if we're editing this slide
-  if (state.editMode && $("raw-text-editor")) {
-    $("raw-text-editor").value = newRawText;
-  }
-};
+      const rawText = rawNode.textContent || '';
+      const lines = rawText.split('\n');
+      let hiddenLineIndex = -1;
+      let isCurrentlyHidden = false;
 
+      // Check if Hidden directive exists
+      for (let i = 0; i < lines.length; i++) {
+        const match = lines[i].match(/^Hidden:\s*(.*)/i);
+        if (match) {
+          hiddenLineIndex = i;
+          isCurrentlyHidden = match[1].trim().toLowerCase() === 'true';
+          break;
+        }
+      }
+
+      // Toggle the hidden state
+      let newLines;
+      if (isCurrentlyHidden) {
+        // Currently hidden, so unhide by removing the line
+        if (hiddenLineIndex >= 0) {
+          newLines = lines.filter((_, index) => index !== hiddenLineIndex);
+        } else {
+          newLines = lines;
+        }
+      } else {
+        // Currently visible, so hide by adding/updating the line
+        if (hiddenLineIndex >= 0) {
+          lines[hiddenLineIndex] = 'Hidden: true';
+          newLines = lines;
+        } else {
+          // Add Hidden: true at the beginning (after any empty lines)
+          let insertIndex = 0;
+          while (insertIndex < lines.length && lines[insertIndex].trim() === '') {
+            insertIndex++;
+          }
+          lines.splice(insertIndex, 0, 'Hidden: true');
+          newLines = lines;
+        }
+      }
+
+      // Update the raw text in XML - trim to avoid extra newlines
+      const newRawText = newLines.join('\n').trim();
+      rawNode.textContent = '';
+      rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${newRawText}\n`));
+
+      // Update the UI
+      state.hasChanges = true;
+      state.slideEls[state.currentAbsoluteSlideIndex].classList.toggle("hidden-in-presentation", !isCurrentlyHidden);
+      updateVisibleSlideIndices();
+      updateToggleHideButtonState();
+      updateSingleThumbnail(state.currentAbsoluteSlideIndex);
+      updateSaveButtonGlow();
+
+      // Update the textarea if we're editing this slide
+      if (state.editMode && $("raw-text-editor")) {
+        $("raw-text-editor").value = newRawText;
+      }
+    };
+
+    // Toggle 'show slide number' button
     $("toggle-count-btn").onclick = () => {
       const cb = $("show-count");
       cb.checked = !cb.checked;
@@ -1244,8 +1400,9 @@ $("toggle-hide-btn").onclick = () => {
       updateHUD();
     };
 
+    // Download as txt button
     $("download-txt-btn").onclick = async () => {
-      updateGroundTruth('DOWNLOAD');                       // flush textarea to XML
+      updateGroundTruth('DOWNLOAD');                       
 
       const fileContents = buildRawDeck();
       const suggestedName = `${
@@ -1280,8 +1437,8 @@ $("toggle-hide-btn").onclick = () => {
       }
     };
 
+    // Print with PrintNote class notes button
     $("print-notes-btn").onclick = () => {
-
       //  Save the current textarea 
       updateGroundTruth('SAVE');          
       buildSlidesFromXMLDoc();  
@@ -1316,12 +1473,14 @@ $("toggle-hide-btn").onclick = () => {
       }, 1000);
     };
 
+    // New presentation button
     $("new-presentation-btn").onclick = () => {
       if (state.hasChanges && !confirm("You have unsaved changes that will be lost unless you download the slides. Continue?")) return;
       updateGroundTruth('NEW');
       init();
     };
 
+    // Load presentation button
     $("load-btn").onclick = () => {
       if (state.hasChanges && !confirm("You have unsaved changes that will be lost unless you download the slides. Continue?")) return;
       const input = document.createElement('input');
@@ -1344,6 +1503,7 @@ $("toggle-hide-btn").onclick = () => {
       input.click();
     };
 
+    // Help button
     $("help-btn").onclick = () => $("help").classList.add("active");
     $("close-help").onclick = () => $("help").classList.remove("active");
 
@@ -1354,7 +1514,60 @@ $("toggle-hide-btn").onclick = () => {
       updateSaveButtonGlow();
     });
 
-    // Theme and deck properties
+    // allow shortcuts
+    $("raw-text-editor").addEventListener('keydown', (e) => {
+      // Check if user just typed a colon after a single letter at line start
+      if (e.key !== ':') return;
+      
+      const textarea = e.target;
+      const cursorPos = textarea.selectionStart;
+      const textBefore = textarea.value.substring(0, cursorPos);
+      
+      // Check if we're at the start of a line with just a single letter
+      const lines = textBefore.split('\n');
+      const currentLine = lines[lines.length - 1];
+      
+      // Match single letter at start of line
+      if (currentLine.length !== 1) return;
+      
+      const letter = currentLine;
+      const shortcuts = {
+        'b': 'BigText',
+        'C': 'Columns:\n  ',
+        'I': 'Image',
+        'T': 'Table:\n  ',
+        'W': 'FullScreenWebsite',
+        'n': 'Notes',
+        's': 'SmallText',
+        'h': 'Header',
+        't': 'Title',
+        'x': 'Text',
+        'P': 'PrintNote',
+        'S': 'SpeakerNote',
+        'F': 'FullScreenImage',
+        'B': 'Background'
+      };
+      
+      if (shortcuts[letter]) {
+        e.preventDefault();
+        
+        // Replace the letter with the full directive
+        const lineStartPos = cursorPos - 1;
+        const before = textarea.value.substring(0, lineStartPos);
+        const after = textarea.value.substring(cursorPos);
+        
+        // For Hidden, add the value too
+        const insertion = letter === 'H' ? 'Hidden: true' : shortcuts[letter] + ': ';
+        
+        textarea.value = before + insertion + after;
+        textarea.selectionStart = textarea.selectionEnd = before.length + insertion.length;
+        
+        // Trigger input event for live preview
+        textarea.dispatchEvent(new Event('input'));
+      }
+    });
+
+    // Change slideshow style
     $("theme-selector").onchange = async () => {
       updateGroundTruth('THEME_CHANGE', { theme: $("theme-selector").value });
       await applyTheme($("theme-selector").value);
@@ -1363,20 +1576,16 @@ $("toggle-hide-btn").onclick = () => {
       }
     };
 
-    $("logo-url").oninput = () => {
-        updateGroundTruth('LOGO_CHANGE');
-        updateHUD(); // Live update for the logo
-    };
-    
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.log(`Error attempting to enable fullscreen: ${err.message}`);
-      });
-    } else {
-      document.exitFullscreen();
+    // Toggle fullscreen
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
     }
-  }
 
     // Add beforeunload warning for unsaved changes
     window.addEventListener('beforeunload', (e) => {
@@ -1388,12 +1597,12 @@ $("toggle-hide-btn").onclick = () => {
   }
   
   /* ═══════════════════════════════════════════════════════════════
-                          IMPORT
+                          IMPORT SLIDESHOW
      ═══════════════════════════════════════════════════════════════ */
   
   function convertTxtToXML(txtContent, filename) {
     let title = filename.replace(/\.(txt|xml)$/i, '') || "Imported Presentation";
-    let theme = "tufte-base";
+    let theme = DEFAULT_THEME;
     let showSlideCount = "true";
     let logoUrl = "";
     
@@ -1477,194 +1686,27 @@ $("toggle-hide-btn").onclick = () => {
       <head>
         <title>Presenter View</title>
         <style>
-          body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a1a;
-            color: #fff;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr auto;
-            height: 100vh;
-            gap: 20px;
-            padding: 20px;
-            box-sizing: border-box;
-          }
-          .slide-container {
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-          }
-          .slide-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-          }
-          .slide-label {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.7);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            z-index: 10;
-          }
-          .notes-section {
-            grid-column: 1 / -1;
-            background: #2a2a2a;
-            border-radius: 8px;
-            padding: 20px;
-            max-height: 200px;
-            overflow-y: auto;
-          }
-          .notes-section h3 {
-            margin-top: 0;
-            color: #ffa500;
-          }
-          .timer-section {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            text-align: right;
-            background: rgba(0,0,0,0.7);
-            padding: 10px 15px;
-            border-radius: 4px;
-          }
-          .timer {
-            font-size: 32px;
-            font-family: monospace;
-            color: #0f0;
-          }
-          .controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-          }
-          .controls button {
-            padding: 10px 20px;
-            background: #333;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-          }
-          .controls button:hover {
-            background: #555;
-          }
-          .slide-info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            font-size: 18px;
-            background: rgba(0,0,0,0.7);
-            padding: 10px 15px;
-            border-radius: 4px;
-          }
-
-/* Print with notes styles */
-.print-notes-content {
-  display: none;
-}
-
-@media print {
-  .slide iframe {
-    display: none !important;
-  }
-  /* Show the lightweight placeholder text when printing */
-  .website-print-placeholder {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    text-align: center;
-    font-size: 1.5rem;
-    color: #666;
-    border: 2px dashed #ccc;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-  }
-
-/* Make the website wrapper invisible, leaving only the placeholder */
-.slide div:has(> .website-print-placeholder) {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  position: static !important;
-  transform: none !important;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-  body.print-with-notes .slide {
-    padding: calc((100vh - 56.25vw) / 4) 0 !important;
-  }
-  
-  body.print-with-notes .slide-content {
-    height: 56.25vw !important;
-    max-height: 60vh !important;
-  }
-  
-  body.print-with-notes .print-notes-content {
-    display: block !important;
-    position: absolute !important;
-    bottom: 5vh !important;
-    left: 10vw !important;
-    right: 10vw !important;
-    color: #cc0000 !important;
-    font-size: 1.2rem !important;
-    line-height: 1.4 !important;
-    max-height: 25vh !important;
-    overflow: hidden !important;
-    font-family: var(--serif-font) !important;
-  }
-  
-  body.print-with-notes .print-notes-content p {
-    margin: 0.5em 0 !important;
-    color: #cc0000 !important;
-  }
-  
-  /* Auto-scale text if too much content */
-  body.print-with-notes .print-notes-content:has(p:nth-child(3)) {
-    font-size: 1rem !important;
-  }
-  
-  body.print-with-notes .print-notes-content:has(p:nth-child(5)) {
-    font-size: 0.9rem !important;
-  }
-  
-  body.print-with-notes .print-notes-content:has(p:nth-child(7)) {
-    font-size: 0.8rem !important;
-  }
-}
+          ${document.getElementById('core-styles').textContent}
         </style>
       </head>
-      <body>
-        <div class="slide-container">
-          <div class="slide-label">Current Slide</div>
+      <body class="presenter-body">
+        <div class="presenter-slide-container">
+          <div class="presenter-slide-label">Current Slide</div>
           <iframe id="current-slide"></iframe>
         </div>
-        <div class="slide-container">
-          <div class="slide-label">Next Slide</div>
+        <div class="presenter-slide-container">
+          <div class="presenter-slide-label">Next Slide</div>
           <iframe id="next-slide"></iframe>
         </div>
-        <div class="notes-section">
+        <div class="presenter-notes-section">
           <h3>Speaker Notes</h3>
           <div id="notes-content">No notes for this slide</div>
         </div>
-        <div class="timer-section">
+        <div class="presenter-timer-section">
           <div>Elapsed Time</div>
-          <div class="timer" id="timer">00:00</div>
+          <div class="presenter-timer" id="timer">00:00</div>
         </div>
-        <!-- <div class="slide-info" id="slide-info">
-          Slide 1 of 10
-        </div> -->
-        <div class="controls">
+        <div class="presenter-controls">
           <button onclick="window.opener.prevSlide()">Previous</button>
           <button onclick="window.opener.nextSlide()">Next</button>
         </div>
@@ -1755,7 +1797,7 @@ $("toggle-hide-btn").onclick = () => {
   };  
 
 /* ═══════════════════════════════════════════════════════════════
-                          DRAG AND DROP
+                          DRAG AND DROP IN EDIT MODE
      ═══════════════════════════════════════════════════════════════ */
   
   function makeThumbnailsDraggable() {
@@ -1917,16 +1959,16 @@ $("toggle-hide-btn").onclick = () => {
     }, { offset: Number.NEGATIVE_INFINITY }).element;
   }
   
-async function reorderSlides(fromIndex, toIndex) {
-  if (fromIndex === toIndex) return;
-  
-  updateGroundTruth('REORDER', { fromIndex, toIndex });
-  
-  buildSlidesFromXMLDoc();
-  await refreshThumbnails();
-  let newCurrentIndex = toIndex;
-  showSlide(newCurrentIndex);
-}
+  async function reorderSlides(fromIndex, toIndex) {
+    if (fromIndex === toIndex) return;
+    
+    updateGroundTruth('REORDER', { fromIndex, toIndex });
+    
+    buildSlidesFromXMLDoc();
+    await refreshThumbnails();
+    let newCurrentIndex = toIndex;
+    showSlide(newCurrentIndex);
+  }
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1939,7 +1981,7 @@ async function reorderSlides(fromIndex, toIndex) {
 
     $("show-count").checked = p.getAttribute("showSlideCount") !== "false";
     $("logo-url").value = p.getAttribute("logoUrl") || "";
-    $("theme-selector").value = p.getAttribute("theme") || "tufte-base";
+    $("theme-selector").value = p.getAttribute("theme") || DEFAULT_THEME;
 
     refreshThumbnails();
     loadTextareaForCurrentSlide();
@@ -1956,11 +1998,17 @@ async function reorderSlides(fromIndex, toIndex) {
     const promise = new Promise(async (resolve) => {
       const thumbsContainer = $("thumbs");
 
+      // Clear old iframes
+      thumbsContainer.querySelectorAll('iframe').forEach(iframe => {
+        iframe.src = 'about:blank';
+        iframe.remove();
+      });
+
       // Clear old thumbnails. This is what causes the scroll jump.
       thumbsContainer.innerHTML = ''; 
       
       const slideNodes = state.xmlDoc.querySelectorAll("presentation > slide");
-      const theme = $("theme-selector").value || "tufte-base";
+      const theme = $("theme-selector").value || DEFAULT_THEME;
 
       // 3) Rebuild the DOM elements
       for (let i = 0; i < slideNodes.length; i++) {
@@ -2016,18 +2064,18 @@ async function reorderSlides(fromIndex, toIndex) {
     }
   }
 
-function highlightThumb(index) {
-  const thumbs = document.querySelectorAll("#thumbs .thumb");
-  thumbs.forEach((t, i) =>
-    t.classList.toggle("selected", i === index)
-  );
-  const selected = document.querySelector("#thumbs .thumb.selected");
-  if (selected) selected.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-}
+  function highlightThumb(index) {
+    const thumbs = document.querySelectorAll("#thumbs .thumb");
+    thumbs.forEach((t, i) =>
+      t.classList.toggle("selected", i === index)
+    );
+    const selected = document.querySelector("#thumbs .thumb.selected");
+    if (selected) selected.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
 
-function buildRawDeck() {
-  const p = state.xmlDoc.documentElement;
-  let txt = `# METADATA:
+  function buildRawDeck() {
+    const p = state.xmlDoc.documentElement;
+    let txt = `# METADATA:
 Title: ${p.getAttribute('title')            || ''}
 Theme: ${p.getAttribute('theme')            || 'tufte-base'}
 ShowSlideCount: ${p.getAttribute('showSlideCount') || 'true'}
@@ -2041,8 +2089,8 @@ LogoUrl: ${p.getAttribute('logoUrl')        || ''}`;
 ${(s.querySelector('raw')?.textContent || '').trim()}`;
   });
 
-  return txt.trim();
-}
+    return txt.trim();
+  }
 
   function getRawTextForSlide(index) {
     const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
@@ -2095,169 +2143,183 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
                     CENTRALIZED STATE UPDATE
    ═══════════════════════════════════════════════════════════════ */
 
-function updateGroundTruth(action, data = {}) {
-  console.log(`[updateGroundTruth] Action: ${action}`, data);
+  function updateGroundTruth(action, data = {}) {
+    console.log(`[updateGroundTruth] Action: ${action}`, data);
 
-  // 0. Save first
-  if (action === 'DOWNLOAD' || action === 'SAVE' || action === 'EXIT_EDIT_MODE') {
-    // Force save current slide text regardless of mode
-    const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
-    if (slideNode && $("raw-text-editor")) {
-      const rawNode = slideNode.querySelector('raw');
-      const newText = $("raw-text-editor").value;
-    
-      if (rawNode) {
-        rawNode.textContent = '';
-        rawNode.appendChild(
-          state.xmlDoc.createCDATASection(`\n${newText}\n`)
-        );
-        console.log(`[updateGroundTruth] Saved current slide text for ${action}`);
-      }
-    }
-    console.log(`Current slides `, state.xmlDoc);
-  }
-  
-  // 1. Create DOM if needed (for new/load/init actions)
-  if (action === 'INIT' || action === 'LOAD' || action === 'NEW') {
-    const xmlString = data.xmlString || DEFAULT_XML;
-    const parser = new DOMParser();
-    const tempDoc = parser.parseFromString(xmlString, "text/xml");
-    
-    if (tempDoc.getElementsByTagName("parsererror").length > 0) {
-      alert("Error parsing presentation XML. Loading default.");
-      state.xmlDoc = parser.parseFromString(DEFAULT_XML, "text/xml");
-    } else {
-      state.xmlDoc = tempDoc;
-    }
-    
-    // Reset other state
-    state.hasChanges = false;
-    state.currentAbsoluteSlideIndex = data.slideIndex || 0;
-    console.log(`[updateGroundTruth] Created new XML DOM from ${action}`);
-  }
-  
-  // 2. Update current slide text (for most actions except init)
-  if (action !== 'INIT' && action !== 'LOAD' && action !== 'NEW' && state.editMode) {
-    const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
-    if (slideNode) {
-      const rawNode = slideNode.querySelector('raw');
-      const newText = $("raw-text-editor").value;
+    // 0. Save first
+    if (action === 'DOWNLOAD' || action === 'SAVE' || action === 'EXIT_EDIT_MODE') {
+      // Force save current slide text regardless of mode
+      const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
+      if (slideNode && $("raw-text-editor")) {
+        const rawNode = slideNode.querySelector('raw');
+        const newText = $("raw-text-editor").value;
       
-      if (rawNode && newText.trim() !== (rawNode.textContent || '').trim()) {
-        rawNode.textContent = '';
-        rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${newText}\n`));
-        state.hasChanges = true;
-        console.log(`[updateGroundTruth] Updated slide ${state.currentAbsoluteSlideIndex} text`);
+        if (rawNode) {
+          rawNode.textContent = '';
+          rawNode.appendChild(
+            state.xmlDoc.createCDATASection(`\n${newText}\n`)
+          );
+          console.log(`[updateGroundTruth] Saved current slide text for ${action}`);
+        }
       }
-    }
-  }
-  
-  // 3. Handle reordering (add, delete, rearrange)
-  if (action === 'REORDER') {
-    const { fromIndex, toIndex } = data;
-
-    // keep a handle on whichever slide is *currently* selected
-    const curSlideNode =
-      state.xmlDoc.querySelectorAll('presentation > slide')[state.currentAbsoluteSlideIndex];
-
-    const pres   = state.xmlDoc.querySelector('presentation');
-    const slides = Array.from(pres.querySelectorAll('slide'));
-    const moved  = slides[fromIndex];
-
-    // physically move the node
-    pres.insertBefore(
-      moved,
-      (fromIndex < toIndex) ? slides[toIndex].nextSibling : slides[toIndex]
-    );
-
-    // recompute where the current slide ended up
-    const newOrder = Array.from(pres.querySelectorAll('slide'));
-    state.currentAbsoluteSlideIndex = newOrder.indexOf(curSlideNode);
-
-    state.hasChanges = true;
-    console.log(
-      `[updateGroundTruth] Reordered slide ${fromIndex} → ${toIndex}. ` +
-      `Current slide is now ${state.currentAbsoluteSlideIndex}`
-    );
-  }
-
-  if (action === 'ADD_SLIDE') {
-    const { index, content } = data;
-    const newSlideNode = state.xmlDoc.createElement('slide');
-    const rawNode = state.xmlDoc.createElement('raw');
-    rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${content}\n`));
-    newSlideNode.appendChild(rawNode);
-    
-    const slides = state.xmlDoc.querySelectorAll("presentation > slide");
-    state.xmlDoc.querySelector("presentation").insertBefore(
-      newSlideNode, 
-      slides[index] || null
-    );
-    
-    state.hasChanges = true;
-    console.log(`[updateGroundTruth] Added slide at index ${index}`);
-  }
-  
-  if (action === 'DELETE_SLIDE') {
-    const { index } = data;
-    state.xmlDoc.querySelectorAll("presentation > slide")[index].remove();
-    state.hasChanges = true;
-    console.log(`[updateGroundTruth] Deleted slide at index ${index}`);
-  }
-  
-  // 4. Update theme
-  if (action === 'THEME_CHANGE' || action === 'LOGO_CHANGE' || action === 'TOGGLE_COUNT') {
-    const presNode = state.xmlDoc.querySelector("presentation");
-    
-    if (action === 'THEME_CHANGE') {
-      presNode.setAttribute("theme", data.theme);
-      console.log(`[updateGroundTruth] Updated theme to ${data.theme}`);
+      console.log(`Current slides `, state.xmlDoc);
     }
     
-    if (action === 'LOGO_CHANGE') {
-      const logoUrl = $("logo-url").value.trim();
-      if (logoUrl) {
-        presNode.setAttribute("logoUrl", logoUrl);
+    // 1. Create DOM if needed (for new/load/init actions)
+    if (action === 'INIT' || action === 'LOAD' || action === 'NEW') {
+      const xmlString = data.xmlString || DEFAULT_XML;
+      const parser = new DOMParser();
+      const tempDoc = parser.parseFromString(xmlString, "text/xml");
+      
+      if (tempDoc.getElementsByTagName("parsererror").length > 0) {
+        alert("Error parsing presentation XML. Loading default.");
+        state.xmlDoc = parser.parseFromString(DEFAULT_XML, "text/xml");
       } else {
-        presNode.removeAttribute("logoUrl");
+        state.xmlDoc = tempDoc;
       }
-      console.log(`[updateGroundTruth] Updated logo to ${logoUrl}`);
+      
+      // Reset other state
+      state.hasChanges = false;
+      state.currentAbsoluteSlideIndex = data.slideIndex || 0;
+      console.log(`[updateGroundTruth] Created new XML DOM from ${action}`);
     }
     
-    if (action === 'TOGGLE_COUNT') {
-      presNode.setAttribute("showSlideCount", $("show-count").checked ? "true" : "false");
-      console.log(`[updateGroundTruth] Updated showSlideCount to ${$("show-count").checked}`);
+    // 2. Update current slide text (for most actions except init)
+    if (action !== 'INIT' && action !== 'LOAD' && action !== 'NEW' && state.editMode) {
+      const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
+      if (slideNode) {
+        const rawNode = slideNode.querySelector('raw');
+        const newText = $("raw-text-editor").value;
+        
+        if (rawNode && newText.trim() !== (rawNode.textContent || '').trim()) {
+          rawNode.textContent = '';
+          rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${newText}\n`));
+          state.hasChanges = true;
+          console.log(`[updateGroundTruth] Updated slide ${state.currentAbsoluteSlideIndex} text`);
+        }
+      }
     }
     
-    state.hasChanges = true;
-  }
-  
-  // 5. Handle hide/show
-  if (action === 'TOGGLE_HIDE') {
-    const { index, hidden } = data;
-    const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
-    if (slideNode) {
-      if (hidden) {
-        slideNode.setAttribute("hidden", "true");
-      } else {
-        slideNode.removeAttribute("hidden");
-      }
+    // 3. Handle reordering (add, delete, rearrange)
+    if (action === 'REORDER') {
+      const { fromIndex, toIndex } = data;
+
+      // keep a handle on whichever slide is *currently* selected
+      const curSlideNode =
+        state.xmlDoc.querySelectorAll('presentation > slide')[state.currentAbsoluteSlideIndex];
+
+      const pres   = state.xmlDoc.querySelector('presentation');
+      const slides = Array.from(pres.querySelectorAll('slide'));
+      const moved  = slides[fromIndex];
+
+      // physically move the node
+      pres.insertBefore(
+        moved,
+        (fromIndex < toIndex) ? slides[toIndex].nextSibling : slides[toIndex]
+      );
+
+      // recompute where the current slide ended up
+      const newOrder = Array.from(pres.querySelectorAll('slide'));
+      state.currentAbsoluteSlideIndex = newOrder.indexOf(curSlideNode);
+
       state.hasChanges = true;
-      console.log(`[updateGroundTruth] Set slide ${index} hidden=${hidden}`);
+      console.log(
+        `[updateGroundTruth] Reordered slide ${fromIndex} → ${toIndex}. ` +
+        `Current slide is now ${state.currentAbsoluteSlideIndex}`
+      );
     }
+
+    if (action === 'ADD_SLIDE') {
+      const { index, content } = data;
+      const newSlideNode = state.xmlDoc.createElement('slide');
+      const rawNode = state.xmlDoc.createElement('raw');
+      rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${content}\n`));
+      newSlideNode.appendChild(rawNode);
+      
+      const slides = state.xmlDoc.querySelectorAll("presentation > slide");
+      state.xmlDoc.querySelector("presentation").insertBefore(
+        newSlideNode, 
+        slides[index] || null
+      );
+      
+      state.hasChanges = true;
+      console.log(`[updateGroundTruth] Added slide at index ${index}`);
+    }
+    
+    if (action === 'DELETE_SLIDE') {
+      const { index } = data;
+      state.xmlDoc.querySelectorAll("presentation > slide")[index].remove();
+      state.hasChanges = true;
+      console.log(`[updateGroundTruth] Deleted slide at index ${index}`);
+    }
+    
+  // 4. Update theme and other metadata
+    if (action === 'THEME_CHANGE' || action === 'TOGGLE_COUNT' || action === 'SAVE' || action === 'EXIT_EDIT_MODE') {
+      const presNode = state.xmlDoc.querySelector("presentation");
+      
+      if (action === 'THEME_CHANGE') {
+        presNode.setAttribute("theme", data.theme);
+      }
+      
+      if (action === 'TOGGLE_COUNT') {
+        presNode.setAttribute("showSlideCount", $("show-count").checked ? "true" : "false");
+      }
+
+      // Scan all slides for the last "Logo:" directive to set it globally.
+      let lastLogoUrl = null;
+      const logoRegex = /^Logo:\s*(.*)/im;
+      state.xmlDoc.querySelectorAll("presentation > slide raw").forEach(raw => {
+          const match = (raw.textContent || '').match(logoRegex);
+          if (match && match[1].trim()) {
+              lastLogoUrl = match[1].trim();
+          }
+      });
+
+      if (lastLogoUrl) {
+          presNode.setAttribute("logoUrl", lastLogoUrl);
+      } else {
+          presNode.removeAttribute("logoUrl");
+      }
+      
+      state.hasChanges = true;
+    }
+    
+    // 5. Handle hide/show
+    if (action === 'TOGGLE_HIDE') {
+      const { index, hidden } = data;
+      const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
+      if (slideNode) {
+        if (hidden) {
+          slideNode.setAttribute("hidden", "true");
+        } else {
+          slideNode.removeAttribute("hidden");
+        }
+        state.hasChanges = true;
+        console.log(`[updateGroundTruth] Set slide ${index} hidden=${hidden}`);
+      }
+    }
+    
+    // Log current state
+    console.log(`[updateGroundTruth] Current state:`, {
+      slides: state.xmlDoc.querySelectorAll("presentation > slide").length,
+      currentSlide: state.currentAbsoluteSlideIndex,
+      hasChanges: state.hasChanges,
+      theme: state.xmlDoc.documentElement.getAttribute("theme"),
+      logoUrl: state.xmlDoc.documentElement.getAttribute("logoUrl")
+    });
+
+    // Finally, save the entire presentation to local storage on every update.
+    try {
+      const serializer = new XMLSerializer();
+      const xmlString = serializer.serializeToString(state.xmlDoc);
+      localStorage.setItem('modernSlides_lastSession', xmlString);
+      console.log('[localStorage] Session saved.');
+    } catch (e) {
+      console.error('[localStorage] Failed to save session:', e);
+    }
+    
+    updateSaveButtonGlow();
   }
-  
-  // Log current state
-  console.log(`[updateGroundTruth] Current state:`, {
-    slides: state.xmlDoc.querySelectorAll("presentation > slide").length,
-    currentSlide: state.currentAbsoluteSlideIndex,
-    hasChanges: state.hasChanges,
-    theme: state.xmlDoc.documentElement.getAttribute("theme"),
-    logoUrl: state.xmlDoc.documentElement.getAttribute("logoUrl")
-  });
-  
-  updateSaveButtonGlow();
-}
 
   /* ═══════════════════════════════════════════════════════════════
                           NAVIGATION & DISPLAY
@@ -2406,55 +2468,13 @@ function updateGroundTruth(action, data = {}) {
     );
   }
   
-  function updateSingleSlide(index) {
-    const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
-    if (!slideNode) return;
-    
-    const rawText = slideNode.querySelector('raw')?.textContent || '';
-    const newSlideElement = createSlideElement(rawText);
-    
-    if (state.slideEls[index]) {
-      state.slideEls[index].replaceWith(newSlideElement);
-      state.slideEls[index] = newSlideElement;
-      
-      if (index === state.currentAbsoluteSlideIndex) {
-        newSlideElement.classList.add('active');
-      }
-      
-      if (window.MathJax?.typesetPromise) {
-        MathJax.typesetPromise([newSlideElement]);
-      }
-    }
-  }
-  
-async function updateSingleThumbnail(index) {
-  const thumb = document.querySelector(`#thumbs .thumb[data-index="${index}"]`);
-  if (!thumb) return;
-  
-  const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
-  const rawText = slideNode?.querySelector('raw')?.textContent || '';
-  const theme = $("theme-selector").value || "tufte-base";
-  
-  const iframe = thumb.querySelector('iframe');
-  if (iframe) {
-    iframe.srcdoc = await getThumbnailHTML(rawText, theme);
-  }
-  
-  // Parse the raw text to check if it's hidden
-  const { attributes } = parseRawText(rawText);
-  if (attributes.hidden) {
-    thumb.classList.add("hidden-slide");
-  } else {
-    thumb.classList.remove("hidden-slide");
-  }
-}
   async function updateSingleThumbnail(index) {
     const thumb = document.querySelector(`#thumbs .thumb[data-index="${index}"]`);
     if (!thumb) return;
     
     const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
     const rawText = slideNode?.querySelector('raw')?.textContent || '';
-    const theme = $("theme-selector").value || "tufte-base";
+    const theme = $("theme-selector").value || DEFAULT_THEME;
     
     const iframe = thumb.querySelector('iframe');
     if (iframe) {
@@ -2470,29 +2490,29 @@ async function updateSingleThumbnail(index) {
     }
   }  
 
- async function getThumbnailHTML(rawText, theme) {
-  const slideElement = createSlideElement(rawText);
-  
-  // Remove the hidden-in-presentation class for thumbnails
-  // We want to see the content in thumbnails even if hidden
-  slideElement.classList.remove('hidden-in-presentation');
-  
-  const slideElementHTML = slideElement.outerHTML;
-  
-  // Get the theme CSS content WITHOUT fetch
-  let themeCSS = '';
-  const themeLink = document.getElementById(`${theme}-stylesheet`);
-  if (themeLink && themeLink.sheet) {
-    try {
-      // Read from the already-loaded stylesheet
-      const cssRules = themeLink.sheet.cssRules || themeLink.sheet.rules;
-      for (let i = 0; i < cssRules.length; i++) {
-        themeCSS += cssRules[i].cssText + '\n';
-      }
-    } catch (err) {
-      // Fallback: include the link tag instead
-      themeCSS = `<link rel="stylesheet" href="${themeLink.href}">`;
-      return `<!DOCTYPE html>
+  async function getThumbnailHTML(rawText, theme) {
+    const slideElement = createSlideElement(rawText);
+    
+    // Remove the hidden-in-presentation class for thumbnails
+    // We want to see the content in thumbnails even if hidden
+    slideElement.classList.remove('hidden-in-presentation');
+    
+    const slideElementHTML = slideElement.outerHTML;
+    
+    // Get the theme CSS content WITHOUT fetch
+    let themeCSS = '';
+    const themeLink = document.getElementById(`${theme}-stylesheet`);
+    if (themeLink && themeLink.sheet) {
+      try {
+        // Read from the already-loaded stylesheet
+        const cssRules = themeLink.sheet.cssRules || themeLink.sheet.rules;
+        for (let i = 0; i < cssRules.length; i++) {
+          themeCSS += cssRules[i].cssText + '\n';
+        }
+      } catch (err) {
+        // Fallback: include the link tag instead
+        themeCSS = `<link rel="stylesheet" href="${themeLink.href}">`;
+        return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -2529,7 +2549,7 @@ async function updateSingleThumbnail(index) {
     ${slideElementHTML}
 </body>
 </html>`;
-}
+  }
   
   /* ═══════════════════════════════════════════════════════════════
                           XML HANDLING
@@ -2546,10 +2566,11 @@ async function updateSingleThumbnail(index) {
       state.xmlDoc = tempDoc;
     }
     
-    const theme = state.xmlDoc.documentElement.getAttribute("theme") || "tufte-base";
+    const theme = state.xmlDoc.documentElement.getAttribute("theme") || DEFAULT_THEME;
     $("theme-selector").value = theme;
     applyTheme(theme);
   }  
+
   function createSlideElement(rawText) {
     const { attributes, innerHTML } = parseRawText(rawText);
     const slideDiv = document.createElement("div");
@@ -2652,6 +2673,7 @@ async function updateSingleThumbnail(index) {
 
     return slideDiv;
   }  
+
   /* ═══════════════════════════════════════════════════════════════
                       TEXT PARSING & HTML GENERATION
      ═══════════════════════════════════════════════════════════════ */
@@ -2676,96 +2698,96 @@ async function updateSingleThumbnail(index) {
       .join('\n');
   }
 
-function formatWithJustify(text) {
-  if (!text || !text.trim()) return "";
+  function formatWithJustify(text) {
+    if (!text || !text.trim()) return "";
 
-  // Map markers to text-align styles
-  const INLINE_ALIGN = {
-    "<<<": "text-align:left;",
-    ">>>": "text-align:right;",
-    "|||": "text-align:center;",
-  };
+    // Map markers to text-align styles
+    const INLINE_ALIGN = {
+      "<<<": "text-align:left;",
+      ">>>": "text-align:right;",
+      "|||": "text-align:center;",
+    };
 
-  // 1) Turn inline pairs like <<<text<<< into placeholders
-  //    that will later become <p style="..."> (not <div>)
-  const inlineMarkers = [];
-  const withInlinePlaceholders = text.replace(/(<<<|>>>|\|\|\|)([^\n]*?)\1/g, (_, tok, body) => {
-    const key = `__ALIGN_${inlineMarkers.length}__`;
-    inlineMarkers.push({
-      key,
-      // p + width:100% keeps BigText size (.large p) and spans the slide in flex
-      html: `<p style="width:100%; ${INLINE_ALIGN[tok]}">${escapeHtml(body)}</p>`,
-    });
-    return key;
-  });
-
-  // 2) Support block fences on their own lines
-  const FENCES = new Set(["<<<", ">>>", "|||"]);
-  const BLOCK_ALIGN_STYLE = INLINE_ALIGN;
-
-  const lines = withInlinePlaceholders.split(/\r?\n/);
-  const out = [];
-  let mode = null;
-  let buf = [];
-
-  const replaceInlineKeys = (html) => {
-    let s = html;
-    for (const { key, html: frag } of inlineMarkers) {
-      s = s.split(key).join(frag);
-    }
-    return s;
-  };
-
-  const flushNormal = () => {
-    if (buf.length === 0) return;
-    const html = plainTextToHtml(buf.join("\n"));
-    out.push(replaceInlineKeys(html));
-    buf = [];
-  };
-
-  const flushBlock = (token) => {
-    const bodyRaw = buf.join("\n");
-    // Allow inline markers inside blocks too
-    const bodyWithPlaceholders = bodyRaw.replace(/(<<<|>>>|\|\|\|)([^\n]*?)\1/g, (_, tok, body) => {
+    // 1) Turn inline pairs like <<<text<<< into placeholders
+    //    that will later become <p style="..."> (not <div>)
+    const inlineMarkers = [];
+    const withInlinePlaceholders = text.replace(/(<<<|>>>|\|\|\|)([^\n]*?)\1/g, (_, tok, body) => {
       const key = `__ALIGN_${inlineMarkers.length}__`;
       inlineMarkers.push({
         key,
-        html: `<p style="${INLINE_ALIGN[tok]}">${escapeHtml(body)}</p>`,
+        // p + width:100% keeps BigText size (.large p) and spans the slide in flex
+        html: `<p style="width:100%; ${INLINE_ALIGN[tok]}">${escapeHtml(body)}</p>`,
       });
       return key;
     });
-    const bodyHtml = replaceInlineKeys(plainTextToHtml(bodyWithPlaceholders));
-    // Make the block span the slide so text-align is meaningful in flex layout
-    out.push(`<div style="${BLOCK_ALIGN_STYLE[token]}">${bodyHtml}</div>`);
-    buf = [];
-  };
 
-  for (const raw of lines) {
-    const trimmed = raw.trim();
-    if (FENCES.has(trimmed)) {
-      if (mode === null) {
-        flushNormal();
-        mode = trimmed;
-        buf = [];
-      } else if (trimmed === mode) {
-        flushBlock(mode);
-        mode = null;
-      } else {
-        buf.push(raw);
+    // 2) Support block fences on their own lines
+    const FENCES = new Set(["<<<", ">>>", "|||"]);
+    const BLOCK_ALIGN_STYLE = INLINE_ALIGN;
+
+    const lines = withInlinePlaceholders.split(/\r?\n/);
+    const out = [];
+    let mode = null;
+    let buf = [];
+
+    const replaceInlineKeys = (html) => {
+      let s = html;
+      for (const { key, html: frag } of inlineMarkers) {
+        s = s.split(key).join(frag);
       }
-      continue;
+      return s;
+    };
+
+    const flushNormal = () => {
+      if (buf.length === 0) return;
+      const html = plainTextToHtml(buf.join("\n"));
+      out.push(replaceInlineKeys(html));
+      buf = [];
+    };
+
+    const flushBlock = (token) => {
+      const bodyRaw = buf.join("\n");
+      // Allow inline markers inside blocks too
+      const bodyWithPlaceholders = bodyRaw.replace(/(<<<|>>>|\|\|\|)([^\n]*?)\1/g, (_, tok, body) => {
+        const key = `__ALIGN_${inlineMarkers.length}__`;
+        inlineMarkers.push({
+          key,
+          html: `<p style="${INLINE_ALIGN[tok]}">${escapeHtml(body)}</p>`,
+        });
+        return key;
+      });
+      const bodyHtml = replaceInlineKeys(plainTextToHtml(bodyWithPlaceholders));
+      // Make the block span the slide so text-align is meaningful in flex layout
+      out.push(`<div style="${BLOCK_ALIGN_STYLE[token]}">${bodyHtml}</div>`);
+      buf = [];
+    };
+
+    for (const raw of lines) {
+      const trimmed = raw.trim();
+      if (FENCES.has(trimmed)) {
+        if (mode === null) {
+          flushNormal();
+          mode = trimmed;
+          buf = [];
+        } else if (trimmed === mode) {
+          flushBlock(mode);
+          mode = null;
+        } else {
+          buf.push(raw);
+        }
+        continue;
+      }
+      buf.push(raw);
     }
-    buf.push(raw);
-  }
 
-  if (mode === null) {
-    flushNormal();
-  } else {
-    flushBlock(mode);
-  }
+    if (mode === null) {
+      flushNormal();
+    } else {
+      flushBlock(mode);
+    }
 
-  return out.join("\n");
-}
+    return out.join("\n");
+  }
  
   function parseRawText(rawText) {
     const attributes = {};
@@ -2854,45 +2876,60 @@ function formatWithJustify(text) {
           break;
         }
           
-case "Columns": {
-  // Split into column parts with --- separators
-  const parts = content.split(/^\s*---\s*$/m);
+        case "Columns": {
+          const parts = content.split(/^\s*---\s*$/m);
 
-  // Allow extensions with optional ?query, and data: URLs
-  const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+)\s*(?:,\s*(.*))?$/i;
+          // Allow extensions with optional ?query, and data: URLs
+          const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+)\s*(?:,\s*(.*))?$/i;
 
-  const colsHtml = parts.map(part => {
-    const lines = part.trim().split(/\r?\n+/).filter(Boolean);
+          const colsHtml = parts.map(part => {
+            const lines = part.trim().split(/\r?\n+/);
 
-    // If any line in this column looks like an image, render line-by-line
-    if (lines.some(l => imgLineRe.test(l))) {
-      const items = lines.map(line => {
-        const m = line.match(imgLineRe);
-        if (m) {
-          const imageUrl   = m[1].trim();
-          const colCaption = (m[2] || '').trim();
-          const resolvedUrl = window.presentationBaseUrl
-            ? resolveImagePath(imageUrl, window.presentationBaseUrl)
-            : imageUrl;
-          return `<div class="img-container">
+            let blocks = [];
+            let textBuf = [];
+            let imageCount = 0;
+            let nonImageCount = 0;
+
+            const flushText = () => {
+              if (textBuf.length) {
+                // Use full text handling (alignment markers, lists, emphasis)
+                blocks.push(formatWithJustify(textBuf.join('\n').trim()));
+                textBuf = [];
+              }
+            };
+
+            for (const line of lines) {
+              const m = line.match(imgLineRe);
+              if (m) {
+                flushText();
+                imageCount++;
+                const imageUrl = m[1].trim();
+                const colCaption = (m[2] || '').trim();
+                const resolvedUrl = window.presentationBaseUrl
+                  ? resolveImagePath(imageUrl, window.presentationBaseUrl)
+                  : imageUrl;
+                blocks.push(
+                  `<div class="img-container">
                     <img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(colCaption)}">
                     <div class="caption">${plainTextToHtml(colCaption)}</div>
-                  </div>`;
+                  </div>`
+                );
+              } else if (line.trim() !== '') {
+                nonImageCount++;
+                textBuf.push(line);
+              }
+            }
+            flushText();
+
+            const onlyImages = imageCount > 0 && nonImageCount === 0;
+            const cls  = onlyImages ? 'column images-only' : 'column';
+            const data = onlyImages ? ` data-imgcount="${imageCount}"` : '';
+            return `<div class="${cls}"${data}>${blocks.join('')}</div>`;
+          }).join('');
+
+          innerHTML += `<div class="columns">${colsHtml}</div>`;
+          break;
         }
-        // Non-image line: render as text paragraph(s)
-        return plainTextToHtml(line);
-      }).join('');
-      return `<div class="column">${items}</div>`;
-    }
-
-    // Fallback: column is pure text
-    return `<div class="column">${plainTextToHtml(part.trim())}</div>`;
-  }).join('');
-
-  innerHTML += `<div class="columns">${colsHtml}</div>`;
-  break;
-}
-
           
         case "Table": {
           let tableHtml = '<table>';
@@ -2930,6 +2967,7 @@ case "Columns": {
     
     return { attributes, innerHTML };
   }  
+
   /* ═══════════════════════════════════════════════════════════════
                           UTILITY FUNCTIONS
      ═══════════════════════════════════════════════════════════════ */
@@ -2946,36 +2984,19 @@ case "Columns": {
      ═══════════════════════════════════════════════════════════════ */
   
   async function discoverThemes() {
-    // For local file system, we can't discover files dynamically
-    // So we'll check for known theme patterns
-    const knownThemes = [
-      'tufte-base.css',
-      'oxford.css',
-      'bringhurst.css',
-      'calgary.css',
-      'swiss-modern.css',
-      'david-carson.css',
-      'gradient.css', 
-      'modern-dark.css',
-      'japan-minimal.css'
-    ];
-    
     state.availableThemes = [];
     
-    for (const filename of knownThemes) {
+    for (const themeName of AVAILABLE_THEMES) {
+      const filename = `${themeName}.css`;
       try {
-        // Try to create a link element to test if the file exists
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = filename;
-        link.id = filename.replace('.css', '-stylesheet');
+        link.id = `${themeName}-stylesheet`;
         link.disabled = true;
         document.head.appendChild(link);
         
-        // Extract theme name from filename
-        const themeName = filename.replace('.css', '');
         const displayName = themeName
-          .replace('theme-', '')
           .replace(/-/g, ' ')
           .split(' ')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -2991,7 +3012,6 @@ case "Columns": {
       }
     }
     
-    // Populate theme selector
     const themeSelector = $('theme-selector');
     themeSelector.innerHTML = '';
     state.availableThemes.forEach(theme => {
@@ -3030,7 +3050,20 @@ case "Columns": {
   function handleURLParameters() {
     const urlParams = new URLSearchParams(window.location.search);
     const inputUrl = urlParams.get('xml');
-    if (!inputUrl) return init();
+    
+    // Check for a saved session in local storage first, but only if no URL is specified.
+    if (!inputUrl) {
+        const savedSession = localStorage.getItem('modernSlides_lastSession');
+        if (savedSession) {
+            if (confirm("Restore the most recently worked-on slideshow?")) {
+                init(savedSession);
+                return; // Stop here to prevent loading the default.
+            }
+        }
+        // If no saved session or user declines, proceed to load the default.
+        init();
+        return;
+    }
 
     let textFileUrl;
     let baseFolderUrl;
@@ -3069,7 +3102,7 @@ case "Columns": {
         init();
       });
   }
-  
+
   window.resolveImagePath = function(imageSrc, baseUrl) {
     if (!baseUrl || imageSrc.startsWith('http://') || 
         imageSrc.startsWith('https://') || imageSrc.startsWith('data:')) {
@@ -3106,26 +3139,28 @@ case "Columns": {
                           INITIALIZATION
      ═══════════════════════════════════════════════════════════════ */
 
-function init(newXmlString) {
-  updateGroundTruth('INIT', { xmlString: newXmlString });
-  
-  const theme = state.xmlDoc.documentElement.getAttribute("theme") || "tufte-base";
-  $("theme-selector").value = theme;
-  applyTheme(theme);
-  
-  buildSlidesFromXMLDoc();
-  showSlide(0, true);
-  updateHUD();
-  updateToggleCountButtonState();
-  
-  if (state.editMode && $("editor").classList.contains("active")) {
-    setupEditorUI();
+  function init(newXmlString) {
+    updateGroundTruth('INIT', { xmlString: newXmlString });
+    
+    const theme = state.xmlDoc.documentElement.getAttribute("theme") || DEFAULT_THEME;
+    $("theme-selector").value = theme;
+    applyTheme(theme);
+    
+    buildSlidesFromXMLDoc();
+    showSlide(0, true);
+    updateHUD();
+    updateToggleCountButtonState();
+    
+    if (state.editMode && $("editor").classList.contains("active")) {
+      setupEditorUI();
+    }
+    
+    if (!state.editMode) {
+      requestWakeLock();
+    }
+
+    $("raw-text-editor").value = getRawTextForSlide(state.currentAbsoluteSlideIndex);
   }
-  
-  if (!state.editMode) {
-    requestWakeLock();
-  }
-}
   
   // Main entry point
   return async function() {
@@ -3150,7 +3185,7 @@ function init(newXmlString) {
 })();
 
 // Start the application
-tufteSlideshowApp();
+ModernSlideshow();
 </script>
 </body>
 </html>
