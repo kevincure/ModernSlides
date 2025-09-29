@@ -910,7 +910,7 @@ body {
         <input type="checkbox" id="show-count" checked style="display:none">
         <!-- toggle button -->
         <button id="toggle-count-btn" title="Hide Slide Numbers">
-          <i class="fa-solid fa-numeric-sort-asc"></i>
+          <i class="fa-solid fa-sort-numeric-asc"></i>
         </button>
         <label>Theme
           <select id="theme-selector">
@@ -1287,6 +1287,7 @@ Text: And some text.
 
     // Duplicate slide
     $("dup-btn").onclick = async () => {
+      updateGroundTruth('SAVE');
       const currentRawText = getRawTextForSlide(state.currentAbsoluteSlideIndex);
       const newIndex = state.currentAbsoluteSlideIndex + 1;
       
@@ -1375,7 +1376,7 @@ Text: And some text.
       // Update the raw text in XML - trim to avoid extra newlines
       const newRawText = newLines.join('\n').trim();
       rawNode.textContent = '';
-      rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${newRawText}\n`));
+      rawNode.appendChild(state.xmlDoc.createCDATASection(newRawText));
 
       // Update the UI
       state.hasChanges = true;
@@ -1556,8 +1557,9 @@ Text: And some text.
         const before = textarea.value.substring(0, lineStartPos);
         const after = textarea.value.substring(cursorPos);
         
-        // For Hidden, add the value too
-        const insertion = letter === 'H' ? 'Hidden: true' : shortcuts[letter] + ': ';
+        const precomposed = new Set(['C','T']);
+        const insertion = precomposed.has(letter) ? shortcuts[letter]
+          : shortcuts[letter] + ': ';
         
         textarea.value = before + insertion + after;
         textarea.selectionStart = textarea.selectionEnd = before.length + insertion.length;
@@ -1980,7 +1982,6 @@ Text: And some text.
     if (!p) return;
 
     $("show-count").checked = p.getAttribute("showSlideCount") !== "false";
-    $("logo-url").value = p.getAttribute("logoUrl") || "";
     $("theme-selector").value = p.getAttribute("theme") || DEFAULT_THEME;
 
     refreshThumbnails();
@@ -2094,7 +2095,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
   function getRawTextForSlide(index) {
     const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
-    return slideNode?.querySelector("raw")?.textContent.trim() || "";
+    return slideNode?.querySelector("raw")?.textContent || "";
   }
 
   function loadTextareaForCurrentSlide() {
@@ -2157,7 +2158,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
         if (rawNode) {
           rawNode.textContent = '';
           rawNode.appendChild(
-            state.xmlDoc.createCDATASection(`\n${newText}\n`)
+            state.xmlDoc.createCDATASection(newText)
           );
           console.log(`[updateGroundTruth] Saved current slide text for ${action}`);
         }
@@ -2193,7 +2194,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
         
         if (rawNode && newText.trim() !== (rawNode.textContent || '').trim()) {
           rawNode.textContent = '';
-          rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${newText}\n`));
+          rawNode.appendChild(state.xmlDoc.createCDATASection(newText));
           state.hasChanges = true;
           console.log(`[updateGroundTruth] Updated slide ${state.currentAbsoluteSlideIndex} text`);
         }
@@ -2233,7 +2234,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       const { index, content } = data;
       const newSlideNode = state.xmlDoc.createElement('slide');
       const rawNode = state.xmlDoc.createElement('raw');
-      rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${content}\n`));
+      rawNode.appendChild(state.xmlDoc.createCDATASection(content));
       newSlideNode.appendChild(rawNode);
       
       const slides = state.xmlDoc.querySelectorAll("presentation > slide");
@@ -2458,7 +2459,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
   function addSlide(index, rawContent) {
     const newSlideNode = state.xmlDoc.createElement('slide');
     const rawNode = state.xmlDoc.createElement('raw');
-    rawNode.appendChild(state.xmlDoc.createCDATASection(`\n${rawContent}\n`));
+    rawNode.appendChild(state.xmlDoc.createCDATASection(rawContent));
     newSlideNode.appendChild(rawNode);
     
     const slides = state.xmlDoc.querySelectorAll("presentation > slide");
@@ -2680,7 +2681,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
   
   function plainTextToHtml(text) {
     if (!text || !text.trim()) return "";
-    let safeText = escapeHtml(text.trim());
+    let safeText = escapeHtml(text);
     
     // Process markdown-style formatting
     safeText = safeText.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
