@@ -12,60 +12,46 @@
   --serif-font: "Source Serif 4", "et-book", Georgia, serif;
   --sans-font: "Lato", "Gill Sans", sans-serif;
   --mono-font: Consolas, Monaco, monospace;
-  --base-font-size: 1.1vw;
 }
 
-body { font-family: var(--serif-font); background: var(--bg-color); color: var(--main-text-color); }
+body { 
+  font-family: var(--serif-font); 
+  background: var(--bg-color); 
+  color: var(--main-text-color); 
+}
 
-.slide-header { font-family: var(--sans-font); font-size: 0.9rem; color: var(--accent-light-color); }
+.slide-header { 
+  font-family: var(--sans-font);
+  color: var(--accent-light-color); 
+}
 
 .slide-content h1 {
   font-family: var(--serif-font);
   font-weight: 600;
-  font-size: 7rem;
-  line-height: 1.2;
-  text-align: center;
   border-bottom: 1px solid var(--h1-border-color);
-  padding-bottom: 0.5rem;
 }
 
-.slide-content p { font-size: 3rem; line-height: 1.6; max-width: 70rem; }
-
-/* --- DIRECTIVE-SPECIFIC STYLES --- */
-
-.slide-content .large p {
-  font-family: var(--serif-font);
-  font-size: 5rem;
-  text-align: center;
-  max-width: 70rem;
-  margin: 1rem auto;
-}
-
-.slide-content .small { font-size: 2rem; }
-.slide-content .small p { font-size: 2rem; }
-
-.slide-content .tiny { font-size: 1rem; }
-.slide-content .tiny p { font-size: 1rem; }
-
-/* Sidenote style for Notes */
 .slide-content .notes {
-  position: absolute; bottom: auto; top: 4rem; right: 2rem;
-  width: 200px;
   font-family: var(--sans-font);
-  font-size: 0.9rem;
-  line-height: 1.5;
   color: var(--accent-light-color);
 }
-.slide-content .notes p { font-size: 1em; margin-bottom: 1em; }
 
 .slide-content table {
-  border-collapse: collapse;
-  font-size: 1.1rem;
   border-top: 2px solid var(--accent-color);
   border-bottom: 2px solid var(--accent-color);
 }
-.slide-content th, .slide-content td { border: none; padding: 0.6em 1em; text-align: left; }
-.slide-content th { font-family: var(--sans-font); font-weight: 700; border-bottom: 1px solid var(--accent-color); }
-.slide-content tbody tr:nth-child(even) td { background: transparent; }
 
-.slide-content .caption { font-size: 1rem; font-style: italic; color: var(--accent-light-color); max-width: 70rem; margin: 0 auto; }
+.slide-content th { 
+  font-family: var(--sans-font); 
+  font-weight: 700; 
+  border-bottom: 1px solid var(--accent-color); 
+}
+
+.slide-content th {
+  background-color: color-mix(in srgb, var(--bg-color) 95%, var(--main-text-color) 5%);
+}
+
+.slide-content .caption { 
+  font-style: italic; 
+  color: var(--accent-light-color);
+}

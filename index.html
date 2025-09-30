@@ -49,13 +49,11 @@ the raw text markup that gets parsed into slide elements.
 
 
 <!---------------------------------------STYLESHEETS SHARED ACROSS FILES ------------------------------------------------>
-<style id="core-styles">
+<style id="core-styles"> 
 /* ----------------------------- */
 /* --- Core Style Variables --- */
-/* ----Specific slide style set in the user-created .css files----- */
-/* ---- Theme stylesheets are dynamically loaded -------------------*/
+/* ----------------------------- */
 
-/* Editor style */
 :root {
   --editor-bg-color: #fffff8;
   --editor-text-color: #1a1a1a;
@@ -72,34 +70,45 @@ the raw text markup that gets parsed into slide elements.
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; height: 100%; overflow: hidden; font-size: var(--base-font-size); }
+
+html, body { width:100%; height:100%; overflow:hidden; }
 
 body {
   line-height: 1.5;
 }
 
+/* The entire scaling system is driven by the --base-font-size variable */
+.presentation-scaler,
+.slide-wrapper {
+  container-type: inline-size;
+  container-name: slideshow;
+  /* This is the single master switch for all slide scaling */
+  --base-font-size: 3cqw;
+}
+
 .deckbar-spacer {
-  flex-grow: 1; 
+  flex-grow: 1;
 }
 
 #editor button.primary-action {
   --editor-accent-color: #008000;
 }
 
-
 /* ----------------------------- */
 /* --- Slideshow Layout --- */
 /* ----------------------------- */
 
-#slideshow {
-  position: fixed; inset: 0; display: flex; align-items: center;
-  justify-content: center; background: var(--bg-color);
-}
-
 .slide {
-  position: absolute; inset: 0; display: flex; align-items: center;
-  justify-content: center; opacity: 0; transition: opacity 0.4s ease;
-  background-position: center; background-size: cover; background-repeat: no-repeat;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 .slide.active { opacity: 1; z-index: 1; }
 .slide.hidden-in-presentation { display: none !important; }
@@ -112,23 +121,32 @@ body {
 }
 
 .slide-header {
-  position: absolute; top: 0; left: 0; width: 100%;
-  font-family: var(--sans-font); font-size: 0.9rem;
-  padding: 0.6rem 1rem; color: var(--accent-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: calc(var(--base-font-size) * 0.2);
+  font-size: calc(var(--base-font-size) * 0.8);
 }
 
 .slide-content {
-  width: 100%; height: 100%; padding: 4rem;
-  display: flex; /* This is primarily for the notes positioning now */
+  width: 100%;
+  height: 100%;
+  padding: 4cqw;
+  display: flex;
   position: relative;
 }
 
 .slide-flow-content {
-  width: 100%;
-  margin: auto;
+  width: 80%;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centers block-level children like tables/images */
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 0;
+  line-height: 1.6;
 }
 
 .slide[style*="background-image"] .slide-content {
@@ -138,55 +156,129 @@ body {
 /* ----------------------------- */
 /* --- Slide Typography --- */
 /* ----------------------------- */
-.slide-content .text-center { text-align: center; }
 
-/* Columns: horizontal layout */
-.slide-content .columns { display: flex; gap: 2rem; align-items: stretch; width: 100%; }
-.slide-content .columns .column { flex: 1; }
-
-/* Vertically center when a column has only images and more than one */
-.slide-content .columns .column.images-only[data-imgcount]:not([data-imgcount="1"]) {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.slide-content h1 {
+  font-size: calc(var(--base-font-size) * 3);
+  line-height: 1.2;
+  text-align: center;
+  padding-bottom: calc(var(--base-font-size) * 0.5);
+  margin-bottom: calc(var(--base-font-size) * 0.8);
+  width: 100%;
 }
-.slide-content .columns .column.images-only > .img-container { margin: 0.5rem 0; }
 
-
-.slide-content table {
-  border-collapse: collapse; margin: 1rem auto; font-size: 1.1rem;
-}
-.slide-content th, .slide-content td {
-  border: 1px solid var(--h1-border-color);
-  padding: 0.5em 0.8em;
+.slide-content p {
+  font-size: var(--base-font-size);
+  line-height: 1.6;
+  margin-bottom: calc(var(--base-font-size) * 0.5);
   text-align: left;
 }
-.slide-content th {
-  font-weight: bold;
-  background-color: color-mix(in srgb, var(--bg-color) 95%, var(--main-text-color) 5%);
+
+.slide-content .text-center { text-align: center; }
+
+.slide-content .large p {
+  text-align: center;
+  font-size: calc(var(--base-font-size) * 1.6);
+  margin: calc(var(--base-font-size) * 0.5) auto;
+}
+
+.slide-content .small,
+.slide-content .small p {
+  font-size: calc(var(--base-font-size) * 0.8);
+}
+
+.slide-content .tiny,
+.slide-content .tiny p {
+  font-size: calc(var(--base-font-size) * 0.6);
+}
+
+.slide-content .notes {
+  position: absolute;
+  bottom: auto;
+  top: calc(var(--base-font-size) * 1.2);
+  right: calc(var(--base-font-size) * 0.6);
+  width: calc(var(--base-font-size) * 6);
+  font-size: calc(var(--base-font-size) * 0.7);
+  line-height: 1.5;
+}
+
+.slide-content .notes p {
+  font-size: 1em;
+  margin-bottom: 0.5em;
+}
+
+/* ----------------------------- */
+/* --- Columns, Tables, Images --- */
+/* ----------------------------- */
+
+.slide-content .columns {
+  display: flex;
+  gap: calc(var(--base-font-size) * 0.75);
+  align-items: stretch;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.slide-content .columns .column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.slide-content .columns .column.images-only[data-imgcount]:not([data-imgcount="1"]) {
+  justify-content: center;
+}
+
+.slide-content .columns .column.images-only > .img-container {
+  margin: calc(var(--base-font-size) * 0.1) 0;
+  flex: 1;
+  min-height: 0;
+}
+
+.slide-content table {
+  border-collapse: collapse;
+  margin: calc(var(--base-font-size) * 0.5) auto;
+  font-size: calc(var(--base-font-size) * 0.7);
+}
+
+.slide-content th, .slide-content td {
+  border: 1px solid var(--h1-border-color);
+  padding: calc(var(--base-font-size) * 0.3);
+  text-align: left;
 }
 
 .slide-content .img-container {
   text-align: center;
-  margin-bottom: 1rem;
-  max-width: 100%;
-  max-height: 80vh;
+  margin-bottom: calc(var(--base-font-size) * 0.5);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 1;
+  min-height: 0;
+  overflow: visible;
+  inline-size: 100%;
+  block-size: 100%;
 }
-.slide-content .img-container img, .slide-content .column img {
-  max-width: 100%;
-  display: block;
-  margin: 0 auto 0.5rem auto;
-  border-radius: 0px;
+
+/* Two-way scaling: fill the box while preserving aspect */
+.slide-content .img-container img,
+.slide-content .column img {
+  inline-size: 100%;
+  block-size: 100%;
   object-fit: contain;
-  width: auto;
-  height: auto;
-  max-height: calc(80vh - 3.5rem);
+  display: block;
+  margin: 0 auto calc(var(--base-font-size) * 0.2) auto;
 }
 
 .slide-content .caption {
-  font-size: 1rem;
-  font-style: italic;
-  color: var(--accent-light-color);
+  font-size: calc(var(--base-font-size) * 0.6);
+  max-width: 90%;
+  flex-shrink: 0;
+  flex-grow: 0;
 }
 
 /* ----------------------------- */
@@ -195,17 +287,17 @@ body {
 
 .company-logo {
   position: fixed;
-  top: 1rem;
-  right: 1rem;
-  max-height: 60px;
+  top: calc(var(--base-font-size) * 0.4);
+  right: calc(var(--base-font-size) * 0.4);
+  max-height: calc(var(--base-font-size) * 2.4);
   display: none;
   z-index: 5;
 }
 .slide-counter {
   position: fixed;
-  bottom: 1rem;
-  left: 1rem;
-  font-size: 0.9rem;
+  bottom: calc(var(--base-font-size) * 0.4);
+  left: calc(var(--base-font-size) * 0.4);
+  font-size: calc(var(--base-font-size) * 0.36);
   color: color-mix(in srgb, var(--main-text-color) 70%, transparent);
   z-index: 5;
 }
@@ -213,7 +305,7 @@ body {
   position: fixed;
   bottom: 0;
   left: 0;
-  height: 4px;
+  height: calc(var(--base-font-size) * 0.16);
   background: var(--accent-color);
   z-index: 10;
   transition: width 0.3s;
@@ -243,12 +335,28 @@ body {
 #thumbs {
   width: 240px;
   overflow-y: auto;
+  overflow-x: hidden;
   border-right: 1px solid var(--editor-border-color);
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
+
+#thumbs::-webkit-scrollbar {
+  width: 8px;
+}
+#thumbs::-webkit-scrollbar-track {
+  background: transparent;
+}
+#thumbs::-webkit-scrollbar-thumb {
+  background-color: #999;
+  border-radius: 4px;
+}
+#thumbs:hover::-webkit-scrollbar-thumb {
+  background-color: #666;
+}
+
 #editor-main {
   flex: 1;
   display: flex;
@@ -264,29 +372,41 @@ body {
 .thumb {
   position: relative;
   width: 200px;
-  padding-top: 112px;
+  height: 112.5px;
   border: 2px solid var(--editor-border-color);
   border-radius: 6px;
-  background: var(--editor-thumb-bg);
-  cursor: pointer;
+  background: #000;
+  cursor: move;
+  cursor: grab;
   pointer-events: auto;
   overflow: hidden;
+  transition: opacity 0.2s;
+  user-select: none;
+  flex-shrink: 0;
 }
+
 .thumb.selected {
   border-color: var(--editor-thumb-selected-border);
   box-shadow: 0 0 0 2px var(--editor-thumb-selected-border);
+}
+
+.thumb:active {
+  cursor: grabbing;
+}
+
+.thumb.dragging {
+  opacity: 0.4;
 }
 
 .thumb-iframe {
   position: absolute;
   top: 0;
   left: 0;
-  width: 640px;
-  height: 360px;
-  transform: scale(0.3125);
-  transform-origin: top left;
+  width: 200px;
+  height: 112.5px;
   border: none;
   pointer-events: none;
+  background: var(--editor-thumb-bg)
 }
 
 .thumb-number {
@@ -301,6 +421,7 @@ body {
   border-radius: 3px;
   z-index: 1;
 }
+
 .thumb.hidden-slide { opacity: 0.6; }
 .thumb.hidden-slide::after {
   content: "HIDDEN";
@@ -314,6 +435,18 @@ body {
   padding: 2px 5px;
   border-radius: 3px;
   z-index: 2;
+}
+
+.thumb-placeholder {
+  background: #007bff;
+  opacity: 0.2;
+  border: 2px dashed #0056b3;
+  border-radius: 4px;
+  margin: 5px;
+  box-sizing: border-box;
+  width: 200px;
+  height: 112.5px;
+  flex-shrink: 0;
 }
 
 #raw-text-editor {
@@ -432,55 +565,7 @@ body {
 }
 
 /* ----------------------------- */
-/* --- Drag and Drop Styles --- */
-/* ----------------------------- */
-
-#thumbs {
-  overflow-y: auto;
-  overflow-x: hidden;
-  max-height: 100%;
-}
-#thumbs::-webkit-scrollbar {
-  width: 8px;
-}
-#thumbs::-webkit-scrollbar-track {
-  background: transparent;
-}
-#thumbs::-webkit-scrollbar-thumb {
-  background-color: #999;
-  border-radius: 4px;
-}
-#thumbs:hover::-webkit-scrollbar-thumb {
-  background-color: #666;
-}
-
-
-.thumb {
-  cursor: move;
-  cursor: grab;
-  transition: opacity 0.2s;
-  user-select: none;
-}
-
-.thumb:active {
-  cursor: grabbing;
-}
-
-.thumb.dragging {
-  opacity: 0.4;
-}
-
-.thumb-placeholder {
-  background: #007bff;
-  opacity: 0.2;
-  border: 2px dashed #0056b3;
-  border-radius: 4px;
-  margin: 5px;
-  box-sizing: border-box;
-}
-
-/* ----------------------------- */
-/* --- 16:9 Aspect Ratio --- */
+/* --- 16:9 Presentation Viewport --- */
 /* ----------------------------- */
 
 .presentation-viewport {
@@ -491,58 +576,63 @@ body {
   align-items: center;
   justify-content: center;
   background: #000;
+  container-type: inline-size;
+  container-name: slideshow;
+  --base-font-size: 3cqw;
 }
 
 .presentation-scaler {
   position: relative;
-  width: 100%;
-  max-width: 177.77vh;
-  max-height: 56.25vw;
-  aspect-ratio: 16/9;
+  width: min(100vw, 177.78vh);
+  height: auto;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
   box-shadow: 0 0 50px rgba(0,0,0,0.5);
+  container-type: inline-size;
+  container-name: slideshow;
 }
 
+/* make the slideshow fill the stage without absolute overlay issues */
 #slideshow {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 100%;
   height: 100%;
   background: var(--bg-color);
 }
 
-.presentation-scaler .slide-counter {
+.slide { width: 100%; height: 100%; }
+
+.presentation-viewport .slide-counter {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
-  font-size: 16px;
+  bottom: calc(var(--base-font-size) * 0.48);
+  left: calc(var(--base-font-size) * 0.48);
+  font-size: calc(var(--base-font-size) * 0.64);
   color: #888;
   z-index: 100;
+  pointer-events: none;
 }
 
-.presentation-scaler #progress-bar {
+.presentation-viewport #progress-bar {
   position: absolute;
   bottom: 0;
   left: 0;
+  height: calc(var(--base-font-size) * 0.2);
   width: 100%;
-  height: 5px;
   background-color: #007bff;
   z-index: 100;
+  pointer-events: none;
 }
 
-.presentation-scaler .company-logo {
+.presentation-viewport .company-logo {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  max-height: 50px;
-  max-width: 150px;
+  top: calc(var(--base-font-size) * 0.8);
+  right: calc(var(--base-font-size) * 0.8);
+  max-height: calc(var(--base-font-size) * 2);
+  max-width: calc(var(--base-font-size) * 6);
   z-index: 100;
+  pointer-events: none;
 }
 
-.slide {
-  width: 100%;
-  height: 100%;
-}
 
 /* ----------------------------- */
 /* --- Presenter Mode Styles --- */
@@ -568,6 +658,10 @@ body {
   overflow: hidden;
   position: relative;
   box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .presenter-slide-container iframe {
@@ -639,175 +733,36 @@ body {
   background: #555;
 }
 
-/* ----- PRINT styles ----- */
-
+/* ----------------------------- */
+/* --- PRINT STYLES --- */
+/* ----------------------------- */
 /* Hide injected print notes on screen */
 .print-notes-content { display: none; }
 /* Hide the website placeholder on screen */
 .website-print-placeholder { display: none; }
 
 @media print {
-  /* Page setup */
   @page {
     size: landscape;
     margin: 0;
   }
 
-  /* Hide UI chrome */
-  #editor,
-  #progress-bar,
-  #slide-counter {
-    display: none !important;
-  }
-
-  /* Reset document margins and overflow */
+  /* Allow the printer to see all slides */
   html, body {
+    overflow: visible !important;
+    background: #fff !important;
     margin: 0 !important;
     padding: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: #fff !important;
-    overflow: visible !important;
   }
-
-  /* Flatten viewport/scaler and slideshow containers */
-  .presentation-viewport,
-  .presentation-scaler,
-  #slideshow {
-    position: static !important;
-    width: auto !important;
-    height: auto !important;
-    max-width: none !important;
-    max-height: none !important;
-    display: block !important;
-    background: transparent !important;
-    transform: none !important;
-    box-shadow: none !important;
-    aspect-ratio: unset !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    inset: unset !important;
-  }
-
-  /* Each slide becomes a full-page white "letterbox" */
+  
+  /* Use the exact same container-relative unit for printing */
   .slide {
-    overflow: hidden !important;
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    margin: 0 !important;
-    padding: calc((100vh - 56.25vw) / 2) 0 !important;
-    background-color: #fff !important;
-    background-clip: padding-box !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    z-index: auto !important;
-    transform: none !important;
-    transition: none !important;
-    page-break-after: always;
-    page-break-inside: avoid;
-    break-after: page;
-    break-inside: avoid;
+    --base-font-size: 3cqw;
   }
 
-  /* Don't force a break after the last slide or show hidden slides */
-  .slide:last-child {
-    page-break-after: auto;
-  }
-  .slide.hidden-in-presentation {
+  /* Hide all on-screen UI chrome */
+  #editor, #progress-bar, .slide-counter, #company-logo, .presenter-controls {
     display: none !important;
-  }
-
-  .slide[style*="background-image"] {
-    background-size: 0 0 !important;
-    background-position: center !important;
-    background-clip: content-box !important;
-  }
-
-  /* Preserve any slide background images */
-  .slide[style*="background-image"] .slide-content {
-    background-image: inherit !important;
-    background-size: contain !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important; 
-  }
-  .slide[style*="background-image"] .slide-content::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--slide-content-bg-if-image);
-    pointer-events: none;
-  }
-
-  /* Inner aspect-ratio container */
-  .slide::before {
-    content: '';
-    position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 177.78vh !important;   /* 16:9 aspect ratio */
-    height: 100vh !important;
-    max-width: 100vw !important;
-    max-height: 56.25vw !important;
-    background-image: none !important;
-    z-index: 99999 !important;
-  }
-
-  /* Slide content box */
-  .slide-content {
-    position: relative !important;
-    display: flex !important;
-    width: 177.78vh !important;
-    height: 100vh !important;
-    max-width: 100vw !important;
-    max-height: 56.25vw !important;
-    padding: 4rem !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-    background: var(--bg-color) !important;
-  }
-
-  /* Flow content inside slides */
-  .slide-flow-content {
-    position: relative !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    width: 100% !important;
-    margin: auto !important;
-  }
-
-  /* Prevent tall images from being clipped */
-  .slide-content .img-container,
-  .slide-content .img-container img {
-    max-height: 100% !important; /* Forces image & container to fit inside slide-content's height */
-    object-fit: contain !important; /* Ensures the image scales down, maintaining aspect ratio */
-  }
-
-  /* Hide embedded websites and show a placeholder to keep PDF size small */
-  .slide iframe {
-    display: none !important; /* Hide the heavy iframe */
-  }
-  .website-print-placeholder {
-    display: flex !important; /* Show the placeholder */
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    width: 100%;
-    text-align: center;
-    font-size: 1.5rem;
-    color: #666;
-    border: 2px dashed #ccc;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    box-sizing: border-box;
-    z-index: 10;
   }
 
   /* Ensure all colors and backgrounds print */
@@ -817,66 +772,82 @@ body {
     color-adjust: exact !important;
   }
 
-  .slide.is-fullscreen-image-slide .slide-content::before {
-    background: transparent !important;
+  /* Flatten on-screen layout containers */
+  .presentation-viewport, .presentation-scaler, #slideshow {
+    position: static !important; display: block !important;
+    width: auto !important; height: auto !important;
+    background: transparent !important; box-shadow: none !important;
+    aspect-ratio: unset !important;
   }
 
-/* When using the "Print with Notes" button */
-  body.print-with-notes .slide {
-    /* move the slide to the top instead of centered */
-    align-items: flex-start !important;
+  /* --- SLIDE PAGE STRUCTURE --- */
+  .slide {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important; /* Center slide vertically by default */
     justify-content: center !important;
-    padding: 0 !important; /* remove letterbox padding that centers vertically */
+    width: 100vw !important; height: 100vh !important;
+    overflow: hidden !important;
+    margin: 0 !important; padding: 0 !important;
+    opacity: 1 !important;
+    page-break-after: always;
+    break-after: page;
+  }
+  .slide:last-child { page-break-after: auto; break-after: avoid; }
+  .slide.hidden-in-presentation { display: none !important; }
+  
+  /* --- 16:9 CONTENT BOX (THE "PRINTABLE SCREEN") --- */
+  .slide-content {
+    position: relative !important; display: flex !important;
+    box-sizing: border-box !important; overflow: hidden !important;
+    background: var(--bg-color) !important;
+    width: 177.78vh !important; height: 100vh !important;
+    max-width: 100vw !important; max-height: 56.25vw !important;
+    container-type: inline-size;
+    container-name: print-slide-container;
   }
 
-  /* Kill the high-z pseudo element that otherwise sits above everything */
-  body.print-with-notes .slide::before {
-    content: none !important;
+  /* Show iframes and hide their placeholders */
+  .slide iframe { display: none !important; }
+  .website-print-placeholder { display: flex !important; }
+
+  /* When printing with notes, push the slide to the top of the page */
+  body.print-with-notes .slide {
+    align-items: flex-start !important;
   }
 
-  /* 16:9 box: limit to the 16:9 height so the area below is free for notes */
+  /* STEP 1: Shrink the slide's 16:9 container to make room at the bottom.
+     The slide content inside will automatically rescale perfectly thanks to `cqw`. */
   body.print-with-notes .slide-content {
-    height: 56.25vw !important;     /* 9/16 of page width */
-    max-height: 56.25vw !important; /* enforce 16:9 height */
+    height: 56.25vw !important;
+    max-height: 56.25vw !important;
   }
 
-  /* Show and place PrintNote at the bottom of the page */
+  /* STEP 2: Make the notes area visible and position it in the new empty space. */
   body.print-with-notes .print-notes-content {
     display: block !important;
     position: absolute !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    top: 56.25vw !important;
-    padding: 1rem 1vw !important;         /* horizontal margins without gaps */
-    background: #fff !important;           /* cover Background/FullScreenImage */
-    font-size: 2rem !important;
+    left: 0 !important; right: 0 !important; bottom: 0 !important;
+    top: 56.25vw !important; /* Start exactly where the slide content ends */
+    padding: calc(var(--base-font-size) * 0.4) calc(var(--base-font-size) * 0.8) !important;
+    background: #fff !important;
+    font-size: calc(var(--base-font-size) * 0.8) !important;
     line-height: 1.4 !important;
     z-index: 2147483647 !important;
-    color: #cc0000 !important;       /* match your presenter style */
+    color: #cc0000 !important; /* The requested red color */
   }
 
-  body.print-with-notes .slide iframe {
-    /* This rule is overridden by the general .slide iframe { display: none !important; } */
-    position: relative !important;
-    z-index: 1 !important;
+  /* STEP 3: Restore the automatic font-shrinking logic based on paragraph count. */
+  body.print-with-notes .print-notes-content:has(p:nth-child(2)) { 
+    font-size: calc(var(--base-font-size) * 0.44) !important; 
   }
-
-  body.print-with-notes .slide::after {
-    content: '' !important;
-    position: absolute !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    top: 56.25vw !important;      /* matches the 16:9 content height */
-    background: #fff !important;  /* opaque bar */
-    z-index: 2147483646 !important; /* under .print-notes-content, above bg */
+  body.print-with-notes .print-notes-content:has(p:nth-child(3)) { 
+    font-size: calc(var(--base-font-size) * 0.36) !important; 
   }
-
-  /* simple auto-shrink if many paragraphs in printeded note */
-  body.print-with-notes .print-notes-content:has(p:nth-child(2)) { font-size: 1.1rem !important; }
-  body.print-with-notes .print-notes-content:has(p:nth-child(3)) { font-size: 0.9rem !important; }
-  body.print-with-notes .print-notes-content:has(p:nth-child(5)) { font-size: 0.8rem !important; }
+  body.print-with-notes .print-notes-content:has(p:nth-child(5)) { 
+    font-size: calc(var(--base-font-size) * 0.32) !important; 
+  }
+}
 }
 </style>
 </head>
@@ -1006,6 +977,7 @@ body {
       # - You cannot nest some directives (e.g., a Table inside a Column).
       # - As you edit, your most-recently-edited slides are stored in LocalStorage via your browser, and can be recovered by reopening ModernSlides
       # - 9 different styles are given, but you can create your own also
+      # - you can add a bullet point by typing z:
       </pre>
     </div>
   </div>
@@ -1203,18 +1175,47 @@ Text: And some text.
         showSlide(nextIndex, !state.editMode);
       } else if (e.key === 'e' || e.key === 'E') {
         e.preventDefault();
+        let indexForShowSlide = state.currentAbsoluteSlideIndex; 
+        if (!state.editMode) {
+          // sync currentAbsoluteSlideIndex with current visible slide
+          if (state.visibleSlideIndices.length > 0 && state.currentVisibleSlideIndex >= 0) {
+            state.currentAbsoluteSlideIndex = state.visibleSlideIndices[state.currentVisibleSlideIndex];
+          }
+          indexForShowSlide = state.currentAbsoluteSlideIndex;
+        }
         state.editMode = !state.editMode;
         $("editor").classList.toggle("active", state.editMode);
         if (state.editMode) {
           setupEditorUI();
           releaseWakeLock();
+          highlightThumb(state.currentAbsoluteSlideIndex);
+          loadTextareaForCurrentSlide();
+          $("raw-text-editor").scrollTop = 0;
+          // Scroll the slideshow to show the current slide
+          const activeSlide = state.slideEls[state.currentAbsoluteSlideIndex];
+          if (activeSlide) {
+            activeSlide.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
         } else {
           // Update ground truth when leaving edit mode
           updateGroundTruth('EXIT_EDIT_MODE');
           buildSlidesFromXMLDoc();
           requestWakeLock();
+          const lastAbsoluteIndex = state.currentAbsoluteSlideIndex;
+          let targetVisibleIndex = state.visibleSlideIndices.indexOf(lastAbsoluteIndex);
+
+          if (targetVisibleIndex === -1) { // We were editing a hidden slide.
+            // Find the index of the next visible slide that comes after it.
+            targetVisibleIndex = state.visibleSlideIndices.findIndex(i => i > lastAbsoluteIndex);
+              
+            // If no "next" is found, go to the last available visible slide.
+            if (targetVisibleIndex === -1) {
+              targetVisibleIndex = Math.max(0, state.visibleSlideIndices.length - 1);
+            }
+          }
+          indexForShowSlide = targetVisibleIndex;
         }
-        showSlide(state.currentAbsoluteSlideIndex, !state.editMode);
+        showSlide(indexForShowSlide, !state.editMode);
       } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         toggleFullscreen();
@@ -1261,7 +1262,7 @@ Text: And some text.
          content: "Title: New Slide\n\nText: Edit this content." 
       });
 
-      buildSlidesFromXMLDoc();
+      await buildSlidesFromXMLDoc();
       await refreshThumbnails();
       showSlide(state.currentAbsoluteSlideIndex + 1);
     };
@@ -1279,7 +1280,7 @@ Text: And some text.
       const newIndex = (i === state.slideEls.length - 1) ? i - 1 : i;
 
       updateGroundTruth('DELETE_SLIDE', { index: i }); // removes slide i in XML
-      buildSlidesFromXMLDoc();                         // rebuild DOM from XML
+      await buildSlidesFromXMLDoc();                         // rebuild DOM from XML
       state.currentAbsoluteSlideIndex = newIndex;      // keep indices aligned to avoid NAVIGATE
       await refreshThumbnails();
       showSlide(newIndex);                             
@@ -1296,7 +1297,7 @@ Text: And some text.
         content: currentRawText
       });
 
-      buildSlidesFromXMLDoc();
+      await buildSlidesFromXMLDoc();
       await refreshThumbnails();
       showSlide(newIndex);
     };
@@ -1377,6 +1378,13 @@ Text: And some text.
       const newRawText = newLines.join('\n').trim();
       rawNode.textContent = '';
       rawNode.appendChild(state.xmlDoc.createCDATASection(newRawText));
+
+      // **ADD THIS: Sync the XML attribute**
+      if (!isCurrentlyHidden) {
+        slideNode.setAttribute("hidden", "true");
+      } else {
+        slideNode.removeAttribute("hidden");
+      }
 
       // Update the UI
       state.hasChanges = true;
@@ -1543,6 +1551,7 @@ Text: And some text.
         'h': 'Header',
         't': 'Title',
         'x': 'Text',
+        'z': '• ',
         'P': 'PrintNote',
         'S': 'SpeakerNote',
         'F': 'FullScreenImage',
@@ -1557,7 +1566,7 @@ Text: And some text.
         const before = textarea.value.substring(0, lineStartPos);
         const after = textarea.value.substring(cursorPos);
         
-        const precomposed = new Set(['C','T']);
+        const precomposed = new Set(['C','T','z']);
         const insertion = precomposed.has(letter) ? shortcuts[letter]
           : shortcuts[letter] + ': ';
         
@@ -1573,9 +1582,6 @@ Text: And some text.
     $("theme-selector").onchange = async () => {
       updateGroundTruth('THEME_CHANGE', { theme: $("theme-selector").value });
       await applyTheme($("theme-selector").value);
-      if (state.editMode) {
-        await refreshThumbnails();
-      }
     };
 
     // Toggle fullscreen
@@ -1738,7 +1744,17 @@ Text: And some text.
     if (!state.presenterWindow || state.presenterWindow.closed) return;
     
     const currentIndex = state.currentAbsoluteSlideIndex;
-    const nextIndex = Math.min(currentIndex + 1, state.slideEls.length - 1);
+    let nextIndex;
+    const currentVisiblePosition = state.visibleSlideIndices.indexOf(currentIndex);
+
+    // Check if the current slide is visible and not the last one.
+    if (currentVisiblePosition !== -1 && currentVisiblePosition < state.visibleSlideIndices.length - 1) {
+        // If so, the next slide is the next one in the visible list.
+        nextIndex = state.visibleSlideIndices[currentVisiblePosition + 1];
+    } else {
+        // Otherwise (if on the last visible slide or a hidden slide), just show the current slide again in the "Next" preview.
+        nextIndex = currentIndex;
+    }
     
     // Get current and next slide HTML
     const currentSlideHTML = state.slideEls[currentIndex].outerHTML;
@@ -1750,27 +1766,34 @@ Text: And some text.
     const themeHref = themeLink ? themeLink.href : '';
     
     // Create standalone HTML for iframes
-    const slideTemplate = (slideHTML) => `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <link rel="stylesheet" href="${themeHref}">
-        <style>
-          ${document.getElementById('core-styles').textContent}
-          body { margin: 0; overflow: hidden; }
-          .slide { 
-            display: flex !important; 
-            opacity: 1 !important; 
-            width: 100vw;
-            height: 100vh;
-          }
-        </style>
-      </head>
-      <body class="${themeId}">
-        <div id="slideshow">${slideHTML}</div>
-      </body>
-      </html>
-    `;
+const slideTemplate = (slideHTML) => `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <link rel="stylesheet" href="${themeHref}">
+<style>
+  ${document.getElementById('core-styles').textContent}
+  body { margin: 0; overflow: hidden; }
+  .slide-wrapper {
+    position: relative;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    container-type: inline-size;
+    container-name: slideshow;
+    font-size: 3cqw;
+  }
+  #slideshow { position: absolute; inset: 0; }
+  .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
+</style>
+  </head>
+  <body class="${themeId}">
+    <div class="slide-wrapper">
+      <div id="slideshow">${slideHTML}</div>
+    </div>
+  </body>
+  </html>
+`;
     
     // Update iframes
     state.presenterWindow.document.getElementById('current-slide').srcdoc = slideTemplate(currentSlideHTML);
@@ -1966,7 +1989,7 @@ Text: And some text.
     
     updateGroundTruth('REORDER', { fromIndex, toIndex });
     
-    buildSlidesFromXMLDoc();
+    await buildSlidesFromXMLDoc();
     await refreshThumbnails();
     let newCurrentIndex = toIndex;
     showSlide(newCurrentIndex);
@@ -2439,7 +2462,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
     updateVisibleSlideIndices();
     if (window.MathJax?.typesetPromise) {
-      MathJax.typesetPromise([$("slideshow")]);
+      return MathJax.typesetPromise([$("slideshow")]);
     }
   }
   
@@ -2491,66 +2514,60 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     }
   }  
 
-  async function getThumbnailHTML(rawText, theme) {
-    const slideElement = createSlideElement(rawText);
-    
-    // Remove the hidden-in-presentation class for thumbnails
-    // We want to see the content in thumbnails even if hidden
-    slideElement.classList.remove('hidden-in-presentation');
-    
-    const slideElementHTML = slideElement.outerHTML;
-    
-    // Get the theme CSS content WITHOUT fetch
-    let themeCSS = '';
-    const themeLink = document.getElementById(`${theme}-stylesheet`);
-    if (themeLink && themeLink.sheet) {
-      try {
-        // Read from the already-loaded stylesheet
-        const cssRules = themeLink.sheet.cssRules || themeLink.sheet.rules;
-        for (let i = 0; i < cssRules.length; i++) {
-          themeCSS += cssRules[i].cssText + '\n';
-        }
-      } catch (err) {
-        // Fallback: include the link tag instead
-        themeCSS = `<link rel="stylesheet" href="${themeLink.href}">`;
-        return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <base href="${window.location.href}">
-    ${themeCSS}
-    <style>
-      ${document.getElementById('core-styles').textContent}
-      body { margin: 0; overflow: hidden; }
-      .slide { display: flex !important; opacity: 1 !important; transform: none !important; }
-      .hidden-in-presentation { display: flex !important; opacity: 1 !important; }
-    </style>
-</head>
-<body class="${theme}">
-    ${slideElementHTML}
-</body>
-</html>`;
+async function getThumbnailHTML(rawText, theme) {
+  const slideElement = createSlideElement(rawText);
+  
+  // Remove the hidden-in-presentation class for thumbnails
+  slideElement.classList.remove('hidden-in-presentation');
+  
+  const slideElementHTML = slideElement.outerHTML;
+  
+  // Get the theme CSS content
+  let themeCSS = '';
+  const themeLink = document.getElementById(`${theme}-stylesheet`);
+  const themeHref = themeLink ? themeLink.href : '';
+  if (themeLink && themeLink.sheet) {
+    try {
+      const cssRules = themeLink.sheet.cssRules || themeLink.sheet.rules;
+      for (let i = 0; i < cssRules.length; i++) {
+        themeCSS += cssRules[i].cssText + '\n';
+      }
+    } catch (err) {
+      // If we can't read CSS, include the link tag
+      console.warn('Could not read theme CSS rules, using link tag');
     }
   }
   
+  // Always use the same wrapper structure for consistency
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <base href="${window.location.href}">
-    <style>
-      ${document.getElementById('core-styles').textContent}
-      ${themeCSS}
-      body { margin: 0; overflow: hidden; }
-      .slide { display: flex !important; opacity: 1 !important; transform: none !important; }
-      .hidden-in-presentation { display: flex !important; opacity: 1 !important; }
-    </style>
+  <meta charset="UTF-8">
+  <base href="${window.location.href}">
+  <link rel="stylesheet" href="${themeHref}">
+  <style>
+    ${document.getElementById('core-styles').textContent}
+    body { margin: 0; overflow: hidden; }
+    .slide-wrapper {
+      position: relative;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      container-type: inline-size;
+      container-name: slideshow;
+      font-size: 3cqw;
+    }
+    #slideshow { position: absolute; inset: 0; }
+    .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
+  </style>
 </head>
 <body class="${theme}">
-    ${slideElementHTML}
+  <div class="slide-wrapper">
+    <div id="slideshow">${slideElementHTML}</div>
+  </div>
 </body>
 </html>`;
-  }
+}
   
   /* ═══════════════════════════════════════════════════════════════
                           XML HANDLING
@@ -3023,26 +3040,34 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     });
   }
   
-  async function applyTheme(themeId) {
-    // Disable all theme stylesheets
-    document.querySelectorAll('link[id$="-stylesheet"]').forEach(link => {
-      link.disabled = true;
+async function applyTheme(themeId) {
+  // Disable all theme stylesheets
+  document.querySelectorAll('link[id$="-stylesheet"]').forEach(link => {
+    link.disabled = true;
+  });
+  
+  // Enable the selected theme
+  const themeLink = document.getElementById(`${themeId}-stylesheet`);
+  if (themeLink) {
+    themeLink.disabled = false;
+    
+    // Wait for the stylesheet to actually load
+    await new Promise((resolve) => {
+      if (themeLink.sheet && themeLink.sheet.cssRules) {
+        resolve(); // Already loaded
+      } else {
+        themeLink.addEventListener('load', resolve, { once: true });
+        setTimeout(resolve, 500); // Timeout fallback
+      }
     });
-    
-    // Enable the selected theme
-    const themeLink = document.getElementById(`${themeId}-stylesheet`);
-    if (themeLink) {
-      themeLink.disabled = false;
-    }
-    
-    // Update body class
-    document.body.className = themeId;
-    
-    // Refresh thumbnails
-    await new Promise(resolve => setTimeout(resolve, 50));
-    await refreshThumbnails();
-    document.querySelectorAll('#thumbs .thumb-iframe').forEach(f => { f.srcdoc = f.srcdoc; });
   }
+  
+  // Update body class
+  document.body.className = themeId;
+  
+  // Now refresh thumbnails with loaded CSS
+  await refreshThumbnails();
+}
 
   /* ═══════════════════════════════════════════════════════════════
                           URL PARAMETER HANDLING
@@ -3116,38 +3141,41 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
                           16:9 ASPECT RATIO SETUP
      ═══════════════════════════════════════════════════════════════ */
   
-  function wrapSlideshowFor16x9() {
-    const slideshow = $("slideshow");
-    if (!slideshow.parentElement.classList.contains('presentation-scaler')) {
-      const viewport = document.createElement('div');
-      viewport.className = 'presentation-viewport';
-      
-      const scaler = document.createElement('div');
-      scaler.className = 'presentation-scaler';
-      
-      slideshow.parentNode.insertBefore(viewport, slideshow);
-      viewport.appendChild(scaler);
-      scaler.appendChild(slideshow);
+function wrapSlideshowFor16x9() {
+  const slideshow = $("slideshow");
+  if (!slideshow.parentElement.classList.contains('presentation-scaler')) {
+    const viewport = document.createElement('div');
+    viewport.className = 'presentation-viewport';
 
-      scaler.appendChild($("slide-counter"));
-      scaler.appendChild($("progress-bar"));
-      const logo = $("company-logo");
-      if (logo) scaler.appendChild(logo);
-    }
+    const scaler = document.createElement('div');
+    scaler.className = 'presentation-scaler';
+
+    slideshow.parentNode.insertBefore(viewport, slideshow);
+    viewport.appendChild(scaler);
+    scaler.appendChild(slideshow);
+
+    // HUD goes on the viewport (letterbox), not over the slide
+    viewport.appendChild($("slide-counter"));
+    viewport.appendChild($("progress-bar"));
+    const logo = $("company-logo");
+    if (logo) viewport.appendChild(logo);
   }
+}
+
+
   
 /* ═══════════════════════════════════════════════════════════════
                           INITIALIZATION
      ═══════════════════════════════════════════════════════════════ */
 
-  function init(newXmlString) {
+  async function init(newXmlString) {
     updateGroundTruth('INIT', { xmlString: newXmlString });
     
     const theme = state.xmlDoc.documentElement.getAttribute("theme") || DEFAULT_THEME;
     $("theme-selector").value = theme;
     applyTheme(theme);
     
-    buildSlidesFromXMLDoc();
+    await buildSlidesFromXMLDoc();
     showSlide(0, true);
     updateHUD();
     updateToggleCountButtonState();

@@ -1,4 +1,4 @@
-/* calgary.css - Rewritten with consistent rem sizing */
+/* calgary.css — aligned to tufte-base contract */
 @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;600;800&family=IBM+Plex+Sans+Condensed:wght@400;600&display=swap');
 
 :root {
@@ -12,85 +12,57 @@
   --serif-font: 'IBM Plex Sans Condensed', sans-serif;
   --sans-font: 'Barlow', system-ui, sans-serif;
   --mono-font: 'Courier New', monospace;
-  --base-font-size: 1.1vw;
 }
 
-/* ---------- headings ---------- */
+body {
+  font-family: var(--serif-font);
+  background: var(--bg-color);
+  color: var(--main-text-color);
+}
+
+.slide-header {
+  font-family: var(--sans-font);
+  color: var(--accent-light-color);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
 .slide-content h1 {
   font-family: var(--sans-font);
   font-weight: 800;
-  font-size: 7rem;
   color: var(--accent-color);
   text-transform: uppercase;
   letter-spacing: -.03em;
-  margin-bottom: .4em;
   border-bottom: 4px solid var(--h1-border-color);
-  padding-bottom: .1em;
-}
-.slide-content h2 {
-  font-family: var(--sans-font);
-  font-weight: 600;
-  font-size: 5rem;
-  margin: .6em 0 .3em;
-}
-.slide-content h3 {
-  font-family: var(--sans-font);
-  font-weight: 600;
-  font-size: 3.5rem;
-  margin: .6em 0 .3em;
 }
 
-/* ---------- body & size directives ---------- */
-.slide-content p { max-width: 70rem; font-size: 2.5rem; line-height: 1.55; }
-
-.slide-content .large { text-align: center; }
-.slide-content .large p {
-  font-size: 5.5rem;
-  line-height: 1.15;
-  font-weight: 600;
-  max-width: 75rem;
-  margin: 1rem auto;
-}
-
-.slide-content .small { opacity: .8; }
-.slide-content .small p { font-size: 1.7rem; max-width: 70rem; }
-
-.slide-content .tiny { opacity: .7; text-transform: uppercase; }
-.slide-content .tiny p { font-size: 1.3rem; max-width: 70rem; }
-
-/* ---------- notes ---------- */
 .slide-content .notes {
-  margin-top: 1.6rem;
-  padding: .9rem 1.2rem;
   background: #FFF4F4;
   border-left: 4px solid #CC0000;
-  font-size: 1.6rem;
-  max-width: 75rem;
+  color: inherit;
 }
-.slide-content .notes p { font-size: 1.6rem; margin: 0; }
 
-/* ---------- tables ---------- */
-.slide-content table { border-collapse: collapse; margin: 1.4rem auto; width: 90%; font-size: 2rem; }
+.slide-content table {
+  border-collapse: collapse;
+  border-top: 2px solid var(--h1-border-color);
+  border-bottom: 2px solid var(--h1-border-color);
+}
 .slide-content th {
   background: var(--accent-color);
   color: #fff;
   font-family: var(--sans-font);
   text-transform: uppercase;
-  font-size: 1.5rem;
   letter-spacing: .05em;
 }
-.slide-content th, .slide-content td { border: 1px solid var(--h1-border-color); padding: .6rem; }
-.slide-content tbody tr:nth-child(even) td { background: #fafafa; }
+.slide-content th, .slide-content td {
+  border: 1px solid var(--h1-border-color);
+}
 
-/* ---------- images ---------- */
-.slide-content img { max-width: 100%; max-height: 72vh; object-fit: contain; border-radius: 4px; }
-.slide-content .caption { font-size: 1.6rem; font-style: italic; color: var(--accent-light-color); max-width: 70rem; margin: 0 auto; }
-
-/* ---------- misc ---------- */
-.slide-content .columns { gap: 2rem; }
-a { color: var(--accent-color); }
-a:hover { text-decoration: none; }
-
+.slide-content .caption {
+  font-style: italic;
+  color: var(--accent-light-color);
+  text-align: center;
+}
 @media (prefers-color-scheme: dark) {
   :root { --bg-color: #151515; --main-text-color: #e6e6e6; --slide-content-bg-if-image: rgba(21,21,21,0.88); }
 }

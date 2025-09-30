@@ -1,4 +1,4 @@
-/* gradient.css - Rewritten with consistent rem sizing */
+/* gradient.css — aligned to tufte-base contract */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
 :root {
@@ -12,7 +12,6 @@
   --serif-font: "Poppins", sans-serif;
   --sans-font: "Poppins", sans-serif;
   --mono-font: "Courier New", monospace;
-  --base-font-size: 1.1vw;
 }
 
 body {
@@ -20,16 +19,16 @@ body {
   background: linear-gradient(45deg, #22223b, #4a4e69);
   color: var(--main-text-color);
 }
-
 #slideshow { background: linear-gradient(45deg, #22223b, #4a4e69); }
-.thumb-iframe body { background: linear-gradient(45deg, #22223b, #4a4e69); }
 
-.slide-header { text-transform: uppercase; letter-spacing: 0.1em; font-size: 1rem; color: var(--accent-light-color); }
+.slide-header {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-light-color);
+}
 
 .slide-content h1 {
   font-weight: 700;
-  font-size: 7rem;
-  line-height: 1.2;
   color: var(--main-text-color);
   text-shadow: 0 0 15px rgba(0, 245, 212, 0.3);
   text-align: center;
@@ -37,44 +36,25 @@ body {
   padding-bottom: 1rem;
 }
 
-.slide-content p { font-size: 2.8rem; line-height: 1.7; max-width: 60rem; }
-
-/* --- DIRECTIVE-SPECIFIC STYLES --- */
-
-.slide-content .large { text-align: center; }
-.slide-content .large p {
-  font-size: 5.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--accent-color);
-  max-width: 65rem;
-  margin: 1rem auto;
-}
-
-.slide-content .small { font-size: 2rem; color: var(--accent-light-color); }
-.slide-content .small p { font-size: 2rem; max-width: 60rem; }
-
-.slide-content .tiny { font-size: 1.2rem; color: var(--accent-light-color); opacity: 0.8; }
-.slide-content .tiny p { font-size: 1.2rem; max-width: 60rem; }
-
 .slide-content .notes {
-  position: absolute; bottom: 3rem; left: 4rem; right: 4rem;
   background: var(--accent-color);
   color: #000;
   text-align: center;
-  padding: 0.5rem;
-  font-size: 2rem;
   font-weight: 700;
 }
-.slide-content .notes p { font-size: 2rem; margin: 0; }
 
-.slide-content table { border-collapse: collapse; font-size: 2rem; margin: 1.5rem auto; }
+.slide-content table {
+  border-collapse: collapse;
+  border-top: 1px solid var(--h1-border-color);
+  border-bottom: 1px solid var(--h1-border-color);
+}
 .slide-content th, .slide-content td {
   border: 1px solid var(--h1-border-color);
-  padding: 0.8em;
   background: rgba(0,0,0,0.2);
 }
-.slide-content th { color: var(--accent-color); font-weight: 700; }
-.slide-content tbody tr:nth-child(even) td { background: rgba(0,0,0,0.3); }
+.slide-content th { color: var(--accent-color); }
 
-.slide-content .caption { font-size: 1.5rem; font-style: normal; color: var(--accent-light-color); max-width: 60rem; margin: 0 auto; }
+.slide-content .caption {
+  color: var(--accent-light-color);
+  text-align: center;
+}

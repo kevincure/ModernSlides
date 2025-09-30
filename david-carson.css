@@ -1,4 +1,4 @@
-/* david-carson.css - Rewritten with consistent rem sizing */
+/* david-carson.css — aligned to tufte-base contract, retain deconstructed vibe */
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:wght@400;700&display=swap');
 
 :root {
@@ -8,102 +8,64 @@
   --accent-light-color: #666;
   --h1-border-color: transparent;
   --slide-content-bg-if-image: rgba(245, 245, 240, 0.85);
-  
+
   --serif-font: 'Courier Prime', 'Courier New', monospace;
   --sans-font: 'Bebas Neue', Impact, sans-serif;
   --mono-font: 'Courier Prime', monospace;
-  --base-font-size: 1.1vw;
 }
 
-/* Chaotic typography */
-.slide-content h1 { 
-  font-family: var(--sans-font); 
-  font-size: 10rem; 
-  transform: rotate(-2deg);
-  letter-spacing: -0.05em;
+body {
+  font-family: var(--serif-font);
+  background: var(--bg-color);
+  color: var(--main-text-color);
+}
+
+.slide-header {
+  font-family: var(--sans-font);
+  color: var(--accent-light-color);
+  text-transform: uppercase;
+}
+
+.slide-content h1 {
+  font-family: var(--sans-font);
   text-transform: uppercase;
   color: var(--accent-color);
+  border: none;
+  letter-spacing: -0.05em;
   text-shadow: 3px 3px 0 #000;
+  transform: rotate(-2deg);
   margin-left: -2rem;
 }
 
-.slide-content h2 { 
-  font-family: var(--serif-font); 
-  font-weight: 700;
-  font-size: 4rem;
-  transform: rotate(1deg);
-  background: #000;
-  color: #fff;
-  display: inline-block;
-  padding: 0.5rem 1rem;
-}
-
-.slide-content p { 
-  font-family: var(--serif-font); 
-  font-size: 2.5rem; 
-  line-height: 1.6;
-  max-width: 60rem;
-}
-
-.slide-content .large { text-align: center; }
-.slide-content .large p { 
-  font-family: var(--sans-font); 
-  font-size: 7rem;
-  transform: skewX(-5deg);
-  line-height: 0.9;
-  max-width: 70rem;
-  margin: 1rem auto;
-}
-
-.slide-content .small { }
-.slide-content .small p { font-size: 2rem; letter-spacing: 0.2em; max-width: 60rem; }
-
-.slide-content .tiny { }
-.slide-content .tiny p { 
-  font-size: 1.4rem; 
-  text-transform: uppercase; 
-  letter-spacing: 0.3em;
-  opacity: 0.7;
-  max-width: 60rem;
-}
-
-.slide-content .notes { 
-  position: absolute; 
-  bottom: 3rem; 
+.slide-content .notes {
   font-family: var(--sans-font);
-  left: 6rem;
-  right: 6rem;
   color: var(--accent-color);
   text-transform: uppercase;
 }
-.slide-content .notes p { font-size: 2.7rem; margin: 0; }
 
-/* Deconstructed tables */
-.slide-content table { 
-  border-collapse: separate; 
-  border-spacing: 4px; 
-  transform: rotate(-1deg); 
-  font-size: 2rem;
-  margin: 1.5rem auto;
+.slide-content table {
+  border: none;
+  border-collapse: separate;
+  border-spacing: 4px;
 }
-.slide-content th { 
-  background: var(--accent-color); 
-  color: #fff; 
+.slide-content th {
+  background: var(--accent-color);
+  color: #fff;
   font-family: var(--sans-font);
   text-transform: uppercase;
   transform: skewX(-10deg);
 }
-.slide-content td { 
-  background: #fff; 
+.slide-content td {
+  background: #fff;
   border: 2px solid #000;
   font-weight: 700;
-  padding: 0.5rem 0.8rem;
 }
-.slide-content tbody tr:nth-child(even) td { background: #000; color: #fff; }
+.slide-content tbody tr:nth-child(even) td {
+  background: #000; color: #fff;
+}
 
-.slide-content .caption { font-size: 1.8rem; font-style: normal; max-width: 60rem; margin: 0 auto; }
-
-/* Random positioning effects */
-.slide-content .img-container { transform: rotate(1deg); }
-.slide-content .columns { gap: 3rem; }
-.slide-content .columns .column:nth-child(2) { margin-top: 2rem; }
+.slide-content .caption {
+  font-style: normal;
+  color: var(--accent-light-color);
+  text-align: left;
+}
