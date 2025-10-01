@@ -55,6 +55,7 @@ the raw text markup that gets parsed into slide elements.
 /* ----------------------------- */
 
 :root {
+  --slide-base-font-size: 3cqw;
   --editor-bg-color: #fffff8;
   --editor-text-color: #1a1a1a;
   --editor-border-color: #d4d4d4;
@@ -83,7 +84,7 @@ body {
   container-type: inline-size;
   container-name: slideshow;
   /* This is the single master switch for all slide scaling */
-  --base-font-size: 3cqw;
+  --base-font-size: var(--slide-base-font-size);
 }
 
 .deckbar-spacer {
@@ -147,6 +148,8 @@ body {
   flex: 1;
   min-height: 0;
   line-height: 1.6;
+  --text-scale: 1;
+  font-size: calc(var(--base-font-size) * var(--text-scale, 1));
 }
 
 .slide[style*="background-image"] .slide-content {
@@ -167,7 +170,7 @@ body {
 }
 
 .slide-content p {
-  font-size: var(--base-font-size);
+  font-size: calc(var(--base-font-size) * var(--text-scale, 1));
   line-height: 1.6;
   margin-bottom: calc(var(--base-font-size) * 0.3);
   text-align: left;
@@ -175,20 +178,24 @@ body {
 
 .slide-content .text-center { text-align: center; }
 
+.slide-content .large {
+  --text-scale: 1.6;
+  font-size: calc(var(--base-font-size) * var(--text-scale, 1));
+}
+
 .slide-content .large p {
   text-align: center;
-  font-size: calc(var(--base-font-size) * 1.6);
   margin: calc(var(--base-font-size) * 0.5) auto;
 }
 
-.slide-content .small,
-.slide-content .small p {
-  font-size: calc(var(--base-font-size) * 0.67);
+.slide-content .small {
+  --text-scale: 0.67;
+  font-size: calc(var(--base-font-size) * var(--text-scale, 1));
 }
 
-.slide-content .tiny,
-.slide-content .tiny p {
-  font-size: calc(var(--base-font-size) * 0.33);
+.slide-content .tiny {
+  --text-scale: 0.33;
+  font-size: calc(var(--base-font-size) * var(--text-scale, 1));
 }
 
 .slide-content .notes {
@@ -224,7 +231,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
+  justify-content: center;
+  overflow: visible;
 }
 
 .slide-content .columns .column.images-only[data-imgcount]:not([data-imgcount="1"]) {
@@ -279,6 +287,39 @@ body {
   max-width: 90%;
   flex-shrink: 0;
   flex-grow: 0;
+}
+
+body.is-edit-mode .slide.has-overflow {
+  outline: calc(var(--base-font-size) * 0.1) solid rgba(179, 38, 30, 0.6);
+  outline-offset: calc(var(--base-font-size) * -0.05);
+}
+
+.overflow-indicator {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--base-font-size) * 0.6);
+  transform: translateX(-50%);
+  background: rgba(179, 38, 30, 0.9);
+  color: #fff;
+  padding: calc(var(--base-font-size) * 0.2) calc(var(--base-font-size) * 0.6);
+  border-radius: calc(var(--base-font-size) * 0.2);
+  font-size: calc(var(--base-font-size) * 0.4);
+  text-align: center;
+  max-width: 80%;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--base-font-size) * 0.15);
+}
+
+.overflow-indicator strong {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+body:not(.is-edit-mode) .overflow-indicator {
+  display: none !important;
 }
 
 /* ----------------------------- */
@@ -470,21 +511,32 @@ body {
   flex-wrap: wrap;
   font-family: var(--editor-ui-font-family);
   font-size: 16px;
-  gap: 0.75rem;
+  gap: 0.6rem;
   align-items: center;
   margin-bottom: 1rem;
 }
 
 #editor button {
-  padding: 8px 16px;
+  padding: 6px 12px;
   background: var(--editor-accent-color);
   font-family: var(--editor-ui-font-family);
-  font-size: 16px;
+  font-size: 15px;
   color: var(--editor-accent-text-color);
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s;
+}
+#editor button.ghost {
+  background: transparent;
+  color: var(--editor-accent-color);
+  border: 1px solid color-mix(in srgb, var(--editor-accent-color) 60%, transparent);
+}
+#editor button.ghost:disabled {
+  border-color: color-mix(in srgb, var(--editor-border-color) 80%, transparent);
+}
+#editor button.ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--editor-accent-color) 10%, transparent);
 }
 #editor button:hover:not(:disabled) {
   background: color-mix(in srgb, var(--editor-accent-color) 85%, black);
@@ -494,25 +546,69 @@ body {
   cursor: not-allowed;
 }
 
+.editor-bottom-bar {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--editor-border-color) 70%, transparent);
+  min-height: 2.75rem;
+}
+
+.editor-bottom-bar-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.editor-bottom-bar .btn-label {
+  margin-left: 0.35rem;
+}
+
+.overflow-warning {
+  font-size: 0.9rem;
+  color: #b3261e;
+  max-width: 60ch;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.overflow-warning::before {
+  content: "⚠";
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.overflow-warning:empty::before {
+  content: "";
+}
+
+.overflow-warning:empty {
+  display: none;
+}
+
 @keyframes editor-glow {
   from { box-shadow: 0 0 8px 2px var(--editor-accent-color); }
   to   { box-shadow: 0 0 2px 1px color-mix(in srgb, var(--editor-accent-color) 50%, transparent); }
 }
 #editor .glow { animation: editor-glow 1.2s infinite alternate; }
 
-.toolbar label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-}
-.toolbar select, .toolbar input[type="text"] {
-  padding: 0.3rem 0.5rem;
+.toolbar select,
+.toolbar input[type="text"] {
+  padding: 0.25rem 0.45rem;
   border-radius: 4px;
   border: 1px solid var(--editor-input-border);
   background-color: var(--editor-input-bg);
-  font-size: 16px;
+  font-size: 15px;
   font-family: var(--editor-ui-font-family);
   color: var(--editor-input-text);
+}
+
+.toolbar .theme-selector {
+  min-width: 9rem;
 }
 
 /* ----------------------------- */
@@ -578,7 +674,7 @@ body {
   background: #000;
   container-type: inline-size;
   container-name: slideshow;
-  --base-font-size: 3cqw;
+  --base-font-size: var(--slide-base-font-size);
 }
 
 .presentation-scaler {
@@ -757,7 +853,7 @@ body {
   
   /* Use the exact same container-relative unit for printing */
   .slide {
-    --base-font-size: 3cqw;
+    --base-font-size: var(--slide-base-font-size);
   }
 
   /* Hide all on-screen UI chrome */
@@ -875,26 +971,39 @@ body {
       <textarea id="raw-text-editor" placeholder="Enter slide content here. Click Help for syntax."></textarea>
       <div class="toolbar">
         <button id="add-btn"       title="New Slide">      <i class="fa-solid fa-plus"></i></button>
-        <button id="del-btn"    title="Delete Slide">   <i class="fa-solid fa-minus"></i></button>
-        <button id="dup-btn"    title="Duplicate Slide"><i class="fa-solid fa-copy"></i></button>              <button id="toggle-hide-btn"    title="Hide/Show Slide"> <i class="fa-solid fa-eye"></i></button>
+        <button id="del-btn"       title="Delete Slide">   <i class="fa-solid fa-minus"></i></button>
+        <button id="dup-btn"       title="Duplicate Slide"><i class="fa-solid fa-copy"></i></button>
+        <button id="toggle-hide-btn" title="Hide/Show Slide"> <i class="fa-solid fa-eye"></i></button>
         <!-- hidden state, still used by updateHUD() -->
         <input type="checkbox" id="show-count" checked style="display:none">
         <!-- toggle button -->
         <button id="toggle-count-btn" title="Hide Slide Numbers">
           <i class="fa-solid fa-sort-numeric-asc"></i>
         </button>
-        <label>Theme
-          <select id="theme-selector">
+        <select id="theme-selector" class="theme-selector" aria-label="Choose theme">
           <!-- Options will be dynamically populated -->
-          </select>
-        </label>
-        <div class="deckbar-spacer"></div> 
-        <button id="help-btn" title="Help"><i class="fa-solid fa-question"></i></button> 
+        </select>
+        <div class="deckbar-spacer"></div>
+        <button id="help-btn" title="Help"><i class="fa-solid fa-question"></i></button>
         <button id="new-presentation-btn"   title="New Slideshow">  <i class="fa-solid fa-file-circle-plus"></i></button>
         <button id="load-btn"  title="Load Slideshow"> <i class="fa-solid fa-folder-open"></i></button>
+        <button id="restore-btn" title="Restore Previous Session" aria-label="Restore previous slideshow" disabled><i class="fa-solid fa-clock-rotate-left"></i></button>
         <button id="download-txt-btn"        title="Download Raw Presentation">       <i class="fa-solid fa-download"></i></button>
         <button id="print-notes-btn" title="Print with Notes"><i class="fa-solid fa-print"></i></button>
-        <button id="save-btn" class="primary-action" title="Presentation View"><i class="fa-solid fa-bullhorn"></i></button> 
+        <button id="save-btn" class="primary-action" title="Presentation View"><i class="fa-solid fa-bullhorn"></i></button>
+      </div>
+      <div class="editor-bottom-bar">
+        <div id="overflow-warning" class="overflow-warning" role="status" aria-live="polite"></div>
+        <div class="editor-bottom-bar-actions">
+          <button id="undo-btn" class="ghost" title="Undo" disabled>
+            <i class="fa-solid fa-rotate-left"></i>
+            <span class="btn-label">Undo</span>
+          </button>
+          <button id="redo-btn" class="ghost" title="Redo" disabled>
+            <i class="fa-solid fa-rotate-right"></i>
+            <span class="btn-label">Redo</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1067,11 +1176,101 @@ Text: And some text.
     </slide>
   </presentation>`;
   const METADATA_DIRECTIVES = ["Theme", "ShowSlideCount", "LogoUrl"];
-  const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header", 
+  const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header",
                                 "Title", "BigText", "Text", "SmallText", "TinyText", "Notes",
                                 "Image", "Columns", "Table", "FullScreenWebsite", "SpeakerNote",
                                 "PrintNote", "Break", "Logo"];
   const ALL_DIRECTIVES = [...METADATA_DIRECTIVES, ...CONTENT_DIRECTIVES];
+  const INLINE_MODE_DIRECTIVE_RE = /\[\[([A-Za-z][A-Za-z0-9.]*)(?::?\s*([^\]]+))?\]\]/g;
+  const MIN_TEXT_SCALE = 0.2;
+  const MAX_TEXT_SCALE = 5;
+  const DEFAULT_TEXT_SCALE = 1;
+  const LAST_SESSION_KEY = 'modernSlides_lastSession';
+  const PREVIOUS_SESSION_KEY = 'modernSlides_previousSession';
+
+  function clampTextScale(value) {
+    if (!Number.isFinite(value)) return DEFAULT_TEXT_SCALE;
+    return Math.min(MAX_TEXT_SCALE, Math.max(MIN_TEXT_SCALE, value));
+  }
+
+  function makeModeState(name, scale) {
+    const normalizedName = name || 'Text';
+    if (normalizedName === 'Text') {
+      return { name: 'Text', textScale: clampTextScale(scale ?? DEFAULT_TEXT_SCALE) };
+    }
+    return { name: normalizedName };
+  }
+
+  function resolveModeState(mode) {
+    if (!mode) return makeModeState('Text');
+
+    if (typeof mode === 'string') {
+      const interpreted = interpretModeKeyword(mode);
+      if (interpreted) return makeModeState(interpreted.name, interpreted.textScale);
+      return makeModeState(mode);
+    }
+
+    if (typeof mode === 'object') {
+      const candidateName = mode.name || mode.type || mode.mode;
+      if (candidateName) {
+        if (candidateName === 'Text' || candidateName === 'text') {
+          const sourceScale = mode.textScale ?? mode.scale ?? mode.factor ?? DEFAULT_TEXT_SCALE;
+          return makeModeState('Text', sourceScale);
+        }
+        return makeModeState(candidateName);
+      }
+    }
+
+    return makeModeState('Text');
+  }
+
+  function interpretModeKeyword(keyword, arg = '') {
+    if (!keyword) return null;
+    const normalized = keyword.trim();
+    if (!normalized) return null;
+    const lower = normalized.toLowerCase();
+
+    if (lower === 'bigtext' || lower === 'big') return makeModeState('BigText');
+    if (lower === 'smalltext' || lower === 'small') return makeModeState('SmallText');
+    if (lower === 'tinytext' || lower === 'tiny') return makeModeState('TinyText');
+
+    if (lower === 'text' || lower === 'normal') {
+      const numericArg = parseFloat((arg || '').replace(',', '.'));
+      if (Number.isFinite(numericArg)) {
+        return makeModeState('Text', numericArg);
+      }
+      return makeModeState('Text');
+    }
+
+    const match = lower.match(/^text(?:(\d+(?:\.\d+)?)|(\.\d+))$/);
+    if (match) {
+      const scaleStr = match[1] ?? match[2];
+      const parsedScale = parseFloat(scaleStr);
+      if (Number.isFinite(parsedScale)) {
+        return makeModeState('Text', parsedScale);
+      }
+    }
+
+    return null;
+  }
+
+  function interpretInlineDirective(keyword, arg = '') {
+    if (!keyword) return null;
+    const lower = keyword.toLowerCase();
+
+    if (lower === 'break') {
+      const amount = parseFloat((arg || '').replace(',', '.'));
+      const lines = Number.isFinite(amount) && amount > 0 ? amount : 1;
+      return { action: 'break', lines };
+    }
+
+    const modeState = interpretModeKeyword(keyword, arg);
+    if (modeState) {
+      return { action: 'mode', mode: resolveModeState(modeState) };
+    }
+
+    return null;
+  }
 
   
 /* ═══════════════════════════════════════════════════════════════
@@ -1094,16 +1293,26 @@ Text: And some text.
     currentVisibleSlideIndex: 0,
     currentAbsoluteSlideIndex: 0,
 
+    // Undo/redo state
+    undoStack: [],
+    redoStack: [],
+    maxUndoDepth: 5,
+    isRestoringSnapshot: false,
+
     // Drag state
     draggedThumbIndex: null,
     placeholder: null,
     thumbnailRefreshPromise: null,
 
+    // Overflow measurement
+    pendingOverflowFrame: null,
+
     // Available themes
     availableThemes: [],
 
     // Presenter window
-    presenterWindow: null
+    presenterWindow: null,
+    presenterTimerInterval: null
   };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1152,6 +1361,8 @@ Text: And some text.
       });
     });
 
+    window.addEventListener('resize', () => scheduleOverflowChecks());
+
     // Keyboard navigation
     // Navigate between slides using arrow keys or page up/down
     // Toggle edit mode using e
@@ -1185,6 +1396,7 @@ Text: And some text.
         }
         state.editMode = !state.editMode;
         $("editor").classList.toggle("active", state.editMode);
+        syncEditModeClass();
         if (state.editMode) {
           setupEditorUI();
           releaseWakeLock();
@@ -1196,24 +1408,16 @@ Text: And some text.
           if (activeSlide) {
             activeSlide.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
+          updateOverflowWarningForEditor();
         } else {
           // Update ground truth when leaving edit mode
           updateGroundTruth('EXIT_EDIT_MODE');
           buildSlidesFromXMLDoc();
           requestWakeLock();
           const lastAbsoluteIndex = state.currentAbsoluteSlideIndex;
-          let targetVisibleIndex = state.visibleSlideIndices.indexOf(lastAbsoluteIndex);
-
-          if (targetVisibleIndex === -1) { // We were editing a hidden slide.
-            // Find the index of the next visible slide that comes after it.
-            targetVisibleIndex = state.visibleSlideIndices.findIndex(i => i > lastAbsoluteIndex);
-              
-            // If no "next" is found, go to the last available visible slide.
-            if (targetVisibleIndex === -1) {
-              targetVisibleIndex = Math.max(0, state.visibleSlideIndices.length - 1);
-            }
-          }
+          const targetVisibleIndex = resolveVisibleIndexForAbsolute(lastAbsoluteIndex);
           indexForShowSlide = targetVisibleIndex;
+          updateOverflowWarningForEditor();
         }
         showSlide(indexForShowSlide, !state.editMode);
       } else if (e.key === 'f' || e.key === 'F') {
@@ -1228,9 +1432,13 @@ Text: And some text.
         } else if (document.fullscreenElement) {
           document.exitFullscreen();
         } else if (state.editMode) {
+          const lastAbsoluteIndex = state.currentAbsoluteSlideIndex;
           state.editMode = false;
           $("editor").classList.remove("active");
-          showSlide(state.currentAbsoluteSlideIndex, true);
+          const targetVisibleIndex = resolveVisibleIndexForAbsolute(lastAbsoluteIndex);
+          syncEditModeClass();
+          updateOverflowWarningForEditor();
+          showSlide(targetVisibleIndex, true);
         }
       }
     });
@@ -1246,7 +1454,10 @@ Text: And some text.
       updateSaveButtonGlow();
       state.editMode = false;
       $("editor").classList.remove("active");
-      showSlide(state.currentAbsoluteSlideIndex, true);
+      syncEditModeClass();
+      const targetVisibleIndex = resolveVisibleIndexForAbsolute(state.currentAbsoluteSlideIndex);
+      showSlide(targetVisibleIndex, true);
+      updateOverflowWarningForEditor();
 
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
@@ -1376,6 +1587,7 @@ Text: And some text.
 
       // Update the raw text in XML - trim to avoid extra newlines
       const newRawText = newLines.join('\n').trim();
+      recordSnapshot('TOGGLE_HIDE');
       rawNode.textContent = '';
       rawNode.appendChild(state.xmlDoc.createCDATASection(newRawText));
 
@@ -1486,7 +1698,7 @@ Text: And some text.
     $("new-presentation-btn").onclick = () => {
       if (state.hasChanges && !confirm("You have unsaved changes that will be lost unless you download the slides. Continue?")) return;
       updateGroundTruth('NEW');
-      init();
+      init(undefined, { fileName: 'New Presentation', slideIndex: 0 });
     };
 
     // Load presentation button
@@ -1505,11 +1717,30 @@ Text: And some text.
           let newXML = content.trim().startsWith('<?xml') || content.trim().startsWith('<presentation')
             ? content
             : convertTxtToXML(content, file.name);
-          init(newXML); // Re-initialize with loaded file
+          init(newXML, { fileName: state.currentFilename, slideIndex: 0 }); // Re-initialize with loaded file
         };
-        reader.readAsText(file);
+      reader.readAsText(file);
       };
       input.click();
+    };
+
+    $("restore-btn").onclick = () => {
+      const btn = $("restore-btn");
+      if (!btn || btn.disabled) return;
+      if (state.hasChanges && !confirm("Restore the previous slideshow and discard current changes?")) return;
+
+      const previousSession = localStorage.getItem(PREVIOUS_SESSION_KEY);
+      if (!previousSession) {
+        updateRestoreButtonState();
+        return;
+      }
+
+      try {
+        init(previousSession, { slideIndex: 0 });
+      } catch (err) {
+        console.error('Failed to restore previous session', err);
+        alert('Unable to restore the previous slideshow. It may be corrupted.');
+      }
     };
 
     // Help button
@@ -1602,6 +1833,25 @@ Text: And some text.
             e.returnValue = ''; // Required for legacy browsers.
         }
     });
+
+    const undoBtn = $("undo-btn");
+    if (undoBtn) {
+      undoBtn.addEventListener('click', () => {
+        handleUndo().catch(err => console.error(err));
+      });
+    }
+
+    const redoBtn = $("redo-btn");
+    if (redoBtn) {
+      redoBtn.addEventListener('click', () => {
+        handleRedo().catch(err => console.error(err));
+      });
+    }
+
+    syncEditModeClass();
+    updateUndoRedoButtons();
+    updateOverflowWarningForEditor();
+    updateRestoreButtonState();
   }
   
   /* ═══════════════════════════════════════════════════════════════
@@ -1678,10 +1928,35 @@ Text: And some text.
                         PRESENTER MODE
   ================================================================= */
 
+  function disposePresenterTimer() {
+    if (state.presenterTimerInterval) {
+      clearInterval(state.presenterTimerInterval);
+      state.presenterTimerInterval = null;
+    }
+  }
+
+  function cleanupPresenterWindowReference() {
+    disposePresenterTimer();
+    if (state.presenterWindow && !state.presenterWindow.closed) {
+      try {
+        state.presenterWindow.close();
+      } catch (err) {
+        console.warn('Unable to close presenter window cleanly.', err);
+      }
+    }
+    state.presenterWindow = null;
+  }
+
   function openPresenterMode() {
     // Open a new window for presenter view
+    if (state.presenterWindow && !state.presenterWindow.closed) {
+      state.presenterWindow.focus();
+      return;
+    }
+
+    disposePresenterTimer();
     const presenterWindow = window.open('', 'presenter', 'width=1200,height=800');
-    
+
     if (!presenterWindow) {
       alert('Please allow popups to use presenter mode');
       return;
@@ -1721,18 +1996,22 @@ Text: And some text.
       </body>
       </html>
     `);
-    
+
     // Store reference to presenter window
     state.presenterWindow = presenterWindow;
-    
+    presenterWindow.addEventListener('beforeunload', cleanupPresenterWindowReference, { once: true });
+
     // Start timer
     let startTime = Date.now();
-    setInterval(() => {
-      if (presenterWindow.closed) return;
+    state.presenterTimerInterval = window.setInterval(() => {
+      if (!state.presenterWindow || state.presenterWindow.closed) {
+        cleanupPresenterWindowReference();
+        return;
+      }
       const elapsed = Date.now() - startTime;
       const minutes = Math.floor(elapsed / 60000);
       const seconds = Math.floor((elapsed % 60000) / 1000);
-      presenterWindow.document.getElementById('timer').textContent = 
+      presenterWindow.document.getElementById('timer').textContent =
         `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }, 1000);
     
@@ -1781,7 +2060,7 @@ const slideTemplate = (slideHTML) => `
     aspect-ratio: 16 / 9;
     container-type: inline-size;
     container-name: slideshow;
-    font-size: 3cqw;
+    font-size: var(--slide-base-font-size);
   }
   #slideshow { position: absolute; inset: 0; }
   .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
@@ -2138,9 +2417,228 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     }
   }
 
+  function captureCurrentSnapshot() {
+    if (!state.xmlDoc) return null;
+    const serializer = new XMLSerializer();
+    return {
+      xmlString: serializer.serializeToString(state.xmlDoc),
+      currentAbsoluteSlideIndex: state.currentAbsoluteSlideIndex,
+      hasChanges: state.hasChanges
+    };
+  }
+
+  function recordSnapshot(reason) {
+    if (state.isRestoringSnapshot) return;
+    const snapshot = captureCurrentSnapshot();
+    if (!snapshot) return;
+    snapshot.reason = reason;
+    state.undoStack.push(snapshot);
+    if (state.undoStack.length > state.maxUndoDepth) {
+      state.undoStack.shift();
+    }
+    state.redoStack = [];
+    updateUndoRedoButtons();
+  }
+
+  async function handleUndo() {
+    if (state.undoStack.length === 0) return;
+    const snapshot = state.undoStack.pop();
+    const current = captureCurrentSnapshot();
+    if (current) {
+      state.redoStack.push(current);
+      if (state.redoStack.length > state.maxUndoDepth) {
+        state.redoStack.shift();
+      }
+    }
+    await applySnapshot(snapshot);
+    updateUndoRedoButtons();
+  }
+
+  async function handleRedo() {
+    if (state.redoStack.length === 0) return;
+    const snapshot = state.redoStack.pop();
+    if (!snapshot) return;
+    const current = captureCurrentSnapshot();
+    if (current) {
+      state.undoStack.push(current);
+      if (state.undoStack.length > state.maxUndoDepth) {
+        state.undoStack.shift();
+      }
+    }
+    await applySnapshot(snapshot);
+    updateUndoRedoButtons();
+  }
+
+  async function applySnapshot(snapshot) {
+    if (!snapshot) return;
+    state.isRestoringSnapshot = true;
+    try {
+      await init(snapshot.xmlString, { slideIndex: snapshot.currentAbsoluteSlideIndex, fileName: state.currentFilename });
+    } finally {
+      state.isRestoringSnapshot = false;
+    }
+
+    state.currentAbsoluteSlideIndex = snapshot.currentAbsoluteSlideIndex;
+    state.hasChanges = snapshot.hasChanges;
+    updateSaveButtonGlow();
+    updateToggleHideButtonState();
+    updateOverflowWarningForEditor();
+  }
+
+  function saveCurrentSlideText(sourceText, reason) {
+    if (!state.xmlDoc) return false;
+    const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
+    if (!slideNode) return false;
+    const rawNode = slideNode.querySelector('raw');
+    if (!rawNode) return false;
+
+    const previous = rawNode.textContent || '';
+    const next = typeof sourceText === 'string' ? sourceText : previous;
+    if (previous === next) return false;
+
+    recordSnapshot(reason);
+    rawNode.textContent = '';
+    rawNode.appendChild(state.xmlDoc.createCDATASection(next));
+    state.hasChanges = true;
+    return true;
+  }
+
+  function updateUndoRedoButtons() {
+    const undoBtn = $("undo-btn");
+    const redoBtn = $("redo-btn");
+    if (!undoBtn || !redoBtn) return;
+    undoBtn.disabled = state.undoStack.length === 0;
+    redoBtn.disabled = state.redoStack.length === 0;
+  }
+
+  function collectOverflowSnippets(container, containerRect) {
+    const snippets = [];
+    if (!container) return snippets;
+
+    const walker = document.createTreeWalker(
+      container,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          return node.textContent && node.textContent.trim()
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_REJECT;
+        }
+      }
+    );
+
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const rects = Array.from(range.getClientRects());
+      range.detach?.();
+      const isOverflowing = rects.some(rect =>
+        rect.bottom - containerRect.bottom > 1 || rect.right - containerRect.right > 1
+      );
+      if (isOverflowing) {
+        const snippet = node.textContent.trim().replace(/\s+/g, ' ');
+        if (snippet) {
+          snippets.push(snippet);
+          if (snippets.length >= 3) break;
+        }
+      }
+    }
+
+    return snippets;
+  }
+
+  function markOverflowForSlide(slideEl) {
+    if (!slideEl) return;
+
+    const indicator = slideEl.querySelector('.overflow-indicator');
+    if (indicator) indicator.remove();
+    slideEl.classList.remove('has-overflow');
+    delete slideEl.dataset.overflowSnippets;
+
+    const content = slideEl.querySelector('.slide-flow-content');
+    if (!content) return;
+
+    const contentRect = content.getBoundingClientRect();
+    if (!contentRect.width || !contentRect.height) return;
+
+    const overflowVert = content.scrollHeight - content.clientHeight > 1;
+    const overflowHoriz = content.scrollWidth - content.clientWidth > 1;
+    if (!overflowVert && !overflowHoriz) return;
+
+    const snippets = collectOverflowSnippets(content, contentRect);
+    slideEl.classList.add('has-overflow');
+    slideEl.dataset.overflowSnippets = JSON.stringify(snippets);
+
+    const notice = document.createElement('div');
+    notice.className = 'overflow-indicator';
+    const preview = snippets.length
+      ? escapeHtml(snippets[0].slice(0, 160)) + (snippets[0].length > 160 ? '&hellip;' : '')
+      : 'Reduce text size or add a break.';
+    notice.innerHTML = `<strong>Overflowing content</strong><span>${preview}</span>`;
+    slideEl.appendChild(notice);
+  }
+
+  function scheduleOverflowChecks() {
+    if (state.pendingOverflowFrame) {
+      cancelAnimationFrame(state.pendingOverflowFrame);
+    }
+    state.pendingOverflowFrame = requestAnimationFrame(() => {
+      state.pendingOverflowFrame = null;
+      state.slideEls.forEach(markOverflowForSlide);
+      updateOverflowWarningForEditor();
+    });
+  }
+
+  function updateOverflowWarningForEditor() {
+    const warning = $("overflow-warning");
+    if (!warning) return;
+
+    if (!state.editMode) {
+      warning.textContent = '';
+      return;
+    }
+
+    const slide = state.slideEls[state.currentAbsoluteSlideIndex];
+    if (!slide || !slide.classList.contains('has-overflow')) {
+      warning.textContent = '';
+      return;
+    }
+
+    let snippets = [];
+    try {
+      snippets = slide.dataset.overflowSnippets ? JSON.parse(slide.dataset.overflowSnippets) : [];
+    } catch (err) {
+      snippets = [];
+    }
+
+    if (snippets.length === 0) {
+      warning.textContent = 'Content extends beyond the 16×9 frame.';
+      return;
+    }
+
+    const summary = snippets
+      .map(snippet => snippet.slice(0, 160).trim())
+      .filter(Boolean)
+      .join(' • ');
+
+    warning.textContent = `Content past frame: ${summary}`;
+  }
+
+  function syncEditModeClass() {
+    document.body.classList.toggle('is-edit-mode', !!state.editMode);
+  }
+
   function updateSaveButtonGlow() {
       // The glow is now controlled entirely by the simple hasChanges flag.
       $("save-btn").classList.toggle("glow", state.hasChanges);
+  }
+
+  function updateRestoreButtonState() {
+    const restoreBtn = $("restore-btn");
+    if (!restoreBtn) return;
+    const hasPreviousSession = !!localStorage.getItem(PREVIOUS_SESSION_KEY);
+    restoreBtn.disabled = !hasPreviousSession;
   }
 
   function updateToggleHideButtonState() {
@@ -2170,25 +2668,17 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
   function updateGroundTruth(action, data = {}) {
     console.log(`[updateGroundTruth] Action: ${action}`, data);
 
-    // 0. Save first
-    if (action === 'DOWNLOAD' || action === 'SAVE' || action === 'EXIT_EDIT_MODE') {
-      // Force save current slide text regardless of mode
-      const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
-      if (slideNode && $("raw-text-editor")) {
-        const rawNode = slideNode.querySelector('raw');
-        const newText = $("raw-text-editor").value;
-      
-        if (rawNode) {
-          rawNode.textContent = '';
-          rawNode.appendChild(
-            state.xmlDoc.createCDATASection(newText)
-          );
-          console.log(`[updateGroundTruth] Saved current slide text for ${action}`);
-        }
+    const editorEl = $("raw-text-editor");
+    const editorValue = editorEl ? editorEl.value : null;
+    let textPersisted = false;
+
+    if ((action === 'DOWNLOAD' || action === 'SAVE' || action === 'EXIT_EDIT_MODE') && editorValue !== null) {
+      textPersisted = saveCurrentSlideText(editorValue, action);
+      if (textPersisted) {
+        console.log(`[updateGroundTruth] Saved current slide text for ${action}`);
       }
-      console.log(`Current slides `, state.xmlDoc);
     }
-    
+
     // 1. Create DOM if needed (for new/load/init actions)
     if (action === 'INIT' || action === 'LOAD' || action === 'NEW') {
       const xmlString = data.xmlString || DEFAULT_XML;
@@ -2201,32 +2691,40 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       } else {
         state.xmlDoc = tempDoc;
       }
-      
+
       // Reset other state
       state.hasChanges = false;
       state.currentAbsoluteSlideIndex = data.slideIndex || 0;
+      if (action === 'NEW') {
+        state.currentFilename = 'New Presentation';
+      }
+
+      if (!state.isRestoringSnapshot) {
+        state.undoStack = [];
+        state.redoStack = [];
+        updateUndoRedoButtons();
+      }
+      if (data.fileName) {
+        state.currentFilename = data.fileName;
+      } else if (!state.currentFilename) {
+        state.currentFilename = 'New Presentation';
+      }
       console.log(`[updateGroundTruth] Created new XML DOM from ${action}`);
     }
-    
+
     // 2. Update current slide text (for most actions except init)
-    if (action !== 'INIT' && action !== 'LOAD' && action !== 'NEW' && state.editMode) {
-      const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
-      if (slideNode) {
-        const rawNode = slideNode.querySelector('raw');
-        const newText = $("raw-text-editor").value;
-        
-        if (rawNode && newText.trim() !== (rawNode.textContent || '').trim()) {
-          rawNode.textContent = '';
-          rawNode.appendChild(state.xmlDoc.createCDATASection(newText));
-          state.hasChanges = true;
-          console.log(`[updateGroundTruth] Updated slide ${state.currentAbsoluteSlideIndex} text`);
-        }
+    if (!textPersisted && action !== 'INIT' && action !== 'LOAD' && action !== 'NEW' && state.editMode && editorValue !== null) {
+      if (saveCurrentSlideText(editorValue, action)) {
+        textPersisted = true;
+        console.log(`[updateGroundTruth] Updated slide ${state.currentAbsoluteSlideIndex} text`);
       }
     }
-    
+
     // 3. Handle reordering (add, delete, rearrange)
     if (action === 'REORDER') {
       const { fromIndex, toIndex } = data;
+
+      recordSnapshot('REORDER');
 
       // keep a handle on whichever slide is *currently* selected
       const curSlideNode =
@@ -2255,11 +2753,12 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
     if (action === 'ADD_SLIDE') {
       const { index, content } = data;
+      recordSnapshot('ADD_SLIDE');
       const newSlideNode = state.xmlDoc.createElement('slide');
       const rawNode = state.xmlDoc.createElement('raw');
       rawNode.appendChild(state.xmlDoc.createCDATASection(content));
       newSlideNode.appendChild(rawNode);
-      
+
       const slides = state.xmlDoc.querySelectorAll("presentation > slide");
       state.xmlDoc.querySelector("presentation").insertBefore(
         newSlideNode, 
@@ -2269,24 +2768,35 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       state.hasChanges = true;
       console.log(`[updateGroundTruth] Added slide at index ${index}`);
     }
-    
+
     if (action === 'DELETE_SLIDE') {
       const { index } = data;
+      recordSnapshot('DELETE_SLIDE');
       state.xmlDoc.querySelectorAll("presentation > slide")[index].remove();
       state.hasChanges = true;
       console.log(`[updateGroundTruth] Deleted slide at index ${index}`);
     }
-    
+
   // 4. Update theme and other metadata
     if (action === 'THEME_CHANGE' || action === 'TOGGLE_COUNT' || action === 'SAVE' || action === 'EXIT_EDIT_MODE') {
       const presNode = state.xmlDoc.querySelector("presentation");
-      
+      let metadataChanged = false;
+
       if (action === 'THEME_CHANGE') {
-        presNode.setAttribute("theme", data.theme);
+        if (presNode.getAttribute("theme") !== data.theme) {
+          recordSnapshot('THEME_CHANGE');
+          presNode.setAttribute("theme", data.theme);
+          metadataChanged = true;
+        }
       }
-      
+
       if (action === 'TOGGLE_COUNT') {
-        presNode.setAttribute("showSlideCount", $("show-count").checked ? "true" : "false");
+        const newValue = $("show-count").checked ? "true" : "false";
+        if (presNode.getAttribute("showSlideCount") !== newValue) {
+          recordSnapshot('TOGGLE_COUNT');
+          presNode.setAttribute("showSlideCount", newValue);
+          metadataChanged = true;
+        }
       }
 
       // Scan all slides for the last "Logo:" directive to set it globally.
@@ -2299,13 +2809,20 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
           }
       });
 
+      const previousLogo = presNode.getAttribute("logoUrl") || '';
       if (lastLogoUrl) {
           presNode.setAttribute("logoUrl", lastLogoUrl);
       } else {
           presNode.removeAttribute("logoUrl");
       }
-      
-      state.hasChanges = true;
+      const currentLogo = presNode.getAttribute("logoUrl") || '';
+      if (currentLogo !== previousLogo) {
+        metadataChanged = true;
+      }
+
+      if (metadataChanged) {
+        state.hasChanges = true;
+      }
     }
     
     // 5. Handle hide/show
@@ -2336,12 +2853,17 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     try {
       const serializer = new XMLSerializer();
       const xmlString = serializer.serializeToString(state.xmlDoc);
-      localStorage.setItem('modernSlides_lastSession', xmlString);
+      const previous = localStorage.getItem(LAST_SESSION_KEY);
+      if (previous && previous !== xmlString) {
+        localStorage.setItem(PREVIOUS_SESSION_KEY, previous);
+      }
+      localStorage.setItem(LAST_SESSION_KEY, xmlString);
       console.log('[localStorage] Session saved.');
     } catch (e) {
       console.error('[localStorage] Failed to save session:', e);
     }
-    
+
+    updateRestoreButtonState();
     updateSaveButtonGlow();
   }
 
@@ -2404,6 +2926,27 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       loadTextareaForCurrentSlide();
       updateToggleHideButtonState();
     }
+
+    updateOverflowWarningForEditor();
+  }
+
+  function resolveVisibleIndexForAbsolute(absIndex) {
+    if (!Array.isArray(state.visibleSlideIndices) || state.visibleSlideIndices.length === 0) {
+      return 0;
+    }
+
+    const existingIndex = state.visibleSlideIndices.indexOf(absIndex);
+    if (existingIndex !== -1) {
+      return existingIndex;
+    }
+
+    for (let i = 0; i < state.visibleSlideIndices.length; i++) {
+      if (state.visibleSlideIndices[i] > absIndex) {
+        return i;
+      }
+    }
+
+    return state.visibleSlideIndices.length - 1;
   }
   
   function updateHUD() {
@@ -2461,9 +3004,16 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     });
 
     updateVisibleSlideIndices();
+    const finalize = () => {
+      scheduleOverflowChecks();
+    };
+
     if (window.MathJax?.typesetPromise) {
-      return MathJax.typesetPromise([$("slideshow")]);
+      return MathJax.typesetPromise([$("slideshow")]).then(() => finalize());
     }
+
+    finalize();
+    return Promise.resolve();
   }
   
   function updateVisibleSlideIndices() {
@@ -2555,7 +3105,7 @@ async function getThumbnailHTML(rawText, theme) {
       aspect-ratio: 16 / 9;
       container-type: inline-size;
       container-name: slideshow;
-      font-size: 3cqw;
+      font-size: var(--slide-base-font-size);
     }
     #slideshow { position: absolute; inset: 0; }
     .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
@@ -2806,12 +3356,127 @@ async function getThumbnailHTML(rawText, theme) {
 
     return out.join("\n");
   }
+
+  function wrapHtmlWithMode(mode, html) {
+    if (!html || !html.trim()) return '';
+
+    const normalized = resolveModeState(mode);
+
+    switch (normalized.name) {
+      case 'BigText':
+        return `<div class="large">${html}</div>`;
+      case 'SmallText':
+        return `<div class="small">${html}</div>`;
+      case 'TinyText':
+        return `<div class="tiny">${html}</div>`;
+      case 'Text': {
+        const scale = normalized.textScale ?? DEFAULT_TEXT_SCALE;
+        if (Math.abs(scale - DEFAULT_TEXT_SCALE) > 1e-6) {
+          return `<div class="text-scale" style="--text-scale:${scale}; font-size: calc(var(--base-font-size) * ${scale});">${html}</div>`;
+        }
+        return html;
+      }
+      default:
+        return html;
+    }
+  }
+
+  function renderRichTextWithModes(rawText, startingMode = 'Text') {
+    if (!rawText) {
+      return { html: '', mode: resolveModeState(startingMode) };
+    }
+
+    let mode = resolveModeState(startingMode);
+    let html = '';
+    let buffer = '';
+
+    INLINE_MODE_DIRECTIVE_RE.lastIndex = 0;
+    const tokens = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = INLINE_MODE_DIRECTIVE_RE.exec(rawText)) !== null) {
+      if (match.index > lastIndex) {
+        tokens.push({ type: 'text', value: rawText.slice(lastIndex, match.index) });
+      }
+      tokens.push({
+        type: 'directive',
+        keyword: match[1] || '',
+        arg: (match[2] || '').trim()
+      });
+      lastIndex = INLINE_MODE_DIRECTIVE_RE.lastIndex;
+    }
+
+    if (lastIndex < rawText.length) {
+      tokens.push({ type: 'text', value: rawText.slice(lastIndex) });
+    }
+
+    const flushBuffer = () => {
+      const trimmed = buffer.trim();
+      if (!trimmed) {
+        buffer = '';
+        return;
+      }
+      html += wrapHtmlWithMode(mode, formatWithJustify(trimmed));
+      buffer = '';
+    };
+
+    for (const token of tokens) {
+      if (token.type === 'text') {
+        buffer += token.value;
+        continue;
+      }
+
+      flushBuffer();
+
+      const directiveInfo = interpretInlineDirective(token.keyword, token.arg);
+      if (!directiveInfo) {
+        continue;
+      }
+
+      if (directiveInfo.action === 'break') {
+        html += `<div aria-hidden="true" style="display:block;height:calc(${directiveInfo.lines} * 1lh);"></div>`;
+        continue;
+      }
+
+      mode = resolveModeState(directiveInfo.mode);
+    }
+
+    flushBuffer();
+    return { html, mode: resolveModeState(mode) };
+  }
  
+  function resolveDirectiveToken(rawToken) {
+    if (!rawToken) return null;
+
+    if (METADATA_DIRECTIVES.includes(rawToken)) {
+      return { name: rawToken, isMetadata: true };
+    }
+
+    if (CONTENT_DIRECTIVES.includes(rawToken)) {
+      const info = { name: rawToken, isMetadata: false };
+      if (rawToken === 'Text') {
+        info.textScale = DEFAULT_TEXT_SCALE;
+      }
+      return info;
+    }
+
+    const modeState = interpretModeKeyword(rawToken);
+    if (modeState && modeState.name === 'Text') {
+      const lower = rawToken.toLowerCase();
+      if (lower.startsWith('text') && lower !== 'text') {
+        return { name: 'Text', isMetadata: false, textScale: modeState.textScale };
+      }
+    }
+
+    return null;
+  }
+
   function parseRawText(rawText) {
     const attributes = {};
     let innerHTML = '';
     const lines = (rawText || '').split('\n');
-    let currentDirective = "Text";
+    let currentDirective = { name: 'Text', isMetadata: false, textScale: DEFAULT_TEXT_SCALE };
     let buffer = [];
 
     function processBuffer() {
@@ -2820,22 +3485,23 @@ async function getThumbnailHTML(rawText, theme) {
       if (!content) return;
 
       // Handle metadata directives
-      if (METADATA_DIRECTIVES.includes(currentDirective)) {
-        attributes[currentDirective.toLowerCase()] = content;
+      const directiveName = currentDirective.name || 'Text';
+      if (currentDirective.isMetadata || METADATA_DIRECTIVES.includes(directiveName)) {
+        attributes[directiveName.toLowerCase()] = content;
         buffer = [];
         return;
       }
 
       // Handle content directives
-      switch (currentDirective) {
-        case "Hidden": 
-          if (content.toLowerCase() === 'true') attributes.hidden = true; 
+      switch (directiveName) {
+        case "Hidden":
+          if (content.toLowerCase() === 'true') attributes.hidden = true;
           break;
           
         case "Background":
         case "FullScreenImage":
           attributes.background = content;
-          if (currentDirective === "FullScreenImage") attributes.isFullScreenImage = true;
+          if (directiveName === "FullScreenImage") attributes.isFullScreenImage = true;
           break;
 
         case "Break": {
@@ -2856,23 +3522,26 @@ async function getThumbnailHTML(rawText, theme) {
           attributes.title = content.split('\n')[0].trim();
           innerHTML += `<h1>${escapeHtml(content).replace(/\n/g, '<br />')}</h1>`;
           break;
-          
-        case "BigText": 
-          innerHTML += `<div class="large">${formatWithJustify(content)}</div>`; 
+
+        case "BigText":
+          innerHTML += wrapHtmlWithMode('BigText', formatWithJustify(content));
           break;
-          
-        case "Text": 
-          innerHTML += formatWithJustify(content); 
+
+        case "Text":
+          innerHTML += wrapHtmlWithMode(
+            makeModeState('Text', currentDirective.textScale),
+            formatWithJustify(content)
+          );
           break;
 
         case "SmallText":
-          innerHTML += `<div class="small">${formatWithJustify(content)}</div>`;
+          innerHTML += wrapHtmlWithMode('SmallText', formatWithJustify(content));
           break;
-        
+
         case "TinyText":
-          innerHTML += `<div class="tiny">${formatWithJustify(content)}</div>`;
+          innerHTML += wrapHtmlWithMode('TinyText', formatWithJustify(content));
           break;
-        
+
         case "Notes":
           attributes.notes = content;
           break;
@@ -2900,29 +3569,103 @@ async function getThumbnailHTML(rawText, theme) {
           // Allow extensions with optional ?query, and data: URLs
           const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+)\s*(?:,\s*(.*))?$/i;
 
-          const colsHtml = parts.map(part => {
-            const lines = part.trim().split(/\r?\n+/);
+          const htmlContainsVisibleText = (html) => {
+            if (!html) return false;
+            return html.replace(/<[^>]*>/g, '').trim().length > 0;
+          };
 
-            let blocks = [];
-            let textBuf = [];
+          const processInlineModesForImageLine = (line, startingMode) => {
+            INLINE_MODE_DIRECTIVE_RE.lastIndex = 0;
+            let match;
+            let lastIndex = 0;
+            let seenNonDirectiveSegment = false;
+            let mode = resolveModeState(startingMode);
+            const beforeFragments = [];
+            const afterFragments = [];
+            const textSegments = [];
+
+            while ((match = INLINE_MODE_DIRECTIVE_RE.exec(line)) !== null) {
+              if (match.index > lastIndex) {
+                const between = line.slice(lastIndex, match.index);
+                textSegments.push(between);
+                if (between.trim()) {
+                  seenNonDirectiveSegment = true;
+                }
+              }
+
+              const directiveInfo = interpretInlineDirective(match[1] || '', (match[2] || '').trim());
+
+              if (directiveInfo) {
+                if (directiveInfo.action === 'break') {
+                  const frag = `<div aria-hidden="true" style="display:block;height:calc(${directiveInfo.lines} * 1lh);"></div>`;
+                  (seenNonDirectiveSegment ? afterFragments : beforeFragments).push(frag);
+                } else if (directiveInfo.action === 'mode') {
+                  mode = resolveModeState(directiveInfo.mode);
+                }
+              }
+
+              lastIndex = INLINE_MODE_DIRECTIVE_RE.lastIndex;
+            }
+
+            if (lastIndex < line.length) {
+              const remainder = line.slice(lastIndex);
+              textSegments.push(remainder);
+              if (remainder.trim()) {
+                seenNonDirectiveSegment = true;
+              }
+            }
+
+            return {
+              sanitizedLine: textSegments.join(''),
+              mode: resolveModeState(mode),
+              beforeHtml: beforeFragments.join(''),
+              afterHtml: afterFragments.join('')
+            };
+          };
+
+          const colsHtml = parts.map(part => {
+            const lines = part.trim().split(/\r?\n/);
+
+            const blocks = [];
+            let pendingText = '';
+            let currentMode = makeModeState('Text');
             let imageCount = 0;
-            let nonImageCount = 0;
+            let hasTextBlock = false;
 
             const flushText = () => {
-              if (textBuf.length) {
-                // Use full text handling (alignment markers, lists, emphasis)
-                blocks.push(formatWithJustify(textBuf.join('\n').trim()));
-                textBuf = [];
+              if (!pendingText) {
+                pendingText = '';
+                return;
               }
+              const rendered = renderRichTextWithModes(pendingText, currentMode);
+              if (rendered.html.trim()) {
+                blocks.push(rendered.html);
+                if (htmlContainsVisibleText(rendered.html)) {
+                  hasTextBlock = true;
+                }
+              }
+              currentMode = rendered.mode;
+              pendingText = '';
             };
 
-            for (const line of lines) {
-              const m = line.match(imgLineRe);
-              if (m) {
+            for (const rawLine of lines) {
+              const inlineInfo = processInlineModesForImageLine(rawLine, currentMode);
+              const sanitized = inlineInfo.sanitizedLine.trim();
+              const match = sanitized ? sanitized.match(imgLineRe) : null;
+
+              if (match) {
                 flushText();
+
+                if (inlineInfo.beforeHtml) {
+                  blocks.push(inlineInfo.beforeHtml);
+                  if (htmlContainsVisibleText(inlineInfo.beforeHtml)) {
+                    hasTextBlock = true;
+                  }
+                }
+
                 imageCount++;
-                const imageUrl = m[1].trim();
-                const colCaption = (m[2] || '').trim();
+                const imageUrl = match[1].trim();
+                const colCaption = (match[2] || '').trim();
                 const resolvedUrl = window.presentationBaseUrl
                   ? resolveImagePath(imageUrl, window.presentationBaseUrl)
                   : imageUrl;
@@ -2932,14 +3675,24 @@ async function getThumbnailHTML(rawText, theme) {
                     <div class="caption">${plainTextToHtml(colCaption)}</div>
                   </div>`
                 );
-              } else if (line.trim() !== '') {
-                nonImageCount++;
-                textBuf.push(line);
+
+                if (inlineInfo.afterHtml) {
+                  blocks.push(inlineInfo.afterHtml);
+                  if (htmlContainsVisibleText(inlineInfo.afterHtml)) {
+                    hasTextBlock = true;
+                  }
+                }
+
+                currentMode = inlineInfo.mode;
+                continue;
               }
+
+              pendingText += pendingText ? `\n${rawLine}` : rawLine;
             }
+
             flushText();
 
-            const onlyImages = imageCount > 0 && nonImageCount === 0;
+            const onlyImages = imageCount > 0 && !hasTextBlock;
             const cls  = onlyImages ? 'column images-only' : 'column';
             const data = onlyImages ? ` data-imgcount="${imageCount}"` : '';
             return `<div class="${cls}"${data}>${blocks.join('')}</div>`;
@@ -2948,20 +3701,29 @@ async function getThumbnailHTML(rawText, theme) {
           innerHTML += `<div class="columns">${colsHtml}</div>`;
           break;
         }
-          
+
         case "Table": {
-          let tableHtml = '<table>';
           const rows = content.split(/^\s*---\s*$/m);
+          let tableHtml = '<table>';
+
           if (rows.length > 0) {
-            const headerCells = rows.shift().split('&')
-              .map(c => `<th>${plainTextToHtml(c.trim())}</th>`).join('');
+            const headerCells = rows.shift().split('&').map(cell => {
+              const rendered = renderRichTextWithModes(cell.trim());
+              return `<th>${rendered.html || plainTextToHtml(cell.trim())}</th>`;
+            }).join('');
             tableHtml += `<thead><tr>${headerCells}</tr></thead>`;
           }
+
           const bodyRows = rows.map(row => {
-            const cells = row.split('&')
-              .map(c => `<td>${plainTextToHtml(c.trim())}</td>`).join('');
+            const cells = row.split('&').map(cell => {
+              const trimmed = cell.trim();
+              const rendered = renderRichTextWithModes(trimmed);
+              const cellHtml = rendered.html || plainTextToHtml(trimmed);
+              return `<td>${cellHtml}</td>`;
+            }).join('');
             return `<tr>${cells}</tr>`;
           }).join('');
+
           tableHtml += `<tbody>${bodyRows}</tbody></table>`;
           innerHTML += tableHtml;
           break;
@@ -2972,19 +3734,27 @@ async function getThumbnailHTML(rawText, theme) {
 
     // Process lines
     for (const line of lines) {
-      const match = line.match(/^([A-Za-z]+):\s*(.*)/);
-      if (match && ALL_DIRECTIVES.includes(match[1])) {
-        processBuffer();
-        currentDirective = match[1];
-        buffer.push(match[2]);
-      } else {
-        buffer.push(line);
+      const match = line.match(/^([A-Za-z][A-Za-z0-9.]*):\s*(.*)/);
+      if (match) {
+        const directiveInfo = resolveDirectiveToken(match[1]);
+        if (directiveInfo) {
+          processBuffer();
+          const nextDirective = { ...directiveInfo };
+          if (nextDirective.name === 'Text' && typeof nextDirective.textScale !== 'number') {
+            nextDirective.textScale = DEFAULT_TEXT_SCALE;
+          }
+          currentDirective = nextDirective;
+          buffer = [];
+          buffer.push(match[2] || '');
+          continue;
+        }
       }
+      buffer.push(line);
     }
     processBuffer();
-    
+
     return { attributes, innerHTML };
-  }  
+  }
 
   /* ═══════════════════════════════════════════════════════════════
                           UTILITY FUNCTIONS
@@ -3062,9 +3832,13 @@ async function applyTheme(themeId) {
     });
   }
   
-  // Update body class
-  document.body.className = themeId;
-  
+  // Update body class without disturbing edit-mode flag
+  document.body.classList.remove(...AVAILABLE_THEMES);
+  document.body.classList.add(themeId);
+  if (state.editMode) {
+    document.body.classList.add('is-edit-mode');
+  }
+
   // Now refresh thumbnails with loaded CSS
   await refreshThumbnails();
 }
@@ -3079,15 +3853,15 @@ async function applyTheme(themeId) {
     
     // Check for a saved session in local storage first, but only if no URL is specified.
     if (!inputUrl) {
-        const savedSession = localStorage.getItem('modernSlides_lastSession');
+        const savedSession = localStorage.getItem(LAST_SESSION_KEY);
         if (savedSession) {
             if (confirm("Restore the most recently worked-on slideshow?")) {
-                init(savedSession);
+                init(savedSession, { slideIndex: 0 });
                 return; // Stop here to prevent loading the default.
             }
         }
         // If no saved session or user declines, proceed to load the default.
-        init();
+        init(undefined, { fileName: 'New Presentation', slideIndex: 0 });
         return;
     }
 
@@ -3100,7 +3874,7 @@ async function applyTheme(themeId) {
       textFileUrl = `${baseFolderUrl}/Slides.txt?dl=1`;
     } else if (inputUrl.match(/drive\.google\.com\/drive\/folders\//)) {
       alert('Google Drive folders aren\'t directly fetchable. Please link to your Slides.txt file, not to the folder.');
-      return init();
+      return init(undefined, { fileName: 'New Presentation', slideIndex: 0 });
     } else {
       const absoluteInputUrl = new URL(inputUrl, window.location.href).href;
       textFileUrl = absoluteInputUrl;
@@ -3118,14 +3892,17 @@ async function applyTheme(themeId) {
         return res.text();
       })
       .then(txt => {
-        const newXml = convertTxtToXML(txt, textFileUrl.split('/').pop());
-        sessionStorage.setItem(`Slides_${state.currentPresentationName}`, newXml);
-        init(newXml);
+        const fileLeaf = textFileUrl.split('/').pop() || 'Slides.txt';
+        const cleanName = fileLeaf.replace(/\.[^.]+$/, '');
+        const newXml = convertTxtToXML(txt, fileLeaf);
+        state.currentFilename = cleanName;
+        sessionStorage.setItem(`Slides_${cleanName}`, newXml);
+        init(newXml, { fileName: cleanName, slideIndex: 0 });
       })
       .catch(err => {
         console.error(err);
         alert('Failed to load presentation.');
-        init();
+        init(undefined, { fileName: 'New Presentation', slideIndex: 0 });
       });
   }
 
@@ -3168,18 +3945,27 @@ function wrapSlideshowFor16x9() {
                           INITIALIZATION
      ═══════════════════════════════════════════════════════════════ */
 
-  async function init(newXmlString) {
-    updateGroundTruth('INIT', { xmlString: newXmlString });
-    
+  async function init(newXmlString, options = {}) {
+    updateGroundTruth('INIT', {
+      xmlString: newXmlString,
+      slideIndex: options.slideIndex,
+      fileName: options.fileName
+    });
+
     const theme = state.xmlDoc.documentElement.getAttribute("theme") || DEFAULT_THEME;
     $("theme-selector").value = theme;
-    applyTheme(theme);
-    
+    await applyTheme(theme);
+
     await buildSlidesFromXMLDoc();
-    showSlide(0, true);
+    const visibleIndex = resolveVisibleIndexForAbsolute(state.currentAbsoluteSlideIndex);
+    if (state.editMode) {
+      showSlide(state.currentAbsoluteSlideIndex, false);
+    } else {
+      showSlide(visibleIndex, true);
+    }
     updateHUD();
     updateToggleCountButtonState();
-    
+
     if (state.editMode && $("editor").classList.contains("active")) {
       setupEditorUI();
     }
