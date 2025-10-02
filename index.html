@@ -156,6 +156,11 @@ body {
   background: var(--slide-content-bg-if-image);
 }
 
+.text-scale {
+  display: block;
+  width: 100%;
+}
+
 /* ----------------------------- */
 /* --- Slide Typography --- */
 /* ----------------------------- */
@@ -935,6 +940,10 @@ body:not(.is-edit-mode) .overflow-indicator {
     container-name: print-slide-container;
   }
 
+  .slide[style*="background-image"] .slide-content {
+    background: var(--slide-content-bg-if-image) !important;
+  }
+
   /* Show iframes and hide their placeholders */
   .slide iframe { display: none !important; }
   .website-print-placeholder { display: flex !important; }
@@ -1056,15 +1065,16 @@ body:not(.is-edit-mode) .overflow-indicator {
 
       Header: Small text in corner (h:)
 
-      BigText: For large, prominent text.  Within all standard text (b:)
-      <<< Text on Left <<<, 
-      >>> Text on Right >>>, and 
-      ||| Text is centered ||| can be used.
+      BigText: For large, prominent text. (b:)
 
       Text: For standard body text. (x:)
+        Add a number to Text (e.g., Text2:, Text.6:) to scale relative to the slide (0.2–5 works).
+        <<< Text on Left <<<, >>> Text on Right >>>, and ||| Text is centered ||| align any paragraph, even when using Text# or inline modes.
         A blank line between text...
 
         ...and a skipped line creates a new paragraph.
+
+      [[BigText]], [[SmallText]], [[TinyText]], [[Text1.2]], and [[Break:0.5]] can be used inside Columns or Tables to keep the mode until it is changed again.
 
       SmallText: For smaller body text. (s:)
 
@@ -1203,8 +1213,16 @@ Text: And some text.
 >>> And here's a paragraph of text justified on right >>>
 ||| Text centered |||
       ]]></raw>
-    </slide>
+  </slide>
   </presentation>`;
+
+  const MINIMAL_NEW_XML = `<presentation title="New Presentation" showSlideCount="true" theme="${DEFAULT_THEME}">
+  <slide>
+    <raw><![CDATA[
+Title: New slide
+    ]]></raw>
+  </slide>
+</presentation>`;
   const METADATA_DIRECTIVES = ["Theme", "ShowSlideCount", "LogoUrl"];
   const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header",
                                 "Title", "BigText", "Text", "SmallText", "TinyText", "Notes",
@@ -1697,8 +1715,9 @@ Text: And some text.
 
     // New presentation button
     $("new-presentation-btn").onclick = () => {
-      updateGroundTruth('NEW');
-      init(undefined, { fileName: 'New Presentation', slideIndex: 0 });
+      const proceed = confirm('Start a new slideshow? This will replace the current deck in memory. Download first if you need a backup.');
+      if (!proceed) return;
+      init(MINIMAL_NEW_XML, { fileName: 'New Presentation', slideIndex: 0 });
     };
 
     // Load presentation button
@@ -1732,6 +1751,9 @@ Text: And some text.
         updateRestoreButtonState();
         return;
       }
+
+      const proceed = confirm('Restore the last saved slideshow? This will replace the deck you are currently editing.');
+      if (!proceed) return;
 
       try {
         init(previousSession, { slideIndex: 0 });
@@ -2029,7 +2051,7 @@ Text: And some text.
     const nextSlideHTML = state.slideEls[nextIndex].outerHTML;
     
     // Get theme CSS
-    const themeId = document.body.className;
+    const themeId = AVAILABLE_THEMES.find(name => document.body.classList.contains(name)) || DEFAULT_THEME;
     const themeLink = document.getElementById(`${themeId}-stylesheet`);
     const themeHref = themeLink ? themeLink.href : '';
     
@@ -2038,6 +2060,7 @@ const slideTemplate = (slideHTML) => `
   <!DOCTYPE html>
   <html>
   <head>
+    <base href="${document.baseURI}">
     <link rel="stylesheet" href="${themeHref}">
 <style>
   ${document.getElementById('core-styles').textContent}
@@ -2446,14 +2469,28 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
   }
 
   async function validateAndUpdateTextarea() {
-    // This function provides a live preview in the thumbnail without saving to XML.
+    const rawText = $("raw-text-editor").value;
+
+    // Update the live thumbnail preview without mutating XML.
     const thumbIframe = document.querySelector(
       `#thumbs .thumb[data-index="${state.currentAbsoluteSlideIndex}"] iframe`
     );
     if (thumbIframe) {
-      const theme = $("theme-selector").value || 'tufte-base';
-      thumbIframe.srcdoc = await getThumbnailHTML($("raw-text-editor").value, theme);
+      const theme = $("theme-selector").value || DEFAULT_THEME;
+      thumbIframe.srcdoc = await getThumbnailHTML(rawText, theme);
     }
+
+    // Reflect edits immediately in the main slide canvas so overflow checks stay fresh.
+    const slideEl = state.slideEls[state.currentAbsoluteSlideIndex];
+    if (slideEl && slideEl.parentElement) {
+      const wasActive = slideEl.classList.contains('active');
+      const replacement = createSlideElement(rawText);
+      if (wasActive) replacement.classList.add('active');
+      slideEl.parentElement.replaceChild(replacement, slideEl);
+      state.slideEls[state.currentAbsoluteSlideIndex] = replacement;
+    }
+
+    scheduleOverflowChecks();
   }
 
   function captureCurrentSnapshot() {
@@ -2550,6 +2587,8 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     redoBtn.disabled = state.redoStack.length === 0;
   }
 
+  const OVERFLOW_SNIPPET_LIMIT = 20;
+
   function collectOverflowSnippets(container, containerRect) {
     const snippets = [];
     if (!container) return snippets;
@@ -2612,7 +2651,8 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     const notice = document.createElement('div');
     notice.className = 'overflow-indicator';
     const preview = snippets.length
-      ? escapeHtml(snippets[0].slice(0, 160)) + (snippets[0].length > 160 ? '&hellip;' : '')
+      ? escapeHtml(snippets[0].slice(0, OVERFLOW_SNIPPET_LIMIT))
+        + (snippets[0].length > OVERFLOW_SNIPPET_LIMIT ? '&hellip;' : '')
       : 'Reduce text size or add a break.';
     notice.innerHTML = `<strong>Overflowing content</strong><span>${preview}</span>`;
     slideEl.appendChild(notice);
@@ -2657,7 +2697,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     }
 
     const summary = snippets
-      .map(snippet => snippet.slice(0, 160).trim())
+      .map(snippet => snippet.slice(0, OVERFLOW_SNIPPET_LIMIT).trim())
       .filter(Boolean)
       .join(' • ');
 
@@ -2999,6 +3039,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     }
 
     updateOverflowWarningForEditor();
+    scheduleOverflowChecks();
   }
 
   function resolveVisibleIndexForAbsolute(absIndex) {
@@ -3075,6 +3116,26 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     });
 
     updateVisibleSlideIndices();
+
+    if (state.slideEls.length === 0) {
+      state.currentAbsoluteSlideIndex = 0;
+      state.currentVisibleSlideIndex = 0;
+    } else {
+      state.currentAbsoluteSlideIndex = Math.max(
+        0,
+        Math.min(state.currentAbsoluteSlideIndex, state.slideEls.length - 1)
+      );
+
+      if (state.visibleSlideIndices.length > 0) {
+        const visiblePos = state.visibleSlideIndices.indexOf(state.currentAbsoluteSlideIndex);
+        state.currentVisibleSlideIndex = visiblePos !== -1
+          ? visiblePos
+          : resolveVisibleIndexForAbsolute(state.currentAbsoluteSlideIndex);
+      } else {
+        state.currentVisibleSlideIndex = 0;
+      }
+    }
+
     updateSlideActionButtons();
     const finalize = () => {
       scheduleOverflowChecks();
