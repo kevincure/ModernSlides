@@ -55,6 +55,7 @@ the raw text markup that gets parsed into slide elements.
 /* ----------------------------- */
 
 :root {
+  --slide-base-font-size: 3cqw;
   --editor-bg-color: #fffff8;
   --editor-text-color: #1a1a1a;
   --editor-border-color: #d4d4d4;
@@ -83,7 +84,7 @@ body {
   container-type: inline-size;
   container-name: slideshow;
   /* This is the single master switch for all slide scaling */
-  --base-font-size: 3cqw;
+  --base-font-size: var(--slide-base-font-size);
 }
 
 .deckbar-spacer {
@@ -117,7 +118,7 @@ body {
   background-size: contain;
 }
 .slide.is-fullscreen-image-slide .slide-content {
-  background: transparent !important;
+  background-color: transparent !important;
 }
 
 .slide-header {
@@ -137,6 +138,17 @@ body {
   position: relative;
 }
 
+.slide-content.has-background-image {
+  background-color: var(--slide-content-bg-if-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.slide.is-fullscreen-image-slide .slide-content.has-background-image {
+  background: transparent;
+}
+
 .slide-flow-content {
   width: 80%;
   margin: 0 auto;
@@ -147,10 +159,22 @@ body {
   flex: 1;
   min-height: 0;
   line-height: 1.6;
+  --text-scale: 1;
+  font-size: calc(var(--base-font-size) * var(--text-scale, 1));
 }
 
 .slide[style*="background-image"] .slide-content {
   background: var(--slide-content-bg-if-image);
+}
+
+.text-scale {
+  display: block;
+  width: 100%;
+  align-self: stretch;
+}
+
+.slide-flow-content > .text-scale {
+  align-self: stretch;
 }
 
 /* ----------------------------- */
@@ -167,7 +191,7 @@ body {
 }
 
 .slide-content p {
-  font-size: var(--base-font-size);
+  font-size: calc(var(--base-font-size) * var(--text-scale, 1));
   line-height: 1.6;
   margin-bottom: calc(var(--base-font-size) * 0.3);
   text-align: left;
@@ -175,20 +199,24 @@ body {
 
 .slide-content .text-center { text-align: center; }
 
+.slide-content .large {
+  --text-scale: 1.6;
+  font-size: calc(var(--base-font-size) * var(--text-scale, 1));
+}
+
 .slide-content .large p {
   text-align: center;
-  font-size: calc(var(--base-font-size) * 1.6);
   margin: calc(var(--base-font-size) * 0.5) auto;
 }
 
-.slide-content .small,
-.slide-content .small p {
-  font-size: calc(var(--base-font-size) * 0.67);
+.slide-content .small {
+  --text-scale: 0.67;
+  font-size: calc(var(--base-font-size) * var(--text-scale, 1));
 }
 
-.slide-content .tiny,
-.slide-content .tiny p {
-  font-size: calc(var(--base-font-size) * 0.33);
+.slide-content .tiny {
+  --text-scale: 0.33;
+  font-size: calc(var(--base-font-size) * var(--text-scale, 1));
 }
 
 .slide-content .notes {
@@ -224,7 +252,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
+  justify-content: center;
+  overflow: visible;
 }
 
 .slide-content .columns .column.images-only[data-imgcount]:not([data-imgcount="1"]) {
@@ -280,6 +309,64 @@ body {
   flex-shrink: 0;
   flex-grow: 0;
 }
+
+body.is-edit-mode .slide.has-overflow {
+  outline: calc(var(--base-font-size) * 0.1) solid rgba(179, 38, 30, 0.6);
+  outline-offset: calc(var(--base-font-size) * -0.05);
+}
+
+.overflow-indicator {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--base-font-size) * 0.6);
+  transform: translateX(-50%);
+  background: rgba(179, 38, 30, 0.9);
+  color: #fff;
+  padding: calc(var(--base-font-size) * 0.2) calc(var(--base-font-size) * 0.6);
+  border-radius: calc(var(--base-font-size) * 0.2);
+  font-size: calc(var(--base-font-size) * 0.4);
+  text-align: center;
+  max-width: 80%;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--base-font-size) * 0.15);
+}
+
+.overflow-indicator strong {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+body:not(.is-edit-mode) .overflow-indicator {
+  display: none !important;
+}
+
+/* BACKGROUND: 80% transparency overlay without dimming text */
+.slide-content.has-background-image { position: relative; }
+
+/* overlay sits UNDER content, ABOVE background image */
+.slide:not(.is-fullscreen-image-slide) .slide-content.has-background-image::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--bg-color, #ffffff);
+  opacity: 0.8;                 /* 80% fade of the image */
+  pointer-events: none;
+  z-index: 0;                   /* crucial: below content */
+}
+
+/* ensure content stays above the overlay */
+.slide-content.has-background-image > .slide-flow-content {
+  position: relative;
+  z-index: 1;
+}
+.slide-content.has-background-image > .notes {
+  position: absolute;           /* keep your existing positioning */
+  z-index: 1;
+}
+
 
 /* ----------------------------- */
 /* --- Presentation HUD --- */
@@ -369,7 +456,7 @@ body {
 /* --- Editor Components --- */
 /* ----------------------------- */
 
-.thumb {
+.thumb { 
   position: relative;
   width: 200px;
   height: 112.5px;
@@ -383,6 +470,48 @@ body {
   transition: opacity 0.2s;
   user-select: none;
   flex-shrink: 0;
+}
+
+.thumb-controls {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  gap: 0.3rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.thumb:hover .thumb-controls,
+.thumb.selected .thumb-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.thumb-controls button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--editor-accent-color) 85%, black 20%);
+  color: var(--editor-accent-text-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+
+.thumb-controls button:hover:not(:disabled) {
+  background: var(--editor-accent-color);
+}
+
+.thumb-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .thumb.selected {
@@ -470,21 +599,32 @@ body {
   flex-wrap: wrap;
   font-family: var(--editor-ui-font-family);
   font-size: 16px;
-  gap: 0.75rem;
+  gap: 0.6rem;
   align-items: center;
   margin-bottom: 1rem;
 }
 
 #editor button {
-  padding: 8px 16px;
+  padding: 6px 12px;
   background: var(--editor-accent-color);
   font-family: var(--editor-ui-font-family);
-  font-size: 16px;
+  font-size: 15px;
   color: var(--editor-accent-text-color);
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s;
+}
+#editor button.ghost {
+  background: transparent;
+  color: var(--editor-accent-color);
+  border: 1px solid color-mix(in srgb, var(--editor-accent-color) 60%, transparent);
+}
+#editor button.ghost:disabled {
+  border-color: color-mix(in srgb, var(--editor-border-color) 80%, transparent);
+}
+#editor button.ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--editor-accent-color) 10%, transparent);
 }
 #editor button:hover:not(:disabled) {
   background: color-mix(in srgb, var(--editor-accent-color) 85%, black);
@@ -494,25 +634,81 @@ body {
   cursor: not-allowed;
 }
 
+.editor-bottom-bar {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--editor-border-color) 70%, transparent);
+  min-height: 2.75rem;
+}
+
+.overflow-warning {
+  font-size: 0.9rem;
+  color: #b3261e;
+  max-width: 60ch;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.overflow-warning::before {
+  content: "⚠";
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.overflow-warning:empty::before {
+  content: "";
+}
+
+.overflow-warning:empty {
+  display: none;
+}
+
+.editor-status {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--editor-accent-color);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.editor-status:empty {
+  display: none;
+}
+
+.editor-status::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--editor-accent-color) 70%, transparent);
+  opacity: 0.75;
+}
+
 @keyframes editor-glow {
   from { box-shadow: 0 0 8px 2px var(--editor-accent-color); }
   to   { box-shadow: 0 0 2px 1px color-mix(in srgb, var(--editor-accent-color) 50%, transparent); }
 }
 #editor .glow { animation: editor-glow 1.2s infinite alternate; }
 
-.toolbar label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-}
-.toolbar select, .toolbar input[type="text"] {
-  padding: 0.3rem 0.5rem;
+.toolbar select,
+.toolbar input[type="text"] {
+  padding: 0.25rem 0.45rem;
   border-radius: 4px;
   border: 1px solid var(--editor-input-border);
   background-color: var(--editor-input-bg);
-  font-size: 16px;
+  font-size: 15px;
   font-family: var(--editor-ui-font-family);
   color: var(--editor-input-text);
+}
+
+.toolbar .theme-selector {
+  min-width: 9rem;
 }
 
 /* ----------------------------- */
@@ -578,7 +774,7 @@ body {
   background: #000;
   container-type: inline-size;
   container-name: slideshow;
-  --base-font-size: 3cqw;
+  --base-font-size: var(--slide-base-font-size);
 }
 
 .presentation-scaler {
@@ -754,10 +950,53 @@ body {
     margin: 0 !important;
     padding: 0 !important;
   }
+
+  .slide.is-fullscreen-image-slide .slide-content {
+    background-size: contain !important;   /* override the generic 'cover' in print */
+    background-color: transparent !important;
+  }
+
+  /* Fix flex-min-height behavior so the 16:9 box never grows on print */
+  .slide > .slide-content {
+    min-height: 0 !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;   /* don't stretch to fit content */
+    overflow: hidden !important;  /* hard clip, like the screen view */
+  }
+
+  /* Hide the iframe (already present above, safe to re-assert) */
+  .slide iframe { display: none !important; }
+
+  /* Tame the inline-styled iframe wrapper used for FullScreenWebsite */
+  .slide [style*="z-index: 100"] {
+    /* occupy exactly the 16:9 area, no chrome */
+    width: min(177.78vh, 100vw) !important;
+    height: calc(min(177.78vh, 100vw) * 0.5625) !important;
+    top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
+    background: transparent !important; box-shadow: none !important; border-radius: 0 !important;
+  }
+
+  /* When printing with notes, the slide is at the top—align the placeholder with it */
+  body.print-with-notes .slide [style*="z-index: 100"] {
+    top: 0 !important; left: 50% !important; transform: translate(-50%, 0) !important;
+  }
+
+  /* Center the placeholder message fully within the 16:9 area */
+  .slide .website-print-placeholder {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: calc(var(--base-font-size) * 0.9) !important;
+  }
   
   /* Use the exact same container-relative unit for printing */
   .slide {
-    --base-font-size: 3cqw;
+    --base-font-size: var(--slide-base-font-size);
   }
 
   /* Hide all on-screen UI chrome */
@@ -791,7 +1030,9 @@ body {
     margin: 0 !important; padding: 0 !important;
     opacity: 1 !important;
     page-break-after: always;
-    break-after: page;
+    break-after: page;'
+    background: transparent !important;
+    background-image: none !important; /* keep imagery inside the 16:9 box */
   }
   .slide:last-child { page-break-after: auto; break-after: avoid; }
   .slide.hidden-in-presentation { display: none !important; }
@@ -800,11 +1041,23 @@ body {
   .slide-content {
     position: relative !important; display: flex !important;
     box-sizing: border-box !important; overflow: hidden !important;
-    background: var(--bg-color) !important;
-    width: 177.78vh !important; height: 100vh !important;
-    max-width: 100vw !important; max-height: 56.25vw !important;
+    background-color: var(--bg-color) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    width: min(177.78vh, 100vw) !important;
+    height: calc(min(177.78vh, 100vw) * 0.5625) !important;
+    margin: 0 auto !important;
     container-type: inline-size;
     container-name: print-slide-container;
+  }
+
+  .slide-content.has-background-image {
+    background-color: var(--slide-content-bg-if-image) !important;
+  }
+
+  .slide.is-fullscreen-image-slide .slide-content {
+    background-color: transparent !important;
   }
 
   /* Show iframes and hide their placeholders */
@@ -819,8 +1072,7 @@ body {
   /* STEP 1: Shrink the slide's 16:9 container to make room at the bottom.
      The slide content inside will automatically rescale perfectly thanks to `cqw`. */
   body.print-with-notes .slide-content {
-    height: 56.25vw !important;
-    max-height: 56.25vw !important;
+    height: calc(min(177.78vh, 100vw) * 0.5625) !important;
   }
 
   /* STEP 2: Make the notes area visible and position it in the new empty space. */
@@ -828,7 +1080,7 @@ body {
     display: block !important;
     position: absolute !important;
     left: 0 !important; right: 0 !important; bottom: 0 !important;
-    top: 56.25vw !important; /* Start exactly where the slide content ends */
+    top: calc(min(177.78vh, 100vw) * 0.5625) !important; /* Start exactly where the slide content ends */
     padding: calc(var(--base-font-size) * 0.4) calc(var(--base-font-size) * 0.8) !important;
     background: #fff !important;
     font-size: calc(var(--base-font-size) * 0.8) !important;
@@ -875,26 +1127,36 @@ body {
       <textarea id="raw-text-editor" placeholder="Enter slide content here. Click Help for syntax."></textarea>
       <div class="toolbar">
         <button id="add-btn"       title="New Slide">      <i class="fa-solid fa-plus"></i></button>
-        <button id="del-btn"    title="Delete Slide">   <i class="fa-solid fa-minus"></i></button>
-        <button id="dup-btn"    title="Duplicate Slide"><i class="fa-solid fa-copy"></i></button>              <button id="toggle-hide-btn"    title="Hide/Show Slide"> <i class="fa-solid fa-eye"></i></button>
+        <button id="del-btn"       title="Delete Slide">   <i class="fa-solid fa-minus"></i></button>
+        <button id="dup-btn"       title="Duplicate Slide"><i class="fa-solid fa-copy"></i></button>
+        <button id="toggle-hide-btn" title="Hide/Show Slide"> <i class="fa-solid fa-eye"></i></button>
         <!-- hidden state, still used by updateHUD() -->
         <input type="checkbox" id="show-count" checked style="display:none">
         <!-- toggle button -->
         <button id="toggle-count-btn" title="Hide Slide Numbers">
           <i class="fa-solid fa-sort-numeric-asc"></i>
         </button>
-        <label>Theme
-          <select id="theme-selector">
+        <select id="theme-selector" class="theme-selector" aria-label="Choose theme">
           <!-- Options will be dynamically populated -->
-          </select>
-        </label>
-        <div class="deckbar-spacer"></div> 
-        <button id="help-btn" title="Help"><i class="fa-solid fa-question"></i></button> 
+        </select>
+        <button id="undo-btn" class="ghost" title="Undo" disabled>
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+        <button id="redo-btn" class="ghost" title="Redo" disabled>
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+        <div class="deckbar-spacer"></div>
+        <button id="help-btn" title="Help"><i class="fa-solid fa-question"></i></button>
         <button id="new-presentation-btn"   title="New Slideshow">  <i class="fa-solid fa-file-circle-plus"></i></button>
         <button id="load-btn"  title="Load Slideshow"> <i class="fa-solid fa-folder-open"></i></button>
+        <button id="restore-btn" title="Restore most recently saved" aria-label="Restore most recently saved slideshow" disabled><i class="fa-solid fa-clock-rotate-left"></i></button>
         <button id="download-txt-btn"        title="Download Raw Presentation">       <i class="fa-solid fa-download"></i></button>
         <button id="print-notes-btn" title="Print with Notes"><i class="fa-solid fa-print"></i></button>
-        <button id="save-btn" class="primary-action" title="Presentation View"><i class="fa-solid fa-bullhorn"></i></button> 
+        <button id="save-btn" class="primary-action" title="Presentation View"><i class="fa-solid fa-bullhorn"></i></button>
+      </div>
+      <div class="editor-bottom-bar">
+        <div id="overflow-warning" class="overflow-warning" role="status" aria-live="polite"></div>
+        <div id="editor-status" class="editor-status" role="status" aria-live="polite"></div>
       </div>
     </div>
   </div>
@@ -919,19 +1181,20 @@ body {
 
       Header: Small text in corner (h:)
 
-      BigText: For large, prominent text.  Within all standard text (b:)
-      <<< Text on Left <<<, 
-      >>> Text on Right >>>, and 
-      ||| Text is centered ||| can be used.
+      BigText: For large, prominent text. (b:)
 
       Text: For standard body text. (x:)
+        Add a number to Text (e.g., Text2:, Text.6:) to scale relative to the slide (0.2–5 works).
+        <<< Text on Left <<<, >>> Text on Right >>>, and ||| Text is centered ||| align any paragraph, even when using Text# or inline modes.
         A blank line between text...
 
         ...and a skipped line creates a new paragraph.
 
+      [[BigText]], [[SmallText]], [[TinyText]], [[Text1.2]], and [[Break:0.5]] can be used inside Columns or Tables to keep the mode until it is changed again.
+
       SmallText: For smaller body text. (s:)
 
-      TinyText: For footnote-sized text. (t:)
+      TinyText: For footnote-sized text. (y:)
 
       Break: 1 (or 2.2 or .7), provides a break of a set size
 
@@ -975,7 +1238,9 @@ body {
       # - In `Columns` and `Table`, use `---` on its own line
       #       to separate sections/rows.
       # - You cannot nest some directives (e.g., a Table inside a Column).
-      # - As you edit, your most-recently-edited slides are stored in LocalStorage via your browser, and can be recovered by reopening ModernSlides
+      # - As you edit, your two most recent sessions are stored locally. The app automatically reopens the last one and the clock icon restores the prior deck.
+      # - Undo and Redo live next to the style selector in the toolbar.
+      # - When a thumbnail is highlighted you can use the + / - buttons on it to add or delete slides.
       # - 9 different styles are given, but you can create your own also
       # - you can add a bullet point by typing z:
       </pre>
@@ -1064,14 +1329,113 @@ Text: And some text.
 >>> And here's a paragraph of text justified on right >>>
 ||| Text centered |||
       ]]></raw>
-    </slide>
+  </slide>
   </presentation>`;
+
+  const MINIMAL_NEW_XML = `<presentation title="New Presentation" showSlideCount="true" theme="${DEFAULT_THEME}">
+  <slide>
+    <raw><![CDATA[
+Title: New slide
+    ]]></raw>
+  </slide>
+</presentation>`;
   const METADATA_DIRECTIVES = ["Theme", "ShowSlideCount", "LogoUrl"];
-  const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header", 
+  const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header",
                                 "Title", "BigText", "Text", "SmallText", "TinyText", "Notes",
                                 "Image", "Columns", "Table", "FullScreenWebsite", "SpeakerNote",
                                 "PrintNote", "Break", "Logo"];
   const ALL_DIRECTIVES = [...METADATA_DIRECTIVES, ...CONTENT_DIRECTIVES];
+  const INLINE_MODE_DIRECTIVE_RE = /\[\[([A-Za-z][A-Za-z0-9.]*)(?::?\s*([^\]]+))?\]\]/g;
+  const MIN_TEXT_SCALE = 0.2;
+  const MAX_TEXT_SCALE = 5;
+  const DEFAULT_TEXT_SCALE = 1;
+  const LAST_SESSION_KEY = 'modernSlides_lastSession';
+  const PREVIOUS_SESSION_KEY = 'modernSlides_previousSession';
+  const DEFAULT_NEW_SLIDE_CONTENT = "Title: New Slide\n\nText: Edit this content.";
+
+  function clampTextScale(value) {
+    if (!Number.isFinite(value)) return DEFAULT_TEXT_SCALE;
+    return Math.min(MAX_TEXT_SCALE, Math.max(MIN_TEXT_SCALE, value));
+  }
+
+  function makeModeState(name, scale) {
+    const normalizedName = name || 'Text';
+    if (normalizedName === 'Text') {
+      return { name: 'Text', textScale: clampTextScale(scale ?? DEFAULT_TEXT_SCALE) };
+    }
+    return { name: normalizedName };
+  }
+
+  function resolveModeState(mode) {
+    if (!mode) return makeModeState('Text');
+
+    if (typeof mode === 'string') {
+      const interpreted = interpretModeKeyword(mode);
+      if (interpreted) return makeModeState(interpreted.name, interpreted.textScale);
+      return makeModeState(mode);
+    }
+
+    if (typeof mode === 'object') {
+      const candidateName = mode.name || mode.type || mode.mode;
+      if (candidateName) {
+        if (candidateName === 'Text' || candidateName === 'text') {
+          const sourceScale = mode.textScale ?? mode.scale ?? mode.factor ?? DEFAULT_TEXT_SCALE;
+          return makeModeState('Text', sourceScale);
+        }
+        return makeModeState(candidateName);
+      }
+    }
+
+    return makeModeState('Text');
+  }
+
+  function interpretModeKeyword(keyword, arg = '') {
+    if (!keyword) return null;
+    const normalized = keyword.trim();
+    if (!normalized) return null;
+    const lower = normalized.toLowerCase();
+
+    if (lower === 'bigtext' || lower === 'big') return makeModeState('BigText');
+    if (lower === 'smalltext' || lower === 'small') return makeModeState('SmallText');
+    if (lower === 'tinytext' || lower === 'tiny') return makeModeState('TinyText');
+
+    if (lower === 'text' || lower === 'normal') {
+      const numericArg = parseFloat((arg || '').replace(',', '.'));
+      if (Number.isFinite(numericArg)) {
+        return makeModeState('Text', numericArg);
+      }
+      return makeModeState('Text');
+    }
+
+    const match = lower.match(/^text(?:(\d+(?:\.\d+)?)|(\.\d+))$/);
+    if (match) {
+      const scaleStr = match[1] ?? match[2];
+      const parsedScale = parseFloat(scaleStr);
+      if (Number.isFinite(parsedScale)) {
+        return makeModeState('Text', parsedScale);
+      }
+    }
+
+    return null;
+  }
+
+  function interpretInlineDirective(keyword, arg = '') {
+    if (!keyword) return null;
+    const lower = keyword.toLowerCase();
+
+    if (lower === 'break') {
+      const amount = parseFloat((arg || '').replace(',', '.'));
+      const lines = Number.isFinite(amount) && amount > 0 ? amount : 1;
+      return { action: 'break', lines };
+    }
+
+    const modeState = interpretModeKeyword(keyword, arg);
+    if (modeState) {
+      return { action: 'mode', mode: resolveModeState(modeState) };
+    }
+
+    return null;
+  }
 
   
 /* ═══════════════════════════════════════════════════════════════
@@ -1094,16 +1458,30 @@ Text: And some text.
     currentVisibleSlideIndex: 0,
     currentAbsoluteSlideIndex: 0,
 
+    // Undo/redo state
+    undoStack: [],
+    redoStack: [],
+    maxUndoDepth: 5,
+    isRestoringSnapshot: false,
+
     // Drag state
     draggedThumbIndex: null,
     placeholder: null,
     thumbnailRefreshPromise: null,
 
+    // Overflow measurement
+    pendingOverflowFrame: null,
+
     // Available themes
     availableThemes: [],
 
     // Presenter window
-    presenterWindow: null
+    presenterWindow: null,
+    presenterTimerInterval: null,
+
+    // Editor status messaging
+    statusTimeout: null,
+    lastStatusMessage: ''
   };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1152,6 +1530,8 @@ Text: And some text.
       });
     });
 
+    window.addEventListener('resize', () => scheduleOverflowChecks());
+
     // Keyboard navigation
     // Navigate between slides using arrow keys or page up/down
     // Toggle edit mode using e
@@ -1185,6 +1565,7 @@ Text: And some text.
         }
         state.editMode = !state.editMode;
         $("editor").classList.toggle("active", state.editMode);
+        syncEditModeClass();
         if (state.editMode) {
           setupEditorUI();
           releaseWakeLock();
@@ -1196,24 +1577,16 @@ Text: And some text.
           if (activeSlide) {
             activeSlide.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
+          updateOverflowWarningForEditor();
         } else {
           // Update ground truth when leaving edit mode
           updateGroundTruth('EXIT_EDIT_MODE');
           buildSlidesFromXMLDoc();
           requestWakeLock();
           const lastAbsoluteIndex = state.currentAbsoluteSlideIndex;
-          let targetVisibleIndex = state.visibleSlideIndices.indexOf(lastAbsoluteIndex);
-
-          if (targetVisibleIndex === -1) { // We were editing a hidden slide.
-            // Find the index of the next visible slide that comes after it.
-            targetVisibleIndex = state.visibleSlideIndices.findIndex(i => i > lastAbsoluteIndex);
-              
-            // If no "next" is found, go to the last available visible slide.
-            if (targetVisibleIndex === -1) {
-              targetVisibleIndex = Math.max(0, state.visibleSlideIndices.length - 1);
-            }
-          }
+          const targetVisibleIndex = resolveVisibleIndexForAbsolute(lastAbsoluteIndex);
           indexForShowSlide = targetVisibleIndex;
+          updateOverflowWarningForEditor();
         }
         showSlide(indexForShowSlide, !state.editMode);
       } else if (e.key === 'f' || e.key === 'F') {
@@ -1228,9 +1601,13 @@ Text: And some text.
         } else if (document.fullscreenElement) {
           document.exitFullscreen();
         } else if (state.editMode) {
+          const lastAbsoluteIndex = state.currentAbsoluteSlideIndex;
           state.editMode = false;
           $("editor").classList.remove("active");
-          showSlide(state.currentAbsoluteSlideIndex, true);
+          const targetVisibleIndex = resolveVisibleIndexForAbsolute(lastAbsoluteIndex);
+          syncEditModeClass();
+          updateOverflowWarningForEditor();
+          showSlide(targetVisibleIndex, true);
         }
       }
     });
@@ -1246,7 +1623,10 @@ Text: And some text.
       updateSaveButtonGlow();
       state.editMode = false;
       $("editor").classList.remove("active");
-      showSlide(state.currentAbsoluteSlideIndex, true);
+      syncEditModeClass();
+      const targetVisibleIndex = resolveVisibleIndexForAbsolute(state.currentAbsoluteSlideIndex);
+      showSlide(targetVisibleIndex, true);
+      updateOverflowWarningForEditor();
 
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
@@ -1256,50 +1636,20 @@ Text: And some text.
     };
 
     // Add slide button
-    $("add-btn").onclick =  async () => {
-      updateGroundTruth('ADD_SLIDE', { 
-         index: state.currentAbsoluteSlideIndex + 1, 
-         content: "Title: New Slide\n\nText: Edit this content." 
-      });
-
-      await buildSlidesFromXMLDoc();
-      await refreshThumbnails();
-      showSlide(state.currentAbsoluteSlideIndex + 1);
+    $("add-btn").onclick = async () => {
+      await insertSlideAfter(state.currentAbsoluteSlideIndex);
     };
 
     // Delete slides
     $("del-btn").onclick = async () => {
-      if (state.slideEls.length <= 1) {
-        alert("Cannot delete the last slide.");
-        return;
-      }
-      if (!confirm("Are you sure you want to delete this slide?")) return;
-
-      const i = state.currentAbsoluteSlideIndex;
-      // Stay on the same absolute index unless we're deleting the last slide.
-      const newIndex = (i === state.slideEls.length - 1) ? i - 1 : i;
-
-      updateGroundTruth('DELETE_SLIDE', { index: i }); // removes slide i in XML
-      await buildSlidesFromXMLDoc();                         // rebuild DOM from XML
-      state.currentAbsoluteSlideIndex = newIndex;      // keep indices aligned to avoid NAVIGATE
-      await refreshThumbnails();
-      showSlide(newIndex);                             
+      await removeSlideAt(state.currentAbsoluteSlideIndex);
     };
 
     // Duplicate slide
     $("dup-btn").onclick = async () => {
       updateGroundTruth('SAVE');
       const currentRawText = getRawTextForSlide(state.currentAbsoluteSlideIndex);
-      const newIndex = state.currentAbsoluteSlideIndex + 1;
-      
-      updateGroundTruth('ADD_SLIDE', { 
-        index: newIndex, 
-        content: currentRawText
-      });
-
-      await buildSlidesFromXMLDoc();
-      await refreshThumbnails();
-      showSlide(newIndex);
+      await insertSlideAfter(state.currentAbsoluteSlideIndex, currentRawText);
     };
 
 
@@ -1376,6 +1726,7 @@ Text: And some text.
 
       // Update the raw text in XML - trim to avoid extra newlines
       const newRawText = newLines.join('\n').trim();
+      recordSnapshot('TOGGLE_HIDE');
       rawNode.textContent = '';
       rawNode.appendChild(state.xmlDoc.createCDATASection(newRawText));
 
@@ -1484,14 +1835,13 @@ Text: And some text.
 
     // New presentation button
     $("new-presentation-btn").onclick = () => {
-      if (state.hasChanges && !confirm("You have unsaved changes that will be lost unless you download the slides. Continue?")) return;
-      updateGroundTruth('NEW');
-      init();
+      const proceed = confirm('Start a new slideshow? This will replace the current deck in memory. Download first if you need a backup.');
+      if (!proceed) return;
+      init(MINIMAL_NEW_XML, { fileName: 'New Presentation', slideIndex: 0, reason: 'new' });
     };
 
     // Load presentation button
     $("load-btn").onclick = () => {
-      if (state.hasChanges && !confirm("You have unsaved changes that will be lost unless you download the slides. Continue?")) return;
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.slides,.txt,text/xml,text/plain';
@@ -1505,11 +1855,31 @@ Text: And some text.
           let newXML = content.trim().startsWith('<?xml') || content.trim().startsWith('<presentation')
             ? content
             : convertTxtToXML(content, file.name);
-          init(newXML); // Re-initialize with loaded file
+          init(newXML, { fileName: state.currentFilename, slideIndex: 0, reason: 'load' }); // Re-initialize with loaded file
         };
-        reader.readAsText(file);
+      reader.readAsText(file);
       };
       input.click();
+    };
+
+    $("restore-btn").onclick = () => {
+      const btn = $("restore-btn");
+      if (!btn || btn.disabled) return;
+
+      const previousSession = localStorage.getItem(PREVIOUS_SESSION_KEY);
+      if (!previousSession) {
+        updateRestoreButtonState();
+        return;
+      }
+
+      const proceed = confirm('Restore the last saved slideshow? This will replace the deck you are currently editing.');
+      if (!proceed) return;
+
+      try {
+        init(previousSession, { slideIndex: 0, reason: 'restore' });
+      } catch (err) {
+        console.error('Failed to restore previous session', err);
+      }
     };
 
     // Help button
@@ -1548,6 +1918,7 @@ Text: And some text.
         'W': 'FullScreenWebsite',
         'n': 'Notes',
         's': 'SmallText',
+        'y': 'TinyText',
         'h': 'Header',
         't': 'Title',
         'x': 'Text',
@@ -1595,13 +1966,24 @@ Text: And some text.
       }
     }
 
-    // Add beforeunload warning for unsaved changes
-    window.addEventListener('beforeunload', (e) => {
-        if (state.hasChanges) {
-            e.preventDefault();
-            e.returnValue = ''; // Required for legacy browsers.
-        }
-    });
+    const undoBtn = $("undo-btn");
+    if (undoBtn) {
+      undoBtn.addEventListener('click', () => {
+        handleUndo().catch(err => console.error(err));
+      });
+    }
+
+    const redoBtn = $("redo-btn");
+    if (redoBtn) {
+      redoBtn.addEventListener('click', () => {
+        handleRedo().catch(err => console.error(err));
+      });
+    }
+
+    syncEditModeClass();
+    updateUndoRedoButtons();
+    updateOverflowWarningForEditor();
+    updateRestoreButtonState();
   }
   
   /* ═══════════════════════════════════════════════════════════════
@@ -1678,10 +2060,35 @@ Text: And some text.
                         PRESENTER MODE
   ================================================================= */
 
+  function disposePresenterTimer() {
+    if (state.presenterTimerInterval) {
+      clearInterval(state.presenterTimerInterval);
+      state.presenterTimerInterval = null;
+    }
+  }
+
+  function cleanupPresenterWindowReference() {
+    disposePresenterTimer();
+    if (state.presenterWindow && !state.presenterWindow.closed) {
+      try {
+        state.presenterWindow.close();
+      } catch (err) {
+        console.warn('Unable to close presenter window cleanly.', err);
+      }
+    }
+    state.presenterWindow = null;
+  }
+
   function openPresenterMode() {
     // Open a new window for presenter view
+    if (state.presenterWindow && !state.presenterWindow.closed) {
+      state.presenterWindow.focus();
+      return;
+    }
+
+    disposePresenterTimer();
     const presenterWindow = window.open('', 'presenter', 'width=1200,height=800');
-    
+
     if (!presenterWindow) {
       alert('Please allow popups to use presenter mode');
       return;
@@ -1721,18 +2128,22 @@ Text: And some text.
       </body>
       </html>
     `);
-    
+
     // Store reference to presenter window
     state.presenterWindow = presenterWindow;
-    
+    presenterWindow.addEventListener('beforeunload', cleanupPresenterWindowReference, { once: true });
+
     // Start timer
     let startTime = Date.now();
-    setInterval(() => {
-      if (presenterWindow.closed) return;
+    state.presenterTimerInterval = window.setInterval(() => {
+      if (!state.presenterWindow || state.presenterWindow.closed) {
+        cleanupPresenterWindowReference();
+        return;
+      }
       const elapsed = Date.now() - startTime;
       const minutes = Math.floor(elapsed / 60000);
       const seconds = Math.floor((elapsed % 60000) / 1000);
-      presenterWindow.document.getElementById('timer').textContent = 
+      presenterWindow.document.getElementById('timer').textContent =
         `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }, 1000);
     
@@ -1761,7 +2172,7 @@ Text: And some text.
     const nextSlideHTML = state.slideEls[nextIndex].outerHTML;
     
     // Get theme CSS
-    const themeId = document.body.className;
+    const themeId = AVAILABLE_THEMES.find(name => document.body.classList.contains(name)) || DEFAULT_THEME;
     const themeLink = document.getElementById(`${themeId}-stylesheet`);
     const themeHref = themeLink ? themeLink.href : '';
     
@@ -1770,6 +2181,7 @@ const slideTemplate = (slideHTML) => `
   <!DOCTYPE html>
   <html>
   <head>
+    <base href="${document.baseURI}">
     <link rel="stylesheet" href="${themeHref}">
 <style>
   ${document.getElementById('core-styles').textContent}
@@ -1781,7 +2193,7 @@ const slideTemplate = (slideHTML) => `
     aspect-ratio: 16 / 9;
     container-type: inline-size;
     container-name: slideshow;
-    font-size: 3cqw;
+    font-size: var(--slide-base-font-size);
   }
   #slideshow { position: absolute; inset: 0; }
   .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
@@ -1856,10 +2268,32 @@ const slideTemplate = (slideHTML) => `
       newThumb.draggable = true;
       newThumb.addEventListener('dragstart', handleDragStart);
       newThumb.addEventListener('dragend', handleDragEnd);
-      
+
       // Re-attach click handler
       const index = parseInt(newThumb.dataset.index);
       newThumb.onclick = () => showSlide(index);
+
+      const controls = newThumb.querySelector('.thumb-controls');
+      if (controls) {
+        const addControl = controls.querySelector('[data-action="add"]');
+        if (addControl) {
+          addControl.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            await insertSlideAfter(index);
+          });
+        }
+
+        const deleteControl = controls.querySelector('[data-action="delete"]');
+        if (deleteControl) {
+          const disableDelete = state.slideEls.length <= 1;
+          deleteControl.disabled = disableDelete;
+          deleteControl.title = disableDelete ? 'Cannot delete the only slide' : 'Delete slide';
+          deleteControl.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            await removeSlideAt(index);
+          });
+        }
+      }
     });
     
     // Remove old container event listeners and add fresh ones
@@ -2056,7 +2490,35 @@ const slideTemplate = (slideHTML) => `
         // This await is fine, it just populates the content
         iframe.srcdoc = await getThumbnailHTML(rawText, theme);
 
-        thumbDiv.append(num, iframe);
+        const controls = document.createElement('div');
+        controls.className = 'thumb-controls';
+
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.title = 'Add slide after';
+        addBtn.dataset.action = 'add';
+        addBtn.setAttribute('aria-label', 'Add slide after');
+        addBtn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+        addBtn.addEventListener('click', async (event) => {
+          event.stopPropagation();
+          await insertSlideAfter(i);
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.title = state.slideEls.length <= 1 ? 'Cannot delete the only slide' : 'Delete slide';
+        deleteBtn.dataset.action = 'delete';
+        deleteBtn.setAttribute('aria-label', 'Delete slide');
+        deleteBtn.innerHTML = '<i class="fa-solid fa-minus"></i>';
+        deleteBtn.disabled = state.slideEls.length <= 1;
+        deleteBtn.addEventListener('click', async (event) => {
+          event.stopPropagation();
+          await removeSlideAt(i);
+        });
+
+        controls.append(addBtn, deleteBtn);
+
+        thumbDiv.append(num, iframe, controls);
         thumbsContainer.appendChild(thumbDiv);
         thumbDiv.onclick = () => showSlide(i);
       }
@@ -2128,19 +2590,337 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
   }
 
   async function validateAndUpdateTextarea() {
-    // This function provides a live preview in the thumbnail without saving to XML.
+    const rawText = $("raw-text-editor").value;
+
+    // Update the live thumbnail preview without mutating XML.
     const thumbIframe = document.querySelector(
       `#thumbs .thumb[data-index="${state.currentAbsoluteSlideIndex}"] iframe`
     );
     if (thumbIframe) {
-      const theme = $("theme-selector").value || 'tufte-base';
-      thumbIframe.srcdoc = await getThumbnailHTML($("raw-text-editor").value, theme);
+      const theme = $("theme-selector").value || DEFAULT_THEME;
+      thumbIframe.srcdoc = await getThumbnailHTML(rawText, theme);
     }
+
+    // Reflect edits immediately in the main slide canvas so overflow checks stay fresh.
+    const slideEl = state.slideEls[state.currentAbsoluteSlideIndex];
+    if (slideEl && slideEl.parentElement) {
+      const wasActive = slideEl.classList.contains('active');
+      const replacement = createSlideElement(rawText);
+      if (wasActive) replacement.classList.add('active');
+      slideEl.parentElement.replaceChild(replacement, slideEl);
+      state.slideEls[state.currentAbsoluteSlideIndex] = replacement;
+    }
+
+    scheduleOverflowChecks();
+  }
+
+  function captureCurrentSnapshot() {
+    if (!state.xmlDoc) return null;
+    const serializer = new XMLSerializer();
+    return {
+      xmlString: serializer.serializeToString(state.xmlDoc),
+      currentAbsoluteSlideIndex: state.currentAbsoluteSlideIndex,
+      hasChanges: state.hasChanges
+    };
+  }
+
+  function recordSnapshot(reason) {
+    if (state.isRestoringSnapshot) return;
+    const snapshot = captureCurrentSnapshot();
+    if (!snapshot) return;
+    snapshot.reason = reason;
+    state.undoStack.push(snapshot);
+    if (state.undoStack.length > state.maxUndoDepth) {
+      state.undoStack.shift();
+    }
+    state.redoStack = [];
+    updateUndoRedoButtons();
+  }
+
+  async function handleUndo() {
+    if (state.undoStack.length === 0) return;
+    const snapshot = state.undoStack.pop();
+    const current = captureCurrentSnapshot();
+    if (current) {
+      state.redoStack.push(current);
+      if (state.redoStack.length > state.maxUndoDepth) {
+        state.redoStack.shift();
+      }
+    }
+    await applySnapshot(snapshot);
+    updateUndoRedoButtons();
+  }
+
+  async function handleRedo() {
+    if (state.redoStack.length === 0) return;
+    const snapshot = state.redoStack.pop();
+    if (!snapshot) return;
+    const current = captureCurrentSnapshot();
+    if (current) {
+      state.undoStack.push(current);
+      if (state.undoStack.length > state.maxUndoDepth) {
+        state.undoStack.shift();
+      }
+    }
+    await applySnapshot(snapshot);
+    updateUndoRedoButtons();
+  }
+
+  async function applySnapshot(snapshot) {
+    if (!snapshot) return;
+    state.isRestoringSnapshot = true;
+    try {
+      await init(snapshot.xmlString, {
+        slideIndex: snapshot.currentAbsoluteSlideIndex,
+        fileName: state.currentFilename,
+        reason: 'snapshot',
+        suppressStatus: true
+      });
+    } finally {
+      state.isRestoringSnapshot = false;
+    }
+
+    state.currentAbsoluteSlideIndex = snapshot.currentAbsoluteSlideIndex;
+    state.hasChanges = snapshot.hasChanges;
+    updateSaveButtonGlow();
+    updateToggleHideButtonState();
+    updateOverflowWarningForEditor();
+  }
+
+  function saveCurrentSlideText(sourceText, reason) {
+    if (!state.xmlDoc) return false;
+    const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
+    if (!slideNode) return false;
+    const rawNode = slideNode.querySelector('raw');
+    if (!rawNode) return false;
+
+    const previous = rawNode.textContent || '';
+    const next = typeof sourceText === 'string' ? sourceText : previous;
+    if (previous === next) return false;
+
+    recordSnapshot(reason);
+    rawNode.textContent = '';
+    rawNode.appendChild(state.xmlDoc.createCDATASection(next));
+    state.hasChanges = true;
+    return true;
+  }
+
+  function updateUndoRedoButtons() {
+    const undoBtn = $("undo-btn");
+    const redoBtn = $("redo-btn");
+    if (!undoBtn || !redoBtn) return;
+    undoBtn.disabled = state.undoStack.length === 0;
+    redoBtn.disabled = state.redoStack.length === 0;
+  }
+
+  const OVERFLOW_SNIPPET_LIMIT = 20;
+
+  function collectOverflowSnippets(container, containerRect) {
+    const snippets = [];
+    if (!container) return snippets;
+
+    const walker = document.createTreeWalker(
+      container,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          return node.textContent && node.textContent.trim()
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_REJECT;
+        }
+      }
+    );
+
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const rects = Array.from(range.getClientRects());
+      range.detach?.();
+      const isOverflowing = rects.some(rect =>
+        rect.bottom - containerRect.bottom > 1 || rect.right - containerRect.right > 1
+      );
+      if (isOverflowing) {
+        const snippet = node.textContent.trim().replace(/\s+/g, ' ');
+        if (snippet) {
+          snippets.push(snippet);
+          if (snippets.length >= 3) break;
+        }
+      }
+    }
+
+    return snippets;
+  }
+
+  function markOverflowForSlide(slideEl) {
+    if (!slideEl) return;
+
+    const indicator = slideEl.querySelector('.overflow-indicator');
+    if (indicator) indicator.remove();
+    slideEl.classList.remove('has-overflow');
+    delete slideEl.dataset.overflowSnippets;
+
+    const content = slideEl.querySelector('.slide-flow-content');
+    if (!content) return;
+
+    const contentRect = content.getBoundingClientRect();
+    if (!contentRect.width || !contentRect.height) return;
+
+    const overflowVert = content.scrollHeight - content.clientHeight > 1;
+    const overflowHoriz = content.scrollWidth - content.clientWidth > 1;
+    if (!overflowVert && !overflowHoriz) return;
+
+    const snippets = collectOverflowSnippets(content, contentRect);
+    slideEl.classList.add('has-overflow');
+    slideEl.dataset.overflowSnippets = JSON.stringify(snippets);
+
+    const notice = document.createElement('div');
+    notice.className = 'overflow-indicator';
+    const preview = snippets.length
+      ? escapeHtml(snippets[0].slice(0, OVERFLOW_SNIPPET_LIMIT))
+        + (snippets[0].length > OVERFLOW_SNIPPET_LIMIT ? '&hellip;' : '')
+      : 'Reduce text size or add a break.';
+    notice.innerHTML = `<strong>Overflowing content</strong><span>${preview}</span>`;
+    slideEl.appendChild(notice);
+  }
+
+  function scheduleOverflowChecks() {
+    if (state.pendingOverflowFrame) {
+      cancelAnimationFrame(state.pendingOverflowFrame);
+    }
+    state.pendingOverflowFrame = requestAnimationFrame(() => {
+      state.pendingOverflowFrame = null;
+      state.slideEls.forEach(markOverflowForSlide);
+      updateOverflowWarningForEditor();
+    });
+  }
+
+  function updateOverflowWarningForEditor() {
+    const warning = $("overflow-warning");
+    if (!warning) return;
+
+    if (!state.editMode) {
+      warning.textContent = '';
+      return;
+    }
+
+    const slide = state.slideEls[state.currentAbsoluteSlideIndex];
+    if (!slide || !slide.classList.contains('has-overflow')) {
+      warning.textContent = '';
+      return;
+    }
+
+    let snippets = [];
+    try {
+      snippets = slide.dataset.overflowSnippets ? JSON.parse(slide.dataset.overflowSnippets) : [];
+    } catch (err) {
+      snippets = [];
+    }
+
+    if (snippets.length === 0) {
+      warning.textContent = 'Content extends beyond the 16×9 frame.';
+      return;
+    }
+
+    const summary = snippets
+      .map(snippet => snippet.slice(0, OVERFLOW_SNIPPET_LIMIT).trim())
+      .filter(Boolean)
+      .join(' • ');
+
+    warning.textContent = `Content past frame: ${summary}`;
+  }
+
+  function setEditorStatus(message, { persist = false, duration = 6000 } = {}) {
+    const statusEl = $("editor-status");
+    if (!statusEl) return;
+
+    if (state.statusTimeout) {
+      clearTimeout(state.statusTimeout);
+      state.statusTimeout = null;
+    }
+
+    const text = message?.trim() || '';
+    state.lastStatusMessage = text;
+    statusEl.textContent = text;
+
+    if (text && !persist && duration > 0) {
+      state.statusTimeout = window.setTimeout(() => {
+        if (state.lastStatusMessage === text) {
+          state.lastStatusMessage = '';
+          statusEl.textContent = '';
+        }
+        state.statusTimeout = null;
+      }, duration);
+    }
+  }
+
+  function announceSessionStatus(options = {}) {
+    if (options.suppressStatus) {
+      setEditorStatus('');
+      return;
+    }
+
+    const reason = options.reason || '';
+    const docTitle = state.xmlDoc?.documentElement?.getAttribute('title')?.trim();
+    const filename = (options.fileName || state.currentFilename || '').trim();
+    const deckName = docTitle || filename || 'this deck';
+
+    let message = '';
+    let persist = false;
+
+    switch (reason) {
+      case 'restore':
+        message = `Restored ${deckName}.`;
+        break;
+      case 'restored-last':
+      case 'autoload':
+        message = `Restored ${deckName} from last session.`;
+        break;
+      case 'new':
+        message = 'Starting a fresh deck.';
+        break;
+      case 'default':
+        message = "Click [!] for help.";
+        persist = true;
+        break;
+      case 'load':
+        message = `Loaded ${deckName} from file.`;
+        break;
+      case 'url':
+        message = `Loaded ${deckName} from link.`;
+        break;
+      case 'snapshot':
+        message = '';
+        break;
+      default:
+        if (!reason) {
+          message = '';
+        }
+    }
+
+    if (message) {
+      setEditorStatus(message, { persist });
+    } else if (options.clearOnEmpty) {
+      setEditorStatus('');
+    }
+  }
+
+  function syncEditModeClass() {
+    document.body.classList.toggle('is-edit-mode', !!state.editMode);
   }
 
   function updateSaveButtonGlow() {
       // The glow is now controlled entirely by the simple hasChanges flag.
       $("save-btn").classList.toggle("glow", state.hasChanges);
+  }
+
+  function updateRestoreButtonState() {
+    const restoreBtn = $("restore-btn");
+    if (!restoreBtn) return;
+    const hasPreviousSession = !!localStorage.getItem(PREVIOUS_SESSION_KEY);
+    restoreBtn.disabled = !hasPreviousSession;
+    restoreBtn.title = hasPreviousSession ? 'Restore most recently saved' : 'Nothing to restore yet';
+    restoreBtn.setAttribute('aria-label', hasPreviousSession ? 'Restore most recently saved slideshow' : 'Restore button disabled until another slideshow is saved');
   }
 
   function updateToggleHideButtonState() {
@@ -2152,6 +2932,36 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       : '<i class="fa-solid fa-eye-slash"></i>';
     btn.title = isHidden ? "Show Slide" : "Hide Slide";
     $("toggle-hide-btn").disabled = !slideNode;
+  }
+
+  function updateSlideActionButtons() {
+    const totalSlides = state.xmlDoc?.querySelectorAll('presentation > slide').length ?? 0;
+    const deleteBtn = $("del-btn");
+    if (deleteBtn) {
+      const disableDelete = totalSlides <= 1;
+      deleteBtn.disabled = disableDelete;
+      deleteBtn.title = disableDelete ? "Delete Slide (add more slides to enable)" : "Delete Slide";
+    }
+  }
+
+  async function insertSlideAfter(index, content = DEFAULT_NEW_SLIDE_CONTENT) {
+    const totalSlides = Array.isArray(state.slideEls) ? state.slideEls.length : 0;
+    const targetIndex = Math.max(0, Math.min(index + 1, totalSlides));
+    updateGroundTruth('ADD_SLIDE', { index: targetIndex, content });
+    await buildSlidesFromXMLDoc();
+    await refreshThumbnails();
+    showSlide(targetIndex);
+  }
+
+  async function removeSlideAt(index) {
+    const totalSlides = Array.isArray(state.slideEls) ? state.slideEls.length : 0;
+    if (totalSlides <= 1) return;
+    const clampedIndex = Math.max(0, Math.min(index, totalSlides - 1));
+    const nextIndex = clampedIndex >= totalSlides - 1 ? clampedIndex - 1 : clampedIndex;
+    updateGroundTruth('DELETE_SLIDE', { index: clampedIndex });
+    await buildSlidesFromXMLDoc();
+    await refreshThumbnails();
+    showSlide(Math.max(0, nextIndex));
   }
 
   function updateToggleCountButtonState() {
@@ -2170,63 +2980,74 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
   function updateGroundTruth(action, data = {}) {
     console.log(`[updateGroundTruth] Action: ${action}`, data);
 
-    // 0. Save first
-    if (action === 'DOWNLOAD' || action === 'SAVE' || action === 'EXIT_EDIT_MODE') {
-      // Force save current slide text regardless of mode
-      const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
-      if (slideNode && $("raw-text-editor")) {
-        const rawNode = slideNode.querySelector('raw');
-        const newText = $("raw-text-editor").value;
-      
-        if (rawNode) {
-          rawNode.textContent = '';
-          rawNode.appendChild(
-            state.xmlDoc.createCDATASection(newText)
-          );
-          console.log(`[updateGroundTruth] Saved current slide text for ${action}`);
-        }
+    const editorEl = $("raw-text-editor");
+    const editorValue = editorEl ? editorEl.value : null;
+    let textPersisted = false;
+
+    if ((action === 'DOWNLOAD' || action === 'SAVE' || action === 'EXIT_EDIT_MODE') && editorValue !== null) {
+      textPersisted = saveCurrentSlideText(editorValue, action);
+      if (textPersisted) {
+        console.log(`[updateGroundTruth] Saved current slide text for ${action}`);
       }
-      console.log(`Current slides `, state.xmlDoc);
     }
-    
+
     // 1. Create DOM if needed (for new/load/init actions)
     if (action === 'INIT' || action === 'LOAD' || action === 'NEW') {
       const xmlString = data.xmlString || DEFAULT_XML;
       const parser = new DOMParser();
       const tempDoc = parser.parseFromString(xmlString, "text/xml");
-      
+
       if (tempDoc.getElementsByTagName("parsererror").length > 0) {
         alert("Error parsing presentation XML. Loading default.");
         state.xmlDoc = parser.parseFromString(DEFAULT_XML, "text/xml");
       } else {
         state.xmlDoc = tempDoc;
       }
-      
+
       // Reset other state
       state.hasChanges = false;
-      state.currentAbsoluteSlideIndex = data.slideIndex || 0;
+      state.visibleSlideIndices = [];
+      state.slideEls = [];
+      const slideNodes = state.xmlDoc.querySelectorAll('presentation > slide');
+      const parsedIndex = Number.isFinite(Number(data.slideIndex)) ? Number(data.slideIndex) : 0;
+      const requestedIndex = Math.trunc(parsedIndex);
+      const maxIndex = Math.max(0, slideNodes.length - 1);
+      const clampedIndex = Math.max(0, Math.min(requestedIndex, maxIndex));
+      state.currentAbsoluteSlideIndex = clampedIndex;
+      state.currentVisibleSlideIndex = clampedIndex;
+      if (action === 'NEW') {
+        state.currentFilename = 'New Presentation';
+      }
+
+      if (!state.isRestoringSnapshot) {
+        state.undoStack = [];
+        state.redoStack = [];
+        updateUndoRedoButtons();
+      }
+      const docTitle = state.xmlDoc.documentElement?.getAttribute('title');
+      if (data.fileName) {
+        state.currentFilename = data.fileName;
+      } else if (docTitle) {
+        state.currentFilename = docTitle;
+      } else if (!state.currentFilename) {
+        state.currentFilename = 'New Presentation';
+      }
       console.log(`[updateGroundTruth] Created new XML DOM from ${action}`);
     }
-    
+
     // 2. Update current slide text (for most actions except init)
-    if (action !== 'INIT' && action !== 'LOAD' && action !== 'NEW' && state.editMode) {
-      const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[state.currentAbsoluteSlideIndex];
-      if (slideNode) {
-        const rawNode = slideNode.querySelector('raw');
-        const newText = $("raw-text-editor").value;
-        
-        if (rawNode && newText.trim() !== (rawNode.textContent || '').trim()) {
-          rawNode.textContent = '';
-          rawNode.appendChild(state.xmlDoc.createCDATASection(newText));
-          state.hasChanges = true;
-          console.log(`[updateGroundTruth] Updated slide ${state.currentAbsoluteSlideIndex} text`);
-        }
+    if (!textPersisted && action !== 'INIT' && action !== 'LOAD' && action !== 'NEW' && state.editMode && editorValue !== null) {
+      if (saveCurrentSlideText(editorValue, action)) {
+        textPersisted = true;
+        console.log(`[updateGroundTruth] Updated slide ${state.currentAbsoluteSlideIndex} text`);
       }
     }
-    
+
     // 3. Handle reordering (add, delete, rearrange)
     if (action === 'REORDER') {
       const { fromIndex, toIndex } = data;
+
+      recordSnapshot('REORDER');
 
       // keep a handle on whichever slide is *currently* selected
       const curSlideNode =
@@ -2255,11 +3076,12 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
     if (action === 'ADD_SLIDE') {
       const { index, content } = data;
+      recordSnapshot('ADD_SLIDE');
       const newSlideNode = state.xmlDoc.createElement('slide');
       const rawNode = state.xmlDoc.createElement('raw');
       rawNode.appendChild(state.xmlDoc.createCDATASection(content));
       newSlideNode.appendChild(rawNode);
-      
+
       const slides = state.xmlDoc.querySelectorAll("presentation > slide");
       state.xmlDoc.querySelector("presentation").insertBefore(
         newSlideNode, 
@@ -2269,24 +3091,35 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       state.hasChanges = true;
       console.log(`[updateGroundTruth] Added slide at index ${index}`);
     }
-    
+
     if (action === 'DELETE_SLIDE') {
       const { index } = data;
+      recordSnapshot('DELETE_SLIDE');
       state.xmlDoc.querySelectorAll("presentation > slide")[index].remove();
       state.hasChanges = true;
       console.log(`[updateGroundTruth] Deleted slide at index ${index}`);
     }
-    
+
   // 4. Update theme and other metadata
     if (action === 'THEME_CHANGE' || action === 'TOGGLE_COUNT' || action === 'SAVE' || action === 'EXIT_EDIT_MODE') {
       const presNode = state.xmlDoc.querySelector("presentation");
-      
+      let metadataChanged = false;
+
       if (action === 'THEME_CHANGE') {
-        presNode.setAttribute("theme", data.theme);
+        if (presNode.getAttribute("theme") !== data.theme) {
+          recordSnapshot('THEME_CHANGE');
+          presNode.setAttribute("theme", data.theme);
+          metadataChanged = true;
+        }
       }
-      
+
       if (action === 'TOGGLE_COUNT') {
-        presNode.setAttribute("showSlideCount", $("show-count").checked ? "true" : "false");
+        const newValue = $("show-count").checked ? "true" : "false";
+        if (presNode.getAttribute("showSlideCount") !== newValue) {
+          recordSnapshot('TOGGLE_COUNT');
+          presNode.setAttribute("showSlideCount", newValue);
+          metadataChanged = true;
+        }
       }
 
       // Scan all slides for the last "Logo:" directive to set it globally.
@@ -2299,13 +3132,20 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
           }
       });
 
+      const previousLogo = presNode.getAttribute("logoUrl") || '';
       if (lastLogoUrl) {
           presNode.setAttribute("logoUrl", lastLogoUrl);
       } else {
           presNode.removeAttribute("logoUrl");
       }
-      
-      state.hasChanges = true;
+      const currentLogo = presNode.getAttribute("logoUrl") || '';
+      if (currentLogo !== previousLogo) {
+        metadataChanged = true;
+      }
+
+      if (metadataChanged) {
+        state.hasChanges = true;
+      }
     }
     
     // 5. Handle hide/show
@@ -2336,12 +3176,17 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     try {
       const serializer = new XMLSerializer();
       const xmlString = serializer.serializeToString(state.xmlDoc);
-      localStorage.setItem('modernSlides_lastSession', xmlString);
+      const previous = localStorage.getItem(LAST_SESSION_KEY);
+      if (action === 'INIT' && previous && previous !== xmlString) {
+        localStorage.setItem(PREVIOUS_SESSION_KEY, previous);
+      }
+      localStorage.setItem(LAST_SESSION_KEY, xmlString);
       console.log('[localStorage] Session saved.');
     } catch (e) {
       console.error('[localStorage] Failed to save session:', e);
     }
-    
+
+    updateRestoreButtonState();
     updateSaveButtonGlow();
   }
 
@@ -2352,8 +3197,8 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
   function showSlide(absIndex, fromPresentationNav = false) {
     let targetAbsIndex = absIndex;
 
-    if (state.editMode && state.currentAbsoluteSlideIndex !== absIndex && 
-        state.currentAbsoluteSlideIndex >= 0 && state.currentAbsoluteSlideIndex < state.slideEls.length) {
+    if (state.editMode &&
+        state.currentAbsoluteSlideIndex >= 0 && absIndex !== state.currentAbsoluteSlideIndex && state.currentAbsoluteSlideIndex < state.slideEls.length) {
       updateGroundTruth('NAVIGATE', { from: state.currentAbsoluteSlideIndex, to: absIndex });
     }
     
@@ -2370,7 +3215,10 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     state.currentAbsoluteSlideIndex = targetAbsIndex;
     
     if (!fromPresentationNav || state.editMode) {
-      state.currentVisibleSlideIndex = state.visibleSlideIndices.indexOf(state.currentAbsoluteSlideIndex);
+      const visibleIdx = state.visibleSlideIndices.indexOf(state.currentAbsoluteSlideIndex);
+      state.currentVisibleSlideIndex = visibleIdx !== -1
+        ? visibleIdx
+        : resolveVisibleIndexForAbsolute(state.currentAbsoluteSlideIndex);
     }
  
     // This block forces GIFs to restart when a slide becomes active.
@@ -2404,6 +3252,28 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       loadTextareaForCurrentSlide();
       updateToggleHideButtonState();
     }
+
+    updateOverflowWarningForEditor();
+    scheduleOverflowChecks();
+  }
+
+  function resolveVisibleIndexForAbsolute(absIndex) {
+    if (!Array.isArray(state.visibleSlideIndices) || state.visibleSlideIndices.length === 0) {
+      return 0;
+    }
+
+    const existingIndex = state.visibleSlideIndices.indexOf(absIndex);
+    if (existingIndex !== -1) {
+      return existingIndex;
+    }
+
+    for (let i = 0; i < state.visibleSlideIndices.length; i++) {
+      if (state.visibleSlideIndices[i] > absIndex) {
+        return i;
+      }
+    }
+
+    return state.visibleSlideIndices.length - 1;
   }
   
   function updateHUD() {
@@ -2461,9 +3331,37 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     });
 
     updateVisibleSlideIndices();
-    if (window.MathJax?.typesetPromise) {
-      return MathJax.typesetPromise([$("slideshow")]);
+
+    if (state.slideEls.length === 0) {
+      state.currentAbsoluteSlideIndex = 0;
+      state.currentVisibleSlideIndex = 0;
+    } else {
+      state.currentAbsoluteSlideIndex = Math.max(
+        0,
+        Math.min(state.currentAbsoluteSlideIndex, state.slideEls.length - 1)
+      );
+
+      if (state.visibleSlideIndices.length > 0) {
+        const visiblePos = state.visibleSlideIndices.indexOf(state.currentAbsoluteSlideIndex);
+        state.currentVisibleSlideIndex = visiblePos !== -1
+          ? visiblePos
+          : resolveVisibleIndexForAbsolute(state.currentAbsoluteSlideIndex);
+      } else {
+        state.currentVisibleSlideIndex = 0;
+      }
     }
+
+    updateSlideActionButtons();
+    const finalize = () => {
+      scheduleOverflowChecks();
+    };
+
+    if (window.MathJax?.typesetPromise) {
+      return MathJax.typesetPromise([$("slideshow")]).then(() => finalize());
+    }
+
+    finalize();
+    return Promise.resolve();
   }
   
   function updateVisibleSlideIndices() {
@@ -2555,7 +3453,7 @@ async function getThumbnailHTML(rawText, theme) {
       aspect-ratio: 16 / 9;
       container-type: inline-size;
       container-name: slideshow;
-      font-size: 3cqw;
+      font-size: var(--slide-base-font-size);
     }
     #slideshow { position: absolute; inset: 0; }
     .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
@@ -2591,18 +3489,22 @@ async function getThumbnailHTML(rawText, theme) {
 
   function createSlideElement(rawText) {
     const { attributes, innerHTML } = parseRawText(rawText);
-    const slideDiv = document.createElement("div");
-    slideDiv.className = "slide";
-    
-    if (attributes.hidden) slideDiv.classList.add("hidden-in-presentation");
-    
-    if (attributes.background) {
-      const resolvedUrl = window.presentationBaseUrl ? 
-        resolveImagePath(attributes.background, window.presentationBaseUrl) : 
-        attributes.background;
-      slideDiv.style.backgroundImage = `url("${escapeHtml(resolvedUrl)}")`;
-      if (attributes.isFullScreenImage) slideDiv.classList.add("is-fullscreen-image-slide");
-    }
+  const slideDiv = document.createElement("div");
+  slideDiv.className = "slide";
+
+  if (attributes.hidden) slideDiv.classList.add("hidden-in-presentation");
+
+  let backgroundUrl = null;
+  if (attributes.background) {
+    const resolvedUrl = window.presentationBaseUrl ?
+      resolveImagePath(attributes.background, window.presentationBaseUrl) :
+      attributes.background;
+    backgroundUrl = resolvedUrl;
+    const cssUrl = `url("${resolvedUrl.replace(/"/g, '\\"')}")`;
+    slideDiv.style.backgroundImage = cssUrl;
+    slideDiv.classList.add("has-background-image");
+    if (attributes.isFullScreenImage) slideDiv.classList.add("is-fullscreen-image-slide");
+  }
     
     if (attributes.header) {
       const headerDiv = document.createElement("div");
@@ -2672,6 +3574,19 @@ async function getThumbnailHTML(rawText, theme) {
     
     const contentDiv = document.createElement("div");
     contentDiv.className = "slide-content";
+
+    if (backgroundUrl) {
+      const cssUrl = `url("${backgroundUrl.replace(/"/g, '\\"')}")`;
+      const backgroundSize = attributes.isFullScreenImage ? 'contain' : 'cover';
+      contentDiv.classList.add('has-background-image');
+      contentDiv.style.backgroundImage = cssUrl;
+      contentDiv.style.backgroundSize = backgroundSize;
+      contentDiv.style.backgroundPosition = 'center';
+      contentDiv.style.backgroundRepeat = 'no-repeat';
+      if (attributes.isFullScreenImage) {
+        contentDiv.style.backgroundColor = 'transparent';
+      }
+    }
 
     // Create the dedicated wrapper for normal flow content
     const flowContentDiv = document.createElement("div");
@@ -2776,7 +3691,7 @@ async function getThumbnailHTML(rawText, theme) {
       });
       const bodyHtml = replaceInlineKeys(plainTextToHtml(bodyWithPlaceholders));
       // Make the block span the slide so text-align is meaningful in flex layout
-      out.push(`<div style="${BLOCK_ALIGN_STYLE[token]}">${bodyHtml}</div>`);
+      out.push(`<div style="width:100%; ${BLOCK_ALIGN_STYLE[token]}">${bodyHtml}</div>`);
       buf = [];
     };
 
@@ -2806,12 +3721,127 @@ async function getThumbnailHTML(rawText, theme) {
 
     return out.join("\n");
   }
+
+  function wrapHtmlWithMode(mode, html) {
+    if (!html || !html.trim()) return '';
+
+    const normalized = resolveModeState(mode);
+
+    switch (normalized.name) {
+      case 'BigText':
+        return `<div class="large">${html}</div>`;
+      case 'SmallText':
+        return `<div class="small">${html}</div>`;
+      case 'TinyText':
+        return `<div class="tiny">${html}</div>`;
+      case 'Text': {
+        const scale = normalized.textScale ?? DEFAULT_TEXT_SCALE;
+        if (Math.abs(scale - DEFAULT_TEXT_SCALE) > 1e-6) {
+          return `<div class="text-scale" style="--text-scale:${scale}; font-size: calc(var(--base-font-size) * ${scale});">${html}</div>`;
+        }
+        return html;
+      }
+      default:
+        return html;
+    }
+  }
+
+  function renderRichTextWithModes(rawText, startingMode = 'Text') {
+    if (!rawText) {
+      return { html: '', mode: resolveModeState(startingMode) };
+    }
+
+    let mode = resolveModeState(startingMode);
+    let html = '';
+    let buffer = '';
+
+    INLINE_MODE_DIRECTIVE_RE.lastIndex = 0;
+    const tokens = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = INLINE_MODE_DIRECTIVE_RE.exec(rawText)) !== null) {
+      if (match.index > lastIndex) {
+        tokens.push({ type: 'text', value: rawText.slice(lastIndex, match.index) });
+      }
+      tokens.push({
+        type: 'directive',
+        keyword: match[1] || '',
+        arg: (match[2] || '').trim()
+      });
+      lastIndex = INLINE_MODE_DIRECTIVE_RE.lastIndex;
+    }
+
+    if (lastIndex < rawText.length) {
+      tokens.push({ type: 'text', value: rawText.slice(lastIndex) });
+    }
+
+    const flushBuffer = () => {
+      const trimmed = buffer.trim();
+      if (!trimmed) {
+        buffer = '';
+        return;
+      }
+      html += wrapHtmlWithMode(mode, formatWithJustify(trimmed));
+      buffer = '';
+    };
+
+    for (const token of tokens) {
+      if (token.type === 'text') {
+        buffer += token.value;
+        continue;
+      }
+
+      flushBuffer();
+
+      const directiveInfo = interpretInlineDirective(token.keyword, token.arg);
+      if (!directiveInfo) {
+        continue;
+      }
+
+      if (directiveInfo.action === 'break') {
+        html += `<div aria-hidden="true" style="display:block;height:calc(${directiveInfo.lines} * 1lh);"></div>`;
+        continue;
+      }
+
+      mode = resolveModeState(directiveInfo.mode);
+    }
+
+    flushBuffer();
+    return { html, mode: resolveModeState(mode) };
+  }
  
+  function resolveDirectiveToken(rawToken) {
+    if (!rawToken) return null;
+
+    if (METADATA_DIRECTIVES.includes(rawToken)) {
+      return { name: rawToken, isMetadata: true };
+    }
+
+    if (CONTENT_DIRECTIVES.includes(rawToken)) {
+      const info = { name: rawToken, isMetadata: false };
+      if (rawToken === 'Text') {
+        info.textScale = DEFAULT_TEXT_SCALE;
+      }
+      return info;
+    }
+
+    const modeState = interpretModeKeyword(rawToken);
+    if (modeState && modeState.name === 'Text') {
+      const lower = rawToken.toLowerCase();
+      if (lower.startsWith('text') && lower !== 'text') {
+        return { name: 'Text', isMetadata: false, textScale: modeState.textScale };
+      }
+    }
+
+    return null;
+  }
+
   function parseRawText(rawText) {
     const attributes = {};
     let innerHTML = '';
     const lines = (rawText || '').split('\n');
-    let currentDirective = "Text";
+    let currentDirective = { name: 'Text', isMetadata: false, textScale: DEFAULT_TEXT_SCALE };
     let buffer = [];
 
     function processBuffer() {
@@ -2820,22 +3850,23 @@ async function getThumbnailHTML(rawText, theme) {
       if (!content) return;
 
       // Handle metadata directives
-      if (METADATA_DIRECTIVES.includes(currentDirective)) {
-        attributes[currentDirective.toLowerCase()] = content;
+      const directiveName = currentDirective.name || 'Text';
+      if (currentDirective.isMetadata || METADATA_DIRECTIVES.includes(directiveName)) {
+        attributes[directiveName.toLowerCase()] = content;
         buffer = [];
         return;
       }
 
       // Handle content directives
-      switch (currentDirective) {
-        case "Hidden": 
-          if (content.toLowerCase() === 'true') attributes.hidden = true; 
+      switch (directiveName) {
+        case "Hidden":
+          if (content.toLowerCase() === 'true') attributes.hidden = true;
           break;
           
         case "Background":
         case "FullScreenImage":
           attributes.background = content;
-          if (currentDirective === "FullScreenImage") attributes.isFullScreenImage = true;
+          if (directiveName === "FullScreenImage") attributes.isFullScreenImage = true;
           break;
 
         case "Break": {
@@ -2856,23 +3887,26 @@ async function getThumbnailHTML(rawText, theme) {
           attributes.title = content.split('\n')[0].trim();
           innerHTML += `<h1>${escapeHtml(content).replace(/\n/g, '<br />')}</h1>`;
           break;
-          
-        case "BigText": 
-          innerHTML += `<div class="large">${formatWithJustify(content)}</div>`; 
+
+        case "BigText":
+          innerHTML += wrapHtmlWithMode('BigText', formatWithJustify(content));
           break;
-          
-        case "Text": 
-          innerHTML += formatWithJustify(content); 
+
+        case "Text":
+          innerHTML += wrapHtmlWithMode(
+            makeModeState('Text', currentDirective.textScale),
+            formatWithJustify(content)
+          );
           break;
 
         case "SmallText":
-          innerHTML += `<div class="small">${formatWithJustify(content)}</div>`;
+          innerHTML += wrapHtmlWithMode('SmallText', formatWithJustify(content));
           break;
-        
+
         case "TinyText":
-          innerHTML += `<div class="tiny">${formatWithJustify(content)}</div>`;
+          innerHTML += wrapHtmlWithMode('TinyText', formatWithJustify(content));
           break;
-        
+
         case "Notes":
           attributes.notes = content;
           break;
@@ -2900,29 +3934,103 @@ async function getThumbnailHTML(rawText, theme) {
           // Allow extensions with optional ?query, and data: URLs
           const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+)\s*(?:,\s*(.*))?$/i;
 
-          const colsHtml = parts.map(part => {
-            const lines = part.trim().split(/\r?\n+/);
+          const htmlContainsVisibleText = (html) => {
+            if (!html) return false;
+            return html.replace(/<[^>]*>/g, '').trim().length > 0;
+          };
 
-            let blocks = [];
-            let textBuf = [];
+          const processInlineModesForImageLine = (line, startingMode) => {
+            INLINE_MODE_DIRECTIVE_RE.lastIndex = 0;
+            let match;
+            let lastIndex = 0;
+            let seenNonDirectiveSegment = false;
+            let mode = resolveModeState(startingMode);
+            const beforeFragments = [];
+            const afterFragments = [];
+            const textSegments = [];
+
+            while ((match = INLINE_MODE_DIRECTIVE_RE.exec(line)) !== null) {
+              if (match.index > lastIndex) {
+                const between = line.slice(lastIndex, match.index);
+                textSegments.push(between);
+                if (between.trim()) {
+                  seenNonDirectiveSegment = true;
+                }
+              }
+
+              const directiveInfo = interpretInlineDirective(match[1] || '', (match[2] || '').trim());
+
+              if (directiveInfo) {
+                if (directiveInfo.action === 'break') {
+                  const frag = `<div aria-hidden="true" style="display:block;height:calc(${directiveInfo.lines} * 1lh);"></div>`;
+                  (seenNonDirectiveSegment ? afterFragments : beforeFragments).push(frag);
+                } else if (directiveInfo.action === 'mode') {
+                  mode = resolveModeState(directiveInfo.mode);
+                }
+              }
+
+              lastIndex = INLINE_MODE_DIRECTIVE_RE.lastIndex;
+            }
+
+            if (lastIndex < line.length) {
+              const remainder = line.slice(lastIndex);
+              textSegments.push(remainder);
+              if (remainder.trim()) {
+                seenNonDirectiveSegment = true;
+              }
+            }
+
+            return {
+              sanitizedLine: textSegments.join(''),
+              mode: resolveModeState(mode),
+              beforeHtml: beforeFragments.join(''),
+              afterHtml: afterFragments.join('')
+            };
+          };
+
+          const colsHtml = parts.map(part => {
+            const lines = part.trim().split(/\r?\n/);
+
+            const blocks = [];
+            let pendingText = '';
+            let currentMode = makeModeState('Text');
             let imageCount = 0;
-            let nonImageCount = 0;
+            let hasTextBlock = false;
 
             const flushText = () => {
-              if (textBuf.length) {
-                // Use full text handling (alignment markers, lists, emphasis)
-                blocks.push(formatWithJustify(textBuf.join('\n').trim()));
-                textBuf = [];
+              if (!pendingText) {
+                pendingText = '';
+                return;
               }
+              const rendered = renderRichTextWithModes(pendingText, currentMode);
+              if (rendered.html.trim()) {
+                blocks.push(rendered.html);
+                if (htmlContainsVisibleText(rendered.html)) {
+                  hasTextBlock = true;
+                }
+              }
+              currentMode = rendered.mode;
+              pendingText = '';
             };
 
-            for (const line of lines) {
-              const m = line.match(imgLineRe);
-              if (m) {
+            for (const rawLine of lines) {
+              const inlineInfo = processInlineModesForImageLine(rawLine, currentMode);
+              const sanitized = inlineInfo.sanitizedLine.trim();
+              const match = sanitized ? sanitized.match(imgLineRe) : null;
+
+              if (match) {
                 flushText();
+
+                if (inlineInfo.beforeHtml) {
+                  blocks.push(inlineInfo.beforeHtml);
+                  if (htmlContainsVisibleText(inlineInfo.beforeHtml)) {
+                    hasTextBlock = true;
+                  }
+                }
+
                 imageCount++;
-                const imageUrl = m[1].trim();
-                const colCaption = (m[2] || '').trim();
+                const imageUrl = match[1].trim();
+                const colCaption = (match[2] || '').trim();
                 const resolvedUrl = window.presentationBaseUrl
                   ? resolveImagePath(imageUrl, window.presentationBaseUrl)
                   : imageUrl;
@@ -2932,14 +4040,24 @@ async function getThumbnailHTML(rawText, theme) {
                     <div class="caption">${plainTextToHtml(colCaption)}</div>
                   </div>`
                 );
-              } else if (line.trim() !== '') {
-                nonImageCount++;
-                textBuf.push(line);
+
+                if (inlineInfo.afterHtml) {
+                  blocks.push(inlineInfo.afterHtml);
+                  if (htmlContainsVisibleText(inlineInfo.afterHtml)) {
+                    hasTextBlock = true;
+                  }
+                }
+
+                currentMode = inlineInfo.mode;
+                continue;
               }
+
+              pendingText += pendingText ? `\n${rawLine}` : rawLine;
             }
+
             flushText();
 
-            const onlyImages = imageCount > 0 && nonImageCount === 0;
+            const onlyImages = imageCount > 0 && !hasTextBlock;
             const cls  = onlyImages ? 'column images-only' : 'column';
             const data = onlyImages ? ` data-imgcount="${imageCount}"` : '';
             return `<div class="${cls}"${data}>${blocks.join('')}</div>`;
@@ -2948,20 +4066,29 @@ async function getThumbnailHTML(rawText, theme) {
           innerHTML += `<div class="columns">${colsHtml}</div>`;
           break;
         }
-          
+
         case "Table": {
-          let tableHtml = '<table>';
           const rows = content.split(/^\s*---\s*$/m);
+          let tableHtml = '<table>';
+
           if (rows.length > 0) {
-            const headerCells = rows.shift().split('&')
-              .map(c => `<th>${plainTextToHtml(c.trim())}</th>`).join('');
+            const headerCells = rows.shift().split('&').map(cell => {
+              const rendered = renderRichTextWithModes(cell.trim());
+              return `<th>${rendered.html || plainTextToHtml(cell.trim())}</th>`;
+            }).join('');
             tableHtml += `<thead><tr>${headerCells}</tr></thead>`;
           }
+
           const bodyRows = rows.map(row => {
-            const cells = row.split('&')
-              .map(c => `<td>${plainTextToHtml(c.trim())}</td>`).join('');
+            const cells = row.split('&').map(cell => {
+              const trimmed = cell.trim();
+              const rendered = renderRichTextWithModes(trimmed);
+              const cellHtml = rendered.html || plainTextToHtml(trimmed);
+              return `<td>${cellHtml}</td>`;
+            }).join('');
             return `<tr>${cells}</tr>`;
           }).join('');
+
           tableHtml += `<tbody>${bodyRows}</tbody></table>`;
           innerHTML += tableHtml;
           break;
@@ -2972,19 +4099,27 @@ async function getThumbnailHTML(rawText, theme) {
 
     // Process lines
     for (const line of lines) {
-      const match = line.match(/^([A-Za-z]+):\s*(.*)/);
-      if (match && ALL_DIRECTIVES.includes(match[1])) {
-        processBuffer();
-        currentDirective = match[1];
-        buffer.push(match[2]);
-      } else {
-        buffer.push(line);
+      const match = line.match(/^([A-Za-z][A-Za-z0-9.]*):\s*(.*)/);
+      if (match) {
+        const directiveInfo = resolveDirectiveToken(match[1]);
+        if (directiveInfo) {
+          processBuffer();
+          const nextDirective = { ...directiveInfo };
+          if (nextDirective.name === 'Text' && typeof nextDirective.textScale !== 'number') {
+            nextDirective.textScale = DEFAULT_TEXT_SCALE;
+          }
+          currentDirective = nextDirective;
+          buffer = [];
+          buffer.push(match[2] || '');
+          continue;
+        }
       }
+      buffer.push(line);
     }
     processBuffer();
-    
+
     return { attributes, innerHTML };
-  }  
+  }
 
   /* ═══════════════════════════════════════════════════════════════
                           UTILITY FUNCTIONS
@@ -3062,9 +4197,13 @@ async function applyTheme(themeId) {
     });
   }
   
-  // Update body class
-  document.body.className = themeId;
-  
+  // Update body class without disturbing edit-mode flag
+  document.body.classList.remove(...AVAILABLE_THEMES);
+  document.body.classList.add(themeId);
+  if (state.editMode) {
+    document.body.classList.add('is-edit-mode');
+  }
+
   // Now refresh thumbnails with loaded CSS
   await refreshThumbnails();
 }
@@ -3079,15 +4218,13 @@ async function applyTheme(themeId) {
     
     // Check for a saved session in local storage first, but only if no URL is specified.
     if (!inputUrl) {
-        const savedSession = localStorage.getItem('modernSlides_lastSession');
+        const savedSession = localStorage.getItem(LAST_SESSION_KEY);
         if (savedSession) {
-            if (confirm("Restore the most recently worked-on slideshow?")) {
-                init(savedSession);
-                return; // Stop here to prevent loading the default.
-            }
+            init(savedSession, { slideIndex: 0, reason: 'restored-last' });
+            return; // Stop here to prevent loading the default.
         }
-        // If no saved session or user declines, proceed to load the default.
-        init();
+        // If no saved session, proceed to load the default.
+        init(undefined, { fileName: 'New Presentation', slideIndex: 0, reason: 'default' });
         return;
     }
 
@@ -3100,7 +4237,7 @@ async function applyTheme(themeId) {
       textFileUrl = `${baseFolderUrl}/Slides.txt?dl=1`;
     } else if (inputUrl.match(/drive\.google\.com\/drive\/folders\//)) {
       alert('Google Drive folders aren\'t directly fetchable. Please link to your Slides.txt file, not to the folder.');
-      return init();
+      return init(undefined, { fileName: 'New Presentation', slideIndex: 0, reason: 'default' });
     } else {
       const absoluteInputUrl = new URL(inputUrl, window.location.href).href;
       textFileUrl = absoluteInputUrl;
@@ -3118,14 +4255,17 @@ async function applyTheme(themeId) {
         return res.text();
       })
       .then(txt => {
-        const newXml = convertTxtToXML(txt, textFileUrl.split('/').pop());
-        sessionStorage.setItem(`Slides_${state.currentPresentationName}`, newXml);
-        init(newXml);
+        const fileLeaf = textFileUrl.split('/').pop() || 'Slides.txt';
+        const cleanName = fileLeaf.replace(/\.[^.]+$/, '');
+        const newXml = convertTxtToXML(txt, fileLeaf);
+        state.currentFilename = cleanName;
+        sessionStorage.setItem(`Slides_${cleanName}`, newXml);
+        init(newXml, { fileName: cleanName, slideIndex: 0, reason: 'url' });
       })
       .catch(err => {
         console.error(err);
         alert('Failed to load presentation.');
-        init();
+        init(undefined, { fileName: 'New Presentation', slideIndex: 0, reason: 'default' });
       });
   }
 
@@ -3168,18 +4308,28 @@ function wrapSlideshowFor16x9() {
                           INITIALIZATION
      ═══════════════════════════════════════════════════════════════ */
 
-  async function init(newXmlString) {
-    updateGroundTruth('INIT', { xmlString: newXmlString });
-    
+  async function init(newXmlString, options = {}) {
+    updateGroundTruth('INIT', {
+      xmlString: newXmlString,
+      slideIndex: options.slideIndex,
+      fileName: options.fileName
+    });
+
     const theme = state.xmlDoc.documentElement.getAttribute("theme") || DEFAULT_THEME;
     $("theme-selector").value = theme;
-    applyTheme(theme);
-    
     await buildSlidesFromXMLDoc();
-    showSlide(0, true);
+    await applyTheme(theme);
+
+    const visibleIndex = resolveVisibleIndexForAbsolute(state.currentAbsoluteSlideIndex);
+    if (state.editMode) {
+      showSlide(state.currentAbsoluteSlideIndex, false);
+    } else {
+      showSlide(visibleIndex, true);
+    }
     updateHUD();
     updateToggleCountButtonState();
-    
+    announceSessionStatus(options);
+
     if (state.editMode && $("editor").classList.contains("active")) {
       setupEditorUI();
     }
