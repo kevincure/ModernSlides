@@ -2945,7 +2945,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
   function showSlide(absIndex, fromPresentationNav = false) {
     let targetAbsIndex = absIndex;
 
-    if (state.editMode && state.currentAbsoluteSlideIndex !== absIndex && 
+    if (state.editMode &&
         state.currentAbsoluteSlideIndex >= 0 && state.currentAbsoluteSlideIndex < state.slideEls.length) {
       updateGroundTruth('NAVIGATE', { from: state.currentAbsoluteSlideIndex, to: absIndex });
     }
