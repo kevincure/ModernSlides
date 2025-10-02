@@ -138,6 +138,17 @@ body {
   position: relative;
 }
 
+.slide-content.has-background-image {
+  background-color: var(--slide-content-bg-if-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.slide.is-fullscreen-image-slide .slide-content.has-background-image {
+  background-color: transparent;
+}
+
 .slide-flow-content {
   width: 80%;
   margin: 0 auto;
@@ -159,6 +170,11 @@ body {
 .text-scale {
   display: block;
   width: 100%;
+  align-self: stretch;
+}
+
+.slide-flow-content > .text-scale {
+  align-self: stretch;
 }
 
 /* ----------------------------- */
@@ -627,6 +643,28 @@ body:not(.is-edit-mode) .overflow-indicator {
   display: none;
 }
 
+.editor-status {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--editor-accent-color);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.editor-status:empty {
+  display: none;
+}
+
+.editor-status::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--editor-accent-color) 70%, transparent);
+  opacity: 0.75;
+}
+
 @keyframes editor-glow {
   from { box-shadow: 0 0 8px 2px var(--editor-accent-color); }
   to   { box-shadow: 0 0 2px 1px color-mix(in srgb, var(--editor-accent-color) 50%, transparent); }
@@ -933,15 +971,23 @@ body:not(.is-edit-mode) .overflow-indicator {
   .slide-content {
     position: relative !important; display: flex !important;
     box-sizing: border-box !important; overflow: hidden !important;
-    background: var(--bg-color) !important;
-    width: 177.78vh !important; height: 100vh !important;
-    max-width: 100vw !important; max-height: 56.25vw !important;
+    background-color: var(--bg-color) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    width: min(177.78vh, 100vw) !important;
+    height: calc(min(177.78vh, 100vw) * 0.5625) !important;
+    margin: 0 auto !important;
     container-type: inline-size;
     container-name: print-slide-container;
   }
 
-  .slide[style*="background-image"] .slide-content {
-    background: var(--slide-content-bg-if-image) !important;
+  .slide-content.has-background-image {
+    background-color: var(--slide-content-bg-if-image) !important;
+  }
+
+  .slide.is-fullscreen-image-slide .slide-content {
+    background-color: transparent !important;
   }
 
   /* Show iframes and hide their placeholders */
@@ -956,8 +1002,7 @@ body:not(.is-edit-mode) .overflow-indicator {
   /* STEP 1: Shrink the slide's 16:9 container to make room at the bottom.
      The slide content inside will automatically rescale perfectly thanks to `cqw`. */
   body.print-with-notes .slide-content {
-    height: 56.25vw !important;
-    max-height: 56.25vw !important;
+    height: calc(min(177.78vh, 100vw) * 0.5625) !important;
   }
 
   /* STEP 2: Make the notes area visible and position it in the new empty space. */
@@ -965,7 +1010,7 @@ body:not(.is-edit-mode) .overflow-indicator {
     display: block !important;
     position: absolute !important;
     left: 0 !important; right: 0 !important; bottom: 0 !important;
-    top: 56.25vw !important; /* Start exactly where the slide content ends */
+    top: calc(min(177.78vh, 100vw) * 0.5625) !important; /* Start exactly where the slide content ends */
     padding: calc(var(--base-font-size) * 0.4) calc(var(--base-font-size) * 0.8) !important;
     background: #fff !important;
     font-size: calc(var(--base-font-size) * 0.8) !important;
@@ -1041,6 +1086,7 @@ body:not(.is-edit-mode) .overflow-indicator {
       </div>
       <div class="editor-bottom-bar">
         <div id="overflow-warning" class="overflow-warning" role="status" aria-live="polite"></div>
+        <div id="editor-status" class="editor-status" role="status" aria-live="polite"></div>
       </div>
     </div>
   </div>
@@ -1361,7 +1407,11 @@ Title: New slide
 
     // Presenter window
     presenterWindow: null,
-    presenterTimerInterval: null
+    presenterTimerInterval: null,
+
+    // Editor status messaging
+    statusTimeout: null,
+    lastStatusMessage: ''
   };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1717,7 +1767,7 @@ Title: New slide
     $("new-presentation-btn").onclick = () => {
       const proceed = confirm('Start a new slideshow? This will replace the current deck in memory. Download first if you need a backup.');
       if (!proceed) return;
-      init(MINIMAL_NEW_XML, { fileName: 'New Presentation', slideIndex: 0 });
+      init(MINIMAL_NEW_XML, { fileName: 'New Presentation', slideIndex: 0, reason: 'new' });
     };
 
     // Load presentation button
@@ -1735,7 +1785,7 @@ Title: New slide
           let newXML = content.trim().startsWith('<?xml') || content.trim().startsWith('<presentation')
             ? content
             : convertTxtToXML(content, file.name);
-          init(newXML, { fileName: state.currentFilename, slideIndex: 0 }); // Re-initialize with loaded file
+          init(newXML, { fileName: state.currentFilename, slideIndex: 0, reason: 'load' }); // Re-initialize with loaded file
         };
       reader.readAsText(file);
       };
@@ -1756,7 +1806,7 @@ Title: New slide
       if (!proceed) return;
 
       try {
-        init(previousSession, { slideIndex: 0 });
+        init(previousSession, { slideIndex: 0, reason: 'restore' });
       } catch (err) {
         console.error('Failed to restore previous session', err);
       }
@@ -2549,7 +2599,12 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     if (!snapshot) return;
     state.isRestoringSnapshot = true;
     try {
-      await init(snapshot.xmlString, { slideIndex: snapshot.currentAbsoluteSlideIndex, fileName: state.currentFilename });
+      await init(snapshot.xmlString, {
+        slideIndex: snapshot.currentAbsoluteSlideIndex,
+        fileName: state.currentFilename,
+        reason: 'snapshot',
+        suppressStatus: true
+      });
     } finally {
       state.isRestoringSnapshot = false;
     }
@@ -2704,6 +2759,81 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     warning.textContent = `Content past frame: ${summary}`;
   }
 
+  function setEditorStatus(message, { persist = false, duration = 6000 } = {}) {
+    const statusEl = $("editor-status");
+    if (!statusEl) return;
+
+    if (state.statusTimeout) {
+      clearTimeout(state.statusTimeout);
+      state.statusTimeout = null;
+    }
+
+    const text = message?.trim() || '';
+    state.lastStatusMessage = text;
+    statusEl.textContent = text;
+
+    if (text && !persist && duration > 0) {
+      state.statusTimeout = window.setTimeout(() => {
+        if (state.lastStatusMessage === text) {
+          state.lastStatusMessage = '';
+          statusEl.textContent = '';
+        }
+        state.statusTimeout = null;
+      }, duration);
+    }
+  }
+
+  function announceSessionStatus(options = {}) {
+    if (options.suppressStatus) {
+      setEditorStatus('');
+      return;
+    }
+
+    const reason = options.reason || '';
+    const docTitle = state.xmlDoc?.documentElement?.getAttribute('title')?.trim();
+    const filename = (options.fileName || state.currentFilename || '').trim();
+    const deckName = docTitle || filename || 'this deck';
+
+    let message = '';
+    let persist = false;
+
+    switch (reason) {
+      case 'restore':
+        message = `Restored ${deckName}.`;
+        break;
+      case 'restored-last':
+      case 'autoload':
+        message = `Restored ${deckName} from last session.`;
+        break;
+      case 'new':
+        message = 'Starting a fresh deck.';
+        break;
+      case 'default':
+        message = "Click [!] for help.";
+        persist = true;
+        break;
+      case 'load':
+        message = `Loaded ${deckName} from file.`;
+        break;
+      case 'url':
+        message = `Loaded ${deckName} from link.`;
+        break;
+      case 'snapshot':
+        message = '';
+        break;
+      default:
+        if (!reason) {
+          message = '';
+        }
+    }
+
+    if (message) {
+      setEditorStatus(message, { persist });
+    } else if (options.clearOnEmpty) {
+      setEditorStatus('');
+    }
+  }
+
   function syncEditModeClass() {
     document.body.classList.toggle('is-edit-mode', !!state.editMode);
   }
@@ -2795,7 +2925,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       const xmlString = data.xmlString || DEFAULT_XML;
       const parser = new DOMParser();
       const tempDoc = parser.parseFromString(xmlString, "text/xml");
-      
+
       if (tempDoc.getElementsByTagName("parsererror").length > 0) {
         alert("Error parsing presentation XML. Loading default.");
         state.xmlDoc = parser.parseFromString(DEFAULT_XML, "text/xml");
@@ -2805,7 +2935,15 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
       // Reset other state
       state.hasChanges = false;
-      state.currentAbsoluteSlideIndex = data.slideIndex || 0;
+      state.visibleSlideIndices = [];
+      state.slideEls = [];
+      const slideNodes = state.xmlDoc.querySelectorAll('presentation > slide');
+      const parsedIndex = Number.isFinite(Number(data.slideIndex)) ? Number(data.slideIndex) : 0;
+      const requestedIndex = Math.trunc(parsedIndex);
+      const maxIndex = Math.max(0, slideNodes.length - 1);
+      const clampedIndex = Math.max(0, Math.min(requestedIndex, maxIndex));
+      state.currentAbsoluteSlideIndex = clampedIndex;
+      state.currentVisibleSlideIndex = clampedIndex;
       if (action === 'NEW') {
         state.currentFilename = 'New Presentation';
       }
@@ -2815,8 +2953,11 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
         state.redoStack = [];
         updateUndoRedoButtons();
       }
+      const docTitle = state.xmlDoc.documentElement?.getAttribute('title');
       if (data.fileName) {
         state.currentFilename = data.fileName;
+      } else if (docTitle) {
+        state.currentFilename = docTitle;
       } else if (!state.currentFilename) {
         state.currentFilename = 'New Presentation';
       }
@@ -3003,7 +3144,10 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     state.currentAbsoluteSlideIndex = targetAbsIndex;
     
     if (!fromPresentationNav || state.editMode) {
-      state.currentVisibleSlideIndex = state.visibleSlideIndices.indexOf(state.currentAbsoluteSlideIndex);
+      const visibleIdx = state.visibleSlideIndices.indexOf(state.currentAbsoluteSlideIndex);
+      state.currentVisibleSlideIndex = visibleIdx !== -1
+        ? visibleIdx
+        : resolveVisibleIndexForAbsolute(state.currentAbsoluteSlideIndex);
     }
  
     // This block forces GIFs to restart when a slide becomes active.
@@ -3274,18 +3418,22 @@ async function getThumbnailHTML(rawText, theme) {
 
   function createSlideElement(rawText) {
     const { attributes, innerHTML } = parseRawText(rawText);
-    const slideDiv = document.createElement("div");
-    slideDiv.className = "slide";
-    
-    if (attributes.hidden) slideDiv.classList.add("hidden-in-presentation");
-    
-    if (attributes.background) {
-      const resolvedUrl = window.presentationBaseUrl ? 
-        resolveImagePath(attributes.background, window.presentationBaseUrl) : 
-        attributes.background;
-      slideDiv.style.backgroundImage = `url("${escapeHtml(resolvedUrl)}")`;
-      if (attributes.isFullScreenImage) slideDiv.classList.add("is-fullscreen-image-slide");
-    }
+  const slideDiv = document.createElement("div");
+  slideDiv.className = "slide";
+
+  if (attributes.hidden) slideDiv.classList.add("hidden-in-presentation");
+
+  let backgroundUrl = null;
+  if (attributes.background) {
+    const resolvedUrl = window.presentationBaseUrl ?
+      resolveImagePath(attributes.background, window.presentationBaseUrl) :
+      attributes.background;
+    backgroundUrl = resolvedUrl;
+    const cssUrl = `url("${resolvedUrl.replace(/"/g, '\\"')}")`;
+    slideDiv.style.backgroundImage = cssUrl;
+    slideDiv.classList.add("has-background-image");
+    if (attributes.isFullScreenImage) slideDiv.classList.add("is-fullscreen-image-slide");
+  }
     
     if (attributes.header) {
       const headerDiv = document.createElement("div");
@@ -3355,6 +3503,19 @@ async function getThumbnailHTML(rawText, theme) {
     
     const contentDiv = document.createElement("div");
     contentDiv.className = "slide-content";
+
+    if (backgroundUrl) {
+      const cssUrl = `url("${backgroundUrl.replace(/"/g, '\\"')}")`;
+      const backgroundSize = attributes.isFullScreenImage ? 'contain' : 'cover';
+      contentDiv.classList.add('has-background-image');
+      contentDiv.style.backgroundImage = cssUrl;
+      contentDiv.style.backgroundSize = backgroundSize;
+      contentDiv.style.backgroundPosition = 'center';
+      contentDiv.style.backgroundRepeat = 'no-repeat';
+      if (attributes.isFullScreenImage) {
+        contentDiv.style.backgroundColor = 'transparent';
+      }
+    }
 
     // Create the dedicated wrapper for normal flow content
     const flowContentDiv = document.createElement("div");
@@ -3459,7 +3620,7 @@ async function getThumbnailHTML(rawText, theme) {
       });
       const bodyHtml = replaceInlineKeys(plainTextToHtml(bodyWithPlaceholders));
       // Make the block span the slide so text-align is meaningful in flex layout
-      out.push(`<div style="${BLOCK_ALIGN_STYLE[token]}">${bodyHtml}</div>`);
+      out.push(`<div style="width:100%; ${BLOCK_ALIGN_STYLE[token]}">${bodyHtml}</div>`);
       buf = [];
     };
 
@@ -3988,11 +4149,11 @@ async function applyTheme(themeId) {
     if (!inputUrl) {
         const savedSession = localStorage.getItem(LAST_SESSION_KEY);
         if (savedSession) {
-            init(savedSession, { slideIndex: 0 });
+            init(savedSession, { slideIndex: 0, reason: 'restored-last' });
             return; // Stop here to prevent loading the default.
         }
         // If no saved session, proceed to load the default.
-        init(undefined, { fileName: 'New Presentation', slideIndex: 0 });
+        init(undefined, { fileName: 'New Presentation', slideIndex: 0, reason: 'default' });
         return;
     }
 
@@ -4005,7 +4166,7 @@ async function applyTheme(themeId) {
       textFileUrl = `${baseFolderUrl}/Slides.txt?dl=1`;
     } else if (inputUrl.match(/drive\.google\.com\/drive\/folders\//)) {
       alert('Google Drive folders aren\'t directly fetchable. Please link to your Slides.txt file, not to the folder.');
-      return init(undefined, { fileName: 'New Presentation', slideIndex: 0 });
+      return init(undefined, { fileName: 'New Presentation', slideIndex: 0, reason: 'default' });
     } else {
       const absoluteInputUrl = new URL(inputUrl, window.location.href).href;
       textFileUrl = absoluteInputUrl;
@@ -4028,12 +4189,12 @@ async function applyTheme(themeId) {
         const newXml = convertTxtToXML(txt, fileLeaf);
         state.currentFilename = cleanName;
         sessionStorage.setItem(`Slides_${cleanName}`, newXml);
-        init(newXml, { fileName: cleanName, slideIndex: 0 });
+        init(newXml, { fileName: cleanName, slideIndex: 0, reason: 'url' });
       })
       .catch(err => {
         console.error(err);
         alert('Failed to load presentation.');
-        init(undefined, { fileName: 'New Presentation', slideIndex: 0 });
+        init(undefined, { fileName: 'New Presentation', slideIndex: 0, reason: 'default' });
       });
   }
 
@@ -4096,6 +4257,7 @@ function wrapSlideshowFor16x9() {
     }
     updateHUD();
     updateToggleCountButtonState();
+    announceSessionStatus(options);
 
     if (state.editMode && $("editor").classList.contains("active")) {
       setupEditorUI();
