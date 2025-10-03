@@ -4622,6 +4622,13 @@ function wrapSlideshowFor16x9() {
     const targetAbsIndex = Math.max(0, Math.min(requestedIndex, maxIndex));
     state.currentAbsoluteSlideIndex = targetAbsIndex;
 
+    if (state.editMode) {
+      const editor = $("raw-text-editor");
+      if (editor) {
+        editor.value = getRawTextForSlide(targetAbsIndex);
+      }
+    }
+
     const visibleIndex = resolveVisibleIndexForAbsolute(targetAbsIndex);
     if (state.editMode) {
       showSlide(targetAbsIndex, false);
