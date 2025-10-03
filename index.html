@@ -4615,9 +4615,16 @@ function wrapSlideshowFor16x9() {
     await buildSlidesFromXMLDoc();
     await applyTheme(theme);
 
-    const visibleIndex = resolveVisibleIndexForAbsolute(state.currentAbsoluteSlideIndex);
+    const requestedIndex = Number.isFinite(Number(options.slideIndex))
+      ? Math.trunc(Number(options.slideIndex))
+      : 0;
+    const maxIndex = Math.max(0, state.slideEls.length - 1);
+    const targetAbsIndex = Math.max(0, Math.min(requestedIndex, maxIndex));
+    state.currentAbsoluteSlideIndex = targetAbsIndex;
+
+    const visibleIndex = resolveVisibleIndexForAbsolute(targetAbsIndex);
     if (state.editMode) {
-      showSlide(state.currentAbsoluteSlideIndex, false);
+      showSlide(targetAbsIndex, false);
     } else {
       showSlide(visibleIndex, true);
     }
