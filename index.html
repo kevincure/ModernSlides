@@ -3240,7 +3240,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     updateGroundTruth('DELETE_SLIDE', { index: clampedIndex });
     await buildSlidesFromXMLDoc();
     await refreshThumbnails();
-    showSlide(Math.max(0, nextIndex));
+    showSlide(Math.max(0, nextIndex), false, { skipEditorSave: true });
   }
 
   function updateToggleCountButtonState() {
@@ -3473,8 +3473,10 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
                           NAVIGATION & DISPLAY
      ═══════════════════════════════════════════════════════════════ */
   
-  function showSlide(absIndex, fromPresentationNav = false) {
-    if (state.editMode) {
+  function showSlide(absIndex, fromPresentationNav = false, options = {}) {
+    const { skipEditorSave = false } = options || {};
+
+    if (state.editMode && !skipEditorSave) {
       saveCurrentSlideText($("raw-text-editor").value, 'THUMB_CLICK');
     }
     let targetAbsIndex = absIndex;
