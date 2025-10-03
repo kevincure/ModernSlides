@@ -38,14 +38,15 @@ Examples and common directives are shown below (use the exact directive names):
       TinyText: For footnote-sized text. (y:)
       Break: 1 (or 2.2 or .7), provides a break of a set size.
       <<< Text on Left <<<, >>> Text on Right >>>, and ||| Text is centered ||| align any paragraph, even when using Text# or
-      inline modes.  *some text* is italic, **some text** is bold, and ***some text*** is bold italic.
+      inline modes.  
+      *some text* is italic, **some text** is bold, and ***some text*** is bold italic.
 
-      Notes: For notes at the bottom of the slide. (n:)
+      Notes: For notes seen on presented slide. (n:)
         These appear in a special position.
 
       SpeakerNote: For notes for yourself in presentation mode (S:)
 
-      PrintNote: notes about the slide to appear only when printed from the 'print' button in Edit (if you print from the slides, you won't get these) (P:)
+      PrintNote: notes about the slide to appear only when printed from the 'print' button in Edit (if you print directly from the slides, you won't get these) (P:)
 
       Image: image-url.jpg (or a weblink to jpg/png/gif), An optional caption for image after the comma (I:)
 
@@ -70,8 +71,8 @@ Examples and common directives are shown below (use the exact directive names):
         Inline modes like [[BigText]] or [[Text.75]] work within any table cell.
 
       # --- NOTES ---
-      # - Download Raw Deck and Load Deck give you your slides but you
-      #      will still need any images referred to in the same folder
+      # - Download Raw Deck and Load Deck give you your slides but you will still need any images referred to in the same folder
+      # - If you want images that are not web-linked, you can paste images into the textbox, and when you download, it will include those images. Keep all in the same folder wherever you store your offline slide text and images.
       # - If you print from your browser, it will give slides with PrintNotes. 
       # - If you print from the print icon in Edit mode, it will show the PrintNotes.
       # - If no directive is given, text defaults to `Text:`.
