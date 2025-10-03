@@ -3474,6 +3474,9 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
      ═══════════════════════════════════════════════════════════════ */
   
   function showSlide(absIndex, fromPresentationNav = false) {
+    if (state.editMode) {
+      saveCurrentSlideText($("raw-text-editor").value, 'THUMB_CLICK');
+    }
     let targetAbsIndex = absIndex;
 
     if (state.editMode &&
