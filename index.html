@@ -1150,7 +1150,8 @@ body:not(.is-edit-mode) .overflow-indicator {
         <button id="new-presentation-btn"   title="New Slideshow">  <i class="fa-solid fa-file-circle-plus"></i></button>
         <button id="load-btn"  title="Load Slideshow"> <i class="fa-solid fa-folder-open"></i></button>
         <button id="restore-btn" title="Restore most recently saved" aria-label="Restore most recently saved slideshow" disabled><i class="fa-solid fa-clock-rotate-left"></i></button>
-        <button id="download-txt-btn"        title="Download Raw Presentation">       <i class="fa-solid fa-download"></i></button>
+        <button id="manage-images-btn" title="Manage Images"><i class="fa-solid fa-images"></i></button>
+        <button id="download-txt-btn" title="Download Raw Presentation"><i class="fa-solid fa-download"></i></button>
         <button id="print-notes-btn" title="Print with Notes"><i class="fa-solid fa-print"></i></button>
         <button id="save-btn" class="primary-action" title="Presentation View"><i class="fa-solid fa-bullhorn"></i></button>
       </div>
@@ -1184,13 +1185,15 @@ body:not(.is-edit-mode) .overflow-indicator {
       BigText: For large, prominent text. (b:)
 
       Text: For standard body text. (x:)
-        Add a number to Text (e.g., Text2:, Text.6:) to scale relative to the slide (0.2–5 works).
-        <<< Text on Left <<<, >>> Text on Right >>>, and ||| Text is centered ||| align any paragraph, even when using Text# or inline modes.
-        A blank line between text...
+        
 
-        ...and a skipped line creates a new paragraph.
+      Add a number to Text (e.g., Text2:, Text.6:) to scale relative to the slide (0.2–5 works).
+      
+      <<< Text on Left <<<, >>> Text on Right >>>, and ||| Text is centered ||| align any paragraph, even when using Text# or inline modes.
+      
+      A blank line between text...
 
-      [[BigText]], [[SmallText]], [[TinyText]], [[Text1.2]], and [[Break:0.5]] can be used inside Columns or Tables to keep the mode until it is changed again.
+      ...and a skipped line creates a new paragraph.
 
       SmallText: For smaller body text. (s:)
 
@@ -1218,7 +1221,7 @@ body:not(.is-edit-mode) .overflow-indicator {
         test.jpg, A caption for the image in the column.
         ...or you can just have more text.
         ---
-        Third column
+        BigText: >>> Third column right-aligned >>>
 
       Table: (T:)
         Header 1 & Header 2 & Header 3
@@ -1226,6 +1229,8 @@ body:not(.is-edit-mode) .overflow-indicator {
         Cell 1.1 & Cell 1.2 & Cell 1.3
         ---
         Cell 2.1 & Cell 2.2 & $math$ is fine
+
+      [[BigText]], [[SmallText]], [[TinyText]], [[Text1.2]], and [[Break:0.5]] can be used inside Columns or Tables to keep the mode until it is changed again.
 
       *some text* is italic, **some text** is bold, ***some text*** is bold italic.
 
@@ -1239,14 +1244,24 @@ body:not(.is-edit-mode) .overflow-indicator {
       #       to separate sections/rows.
       # - You cannot nest some directives (e.g., a Table inside a Column).
       # - As you edit, your two most recent sessions are stored locally. The app automatically reopens the last one and the clock icon restores the prior deck.
-      # - Undo and Redo live next to the style selector in the toolbar.
+      # - Undo and Redo are next to the style selector in the toolbar.
       # - When a thumbnail is highlighted you can use the + / - buttons on it to add or delete slides.
       # - 9 different styles are given, but you can create your own also
       # - you can add a bullet point by typing z:
+      # - If you want images that are not web-linked, you can paste images into the textbox, and when you download, it will include those images. Keep all in the same folder wherever you store your offline slide text and images.
       </pre>
     </div>
   </div>
 
+<!-- Image Manager Modal -->
+<div id="image-manager" class="modal">
+  <div class="modal-box">
+    <button id="close-image-manager" style="float:right;">Close</button>
+    <h3>Manage Images</h3>
+    <p>Images pasted into this browser (IndexedDB). Delete unused ones to free space.</p>
+    <div id="image-list" style="max-height:400px;overflow:auto;margin-top:1rem;"></div>
+  </div>
+</div>
 
 
 
@@ -1483,6 +1498,134 @@ Title: New slide
     statusTimeout: null,
     lastStatusMessage: ''
   };
+
+
+/* ────────────────────────────────
+   IMAGE STORAGE (IndexedDB)
+   ──────────────────────────────── */
+const ImageStore = {
+  db: null,
+  // id → blob: URL (kept alive as long as the page is open)
+  idToURL: new Map(),
+
+  async init() {
+    if (!('indexedDB' in window)) {
+      console.warn('IndexedDB not available; local images will not persist.');
+      return;
+    }
+    await new Promise((resolve, reject) => {
+      const req = indexedDB.open('ModernSlidesImages', 1);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('images')) {
+          db.createObjectStore('images', { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = (e) => { this.db = e.target.result; resolve(); };
+      req.onerror = () => reject(req.error);
+    });
+
+    // Pre-cache blob: URLs for all stored images so resolveImagePath can be sync.
+    try {
+      const all = await this.getAllImages();
+      all.forEach(rec => {
+        if (!this.idToURL.has(rec.id)) {
+          this.idToURL.set(rec.id, URL.createObjectURL(rec.blob));
+        }
+      });
+    } catch (err) {
+      console.warn('ImageStore init could not hydrate cache:', err);
+    }
+  },
+
+  async downscaleImage(blob) {
+    // Keep small images as-is; downscale larger to fit within 1024×1024.
+    return new Promise((resolve) => {
+      const img = new Image();
+      const u = URL.createObjectURL(blob);
+      img.onload = () => {
+        URL.revokeObjectURL(u);
+        const MAX = 1024;
+        let { width, height } = img;
+        if (width <= MAX && height <= MAX) { resolve(blob); return; }
+
+        if (width > height) { height = Math.round(height * (MAX / img.width)); width = MAX; }
+        else { width = Math.round(width * (MAX / img.height)); height = MAX; }
+
+        const c = document.createElement('canvas');
+        c.width = width; c.height = height;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const isJPEG = (blob.type || '').includes('jpeg') || (blob.type || '').includes('jpg');
+        c.toBlob((b) => resolve(b || blob), isJPEG ? 'image/jpeg' : blob.type || 'image/png', 0.9);
+      };
+      img.onerror = () => { URL.revokeObjectURL(u); resolve(blob); };
+      img.src = u;
+    });
+  },
+
+  async storeImage(blob, originalName = 'pasted-image') {
+    const downscaled = await this.downscaleImage(blob);
+    const extRaw = (downscaled.type || 'image/jpeg').split('/')[1] || 'jpg';
+    const ext = extRaw.toLowerCase() === 'jpeg' ? 'jpg' : extRaw.toLowerCase();
+    const id = `local-img-${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`;
+
+    await new Promise((resolve, reject) => {
+      const tx = this.db.transaction('images', 'readwrite');
+      tx.objectStore('images').put({
+        id,
+        blob: downscaled,
+        originalName,
+        timestamp: Date.now()
+      });
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+
+    // Cache blob URL for synchronous resolution in UI/preview/thumbnail.
+    const url = URL.createObjectURL(downscaled);
+    this.idToURL.set(id, url);
+    return id;
+  },
+
+  getObjectURLForId(id) {
+    return this.idToURL.get(id) || '';
+  },
+
+  async getImage(id) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('images', 'readonly');
+      const req = tx.objectStore('images').get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  async getAllImages() {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('images', 'readonly');
+      const req = tx.objectStore('images').getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  async deleteImage(id) {
+    // Revoke any live object URL
+    const u = this.idToURL.get(id);
+    if (u) { URL.revokeObjectURL(u); this.idToURL.delete(id); }
+
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('images', 'readwrite');
+      tx.objectStore('images').delete(id);
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+};
+
+
 
 /* ═══════════════════════════════════════════════════════════════
       WAKE LOCK TO KEEP SCREEN FROM FALLING ASLEEP IN PRESENTATIONS
@@ -1760,42 +1903,98 @@ Title: New slide
       updateHUD();
     };
 
-    // Download as txt button
-    $("download-txt-btn").onclick = async () => {
-      updateGroundTruth('DOWNLOAD');                       
+    // Download as txt button incl images
+$("download-txt-btn").onclick = async () => {
+  updateGroundTruth('DOWNLOAD');
 
-      const fileContents = buildRawDeck();
-      const suggestedName = `${
-        (state.currentFilename ||
-         state.xmlDoc.documentElement.getAttribute('title') ||
-         'presentation')
-         .replace(/\s+/g, '-')
-      }.txt`;
+  const fileContents = buildRawDeck();
+  const baseName = (state.currentFilename ||
+    state.xmlDoc.documentElement.getAttribute('title') ||
+    'presentation').replace(/\s+/g, '-');
 
-      try {
-        // Attempt to use the modern File System Access API.
-        const handle = await window.showSaveFilePicker({
-          suggestedName,
-          types: [{ description: 'Modern Slides', accept: { 'text/plain': ['.txt'] } }]
-        });
-        const w = await handle.createWritable();
-        await w.write(new Blob([fileContents], { type: 'text/plain' }));
-        await w.close();
-      } catch (err) {
-        // If the modern API fails (e.g., user cancellation, security block, or not supported),
-        // fall back to the traditional anchor tag download method.
-        console.warn("Modern save picker failed, falling back to legacy download.", err);
-        const blob = new Blob([fileContents], { type: 'text/plain' });
-        const a = Object.assign(document.createElement('a'), {
-          href: URL.createObjectURL(blob),
-          download: suggestedName,
-          style: 'display:none'
-        });
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  // Collect all local image ids (works for Image:, Background:, FullScreenImage:, and inside Columns)
+  const idRE = /local-img-[a-z0-9-]+\.(?:png|jpg|jpeg|gif|webp|svg)/gi;
+  const ids = Array.from(new Set((fileContents.match(idRE) || []).map(s => s.trim())));
+
+  // If no local images, keep your previous simple text download path
+  if (ids.length === 0) {
+    const suggestedName = `${baseName}.txt`;
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName,
+        types: [{ description: 'Modern Slides', accept: { 'text/plain': ['.txt'] } }]
+      });
+      const w = await handle.createWritable();
+      await w.write(new Blob([fileContents], { type: 'text/plain' }));
+      await w.close();
+    } catch (err) {
+      console.warn("Save picker failed; falling back to anchor download.", err);
+      const blob = new Blob([fileContents], { type: 'text/plain' });
+      const a = Object.assign(document.createElement('a'), {
+        href: URL.createObjectURL(blob),
+        download: suggestedName,
+        style: 'display:none'
+      });
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+    }
+    return;
+  }
+
+  // With local images: build a ZIP (Slides.txt + images at root)
+  try {
+    if (!window.JSZip) {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      await new Promise((res, rej) => { s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    }
+
+    const zip = new JSZip();
+    zip.file(`${baseName}.txt`, fileContents);
+
+    for (const imageId of ids) {
+      const rec = await ImageStore.getImage(imageId);
+      if (rec?.blob) {
+        // Put images at ZIP root → matches text references exactly
+        zip.file(imageId, rec.blob);
       }
-    };
+    }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const suggestedZip = `${baseName}.zip`;
+
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: suggestedZip,
+        types: [{ description: 'Modern Slides (ZIP)', accept: { 'application/zip': ['.zip'] } }]
+      });
+      const w = await handle.createWritable();
+      await w.write(zipBlob);
+      await w.close();
+    } catch (err) {
+      console.warn("Save picker failed; falling back to anchor ZIP download.", err);
+      const a = Object.assign(document.createElement('a'), {
+        href: URL.createObjectURL(zipBlob),
+        download: suggestedZip,
+        style: 'display:none'
+      });
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+    }
+  } catch (err) {
+    console.error('Zip creation failed:', err);
+    alert('Failed to create ZIP. Downloading text only.');
+    const blob = new Blob([fileContents], { type: 'text/plain' });
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(blob),
+      download: `${baseName}.txt`,
+      style: 'display:none'
+    });
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  }
+};
+
 
     // Print with PrintNote class notes button
     $("print-notes-btn").onclick = () => {
@@ -1886,12 +2085,92 @@ Title: New slide
     $("help-btn").onclick = () => $("help").classList.add("active");
     $("close-help").onclick = () => $("help").classList.remove("active");
 
+// Image Manager
+$("manage-images-btn").onclick = async () => {
+  const modal = $("image-manager");
+  const listDiv = $("image-list");
+
+  // Find all local image ids referenced anywhere in the deck text
+  const deckTxt = buildRawDeck();
+  const idRE = /local-img-[a-z0-9-]+\.(?:png|jpg|jpeg|gif|webp|svg)/gi;
+  const used = new Set((deckTxt.match(idRE) || []).map(s => s.trim()));
+
+  const all = await ImageStore.getAllImages();
+  if (!all.length) {
+    listDiv.innerHTML = '<p style="color:#999;">No images stored.</p>';
+  } else {
+    listDiv.innerHTML = all.map(rec => {
+      const inUse = used.has(rec.id);
+      const url = ImageStore.getObjectURLForId(rec.id) || URL.createObjectURL(rec.blob);
+      if (!ImageStore.idToURL.has(rec.id)) { ImageStore.idToURL.set(rec.id, url); }
+      const kb = (rec.blob.size / 1024).toFixed(1);
+      return `
+        <div style="display:flex;align-items:center;gap:1rem;padding:0.5rem 0;border-bottom:1px solid #ddd;">
+          <img src="${url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;">
+          <div style="flex:1;">
+            <div style="font-family:monospace">${rec.id}</div>
+            <div style="font-size:0.9em;color:#666;">${kb} KB ${inUse ? '• In use' : '• <span style="color:#999;">Unused</span>'}</div>
+          </div>
+          ${inUse ? '' : `<button data-del="${rec.id}" style="padding:0.25rem 0.5rem;">Delete</button>`}
+        </div>`;
+    }).join('');
+  }
+
+  // Attach delete handlers (only for unused)
+  listDiv.querySelectorAll('button[data-del]').forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.getAttribute('data-del');
+      if (confirm(`Delete ${id}?`)) {
+        await ImageStore.deleteImage(id);
+        $("manage-images-btn").click(); // refresh list
+      }
+    };
+  });
+
+  modal.classList.add("active");
+};
+$("close-image-manager").onclick = () => $("image-manager").classList.remove("active");
+
     // Text editor - this is the main source of changes.
     $("raw-text-editor").addEventListener('input', () => {
       state.hasChanges = true;
       validateAndUpdateTextarea(); // Live preview update
       updateSaveButtonGlow();
     });
+
+// Paste images into the editor → store in IndexedDB → insert Image: local-img-... line
+$("raw-text-editor").addEventListener('paste', async (e) => {
+  const items = e.clipboardData?.items;
+  if (!items || !items.length) return;
+
+  const images = Array.from(items).filter(it => it.type && it.type.startsWith('image/'));
+  if (images.length === 0) return;
+
+  e.preventDefault();
+  const textarea = $("raw-text-editor");
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const before = textarea.value.slice(0, start);
+  const after  = textarea.value.slice(end);
+
+  const insertLines = [];
+  for (const it of images) {
+    const file = it.getAsFile();
+    if (!file) continue;
+    const id = await ImageStore.storeImage(file, 'clipboard');
+    insertLines.push(`Image: ${id}, Pasted image`);
+  }
+
+  const insertion = (before.endsWith('\n') || before.length === 0 ? '' : '\n') +
+                    insertLines.join('\n') + '\n';
+  textarea.value = before + insertion + after;
+  const newCaret = (before + insertion).length;
+  textarea.selectionStart = textarea.selectionEnd = newCaret;
+
+  state.hasChanges = true;
+  validateAndUpdateTextarea();
+  updateSaveButtonGlow();
+});
 
     // allow shortcuts
     $("raw-text-editor").addEventListener('keydown', (e) => {
@@ -3496,9 +3775,7 @@ async function getThumbnailHTML(rawText, theme) {
 
   let backgroundUrl = null;
   if (attributes.background) {
-    const resolvedUrl = window.presentationBaseUrl ?
-      resolveImagePath(attributes.background, window.presentationBaseUrl) :
-      attributes.background;
+    const resolvedUrl = resolveImagePath(attributes.background, window.presentationBaseUrl);
     backgroundUrl = resolvedUrl;
     const cssUrl = `url("${resolvedUrl.replace(/"/g, '\\"')}")`;
     slideDiv.style.backgroundImage = cssUrl;
@@ -3919,20 +4196,20 @@ async function getThumbnailHTML(rawText, theme) {
           attributes.printNotes = content;
           break;
           
-        case "Image": {
-          const [url, ...captionParts] = content.split(/,(.*)/s);
-          const caption = (captionParts[0] || '').trim();
-          const resolvedUrl = window.presentationBaseUrl ? 
-            resolveImagePath(url.trim(), window.presentationBaseUrl) : url.trim();
-          innerHTML += `<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(caption)}"><div class="caption">${plainTextToHtml(caption)}</div></div>`;
-          break;
-        }
+case "Image": {
+  const [url, ...captionParts] = content.split(/,(.*)/s);
+  const caption = (captionParts[0] || '').trim();
+  const resolvedUrl = resolveImagePath(url.trim(), window.presentationBaseUrl);
+  innerHTML += `<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(caption)}"><div class="caption">${plainTextToHtml(caption)}</div></div>`;
+  break;
+}
           
         case "Columns": {
           const parts = content.split(/^\s*---\s*$/m);
 
-          // Allow extensions with optional ?query, and data: URLs
-          const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+)\s*(?:,\s*(.*))?$/i;
+          // Allow extensions with optional ?query, data: URLs, and local pasted ids
+const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+|local-img-[^\s,]+)\s*(?:,\s*(.*))?$/i;
+
 
           const htmlContainsVisibleText = (html) => {
             if (!html) return false;
@@ -4032,8 +4309,8 @@ async function getThumbnailHTML(rawText, theme) {
                 const imageUrl = match[1].trim();
                 const colCaption = (match[2] || '').trim();
                 const resolvedUrl = window.presentationBaseUrl
-                  ? resolveImagePath(imageUrl, window.presentationBaseUrl)
-                  : imageUrl;
+                   ? resolveImagePath(imageUrl, window.presentationBaseUrl)
+                   : imageUrl;
                 blocks.push(
                   `<div class="img-container">
                     <img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(colCaption)}">
@@ -4269,13 +4546,28 @@ async function applyTheme(themeId) {
       });
   }
 
-  window.resolveImagePath = function(imageSrc, baseUrl) {
-    if (!baseUrl || imageSrc.startsWith('http://') || 
-        imageSrc.startsWith('https://') || imageSrc.startsWith('data:')) {
-      return imageSrc;
-    }
-    return new URL(imageSrc, baseUrl).href;
-  };
+window.resolveImagePath = function(imageSrc, baseUrl) {
+  const src = (imageSrc || '').trim();
+
+  // Our local pasted images (e.g., "local-img-...jpg")
+  if (src.startsWith('local-img-')) {
+    // If we have the blob in IndexedDB (editing/local case), use blob: URL.
+    const local = ImageStore.getObjectURLForId(src);
+    if (local) return local;
+
+    // Otherwise (e.g., ZIP extracted on a server), treat as a relative file.
+    if (baseUrl) return new URL(src, baseUrl).href;
+    return src;
+  }
+
+  // Remote or data URLs
+  if (!baseUrl || /^https?:\/\//i.test(src) || src.startsWith('data:')) {
+    return src;
+  }
+  // Relative paths resolve against presentationBaseUrl
+  return new URL(src, baseUrl).href;
+};
+
   
   /* ═══════════════════════════════════════════════════════════════
                           16:9 ASPECT RATIO SETUP
@@ -4343,6 +4635,7 @@ function wrapSlideshowFor16x9() {
   
   // Main entry point
   return async function() {
+    await ImageStore.init();
     // Discover and load themes
     await discoverThemes();
     
