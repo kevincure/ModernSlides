@@ -634,6 +634,22 @@ body:not(.is-edit-mode) .overflow-indicator {
   overflow: auto;
 }
 
+#overflow-measure-stage {
+  position: fixed;
+  top: -3000px;
+  left: -3000px;
+  width: 1280px;
+  height: 720px;
+  pointer-events: none;
+  visibility: hidden;
+  z-index: -1;
+}
+
+#overflow-measure-stage .presentation-scaler {
+  width: 100%;
+  height: 100%;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -2265,8 +2281,6 @@ $("download-txt-btn").onclick = async () => {
 
     // New presentation button
     $("new-presentation-btn").onclick = () => {
-      const proceed = confirm('Start a new slideshow? This will replace the current deck in memory. Download first if you need a backup.');
-      if (!proceed) return;
       openNewDeckModal();
     };
 
@@ -2414,21 +2428,21 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
         e.preventDefault();
 
         const { selectionStart, value } = textarea;
-        const beforeSelection = value.slice(0, selectionStart);
-        const lineStartIndex = beforeSelection.lastIndexOf('\n') + 1;
-        const insertionIndex = lineStartIndex < 0 ? 0 : lineStartIndex;
         const bullet = '• ';
+        const alreadyPresent =
+          selectionStart >= bullet.length &&
+          value.slice(selectionStart - bullet.length, selectionStart) === bullet;
 
-        if (value.slice(insertionIndex, insertionIndex + bullet.length) === bullet) {
-          textarea.selectionStart = textarea.selectionEnd = insertionIndex + bullet.length;
+        if (alreadyPresent) {
+          textarea.selectionStart = textarea.selectionEnd = selectionStart;
           return;
         }
 
         textarea.value =
-          value.slice(0, insertionIndex) +
+          value.slice(0, selectionStart) +
           bullet +
-          value.slice(insertionIndex);
-        const newCaret = insertionIndex + bullet.length;
+          value.slice(selectionStart);
+        const newCaret = selectionStart + bullet.length;
         textarea.selectionStart = textarea.selectionEnd = newCaret;
         textarea.dispatchEvent(new Event('input'));
         return;
@@ -2982,6 +2996,17 @@ const slideTemplate = (slideHTML) => `
     const p = state.xmlDoc.querySelector("presentation");
     if (!p) return;
 
+    const editorTextarea = $("raw-text-editor");
+    if (editorTextarea) {
+      editorTextarea.setAttribute('spellcheck', 'true');
+      editorTextarea.spellcheck = true;
+      editorTextarea.setAttribute('lang', 'en-US');
+      editorTextarea.lang = 'en-US';
+      editorTextarea.setAttribute('autocapitalize', 'off');
+      editorTextarea.setAttribute('autocomplete', 'off');
+      editorTextarea.setAttribute('autocorrect', 'off');
+    }
+
     $("show-count").checked = p.getAttribute("showSlideCount") !== "false";
     $("theme-selector").value = p.getAttribute("theme") || DEFAULT_THEME;
 
@@ -3149,32 +3174,123 @@ const slideTemplate = (slideHTML) => `
     return segments;
   }
 
-  function applyMarkersForSelection(textarea, segments, beforeMarker, afterMarker, options = {}) {
-    if (!segments.length) return;
-    const { combined = false } = options;
+  function applyMarkersForSelection(textarea, segments, config) {
+    if (!segments.length || !config) return;
+
+    const {
+      open,
+      close,
+      combined = false,
+      padWithSpaces = false,
+      extraBeforeVariants = [],
+      extraAfterVariants = []
+    } = config;
+
+    const beforeMarker = padWithSpaces ? `${open} ` : open;
+    const afterMarker = padWithSpaces ? ` ${close}` : close;
+    const beforeVariants = [beforeMarker, ...extraBeforeVariants.filter(Boolean)];
+    const afterVariants = [afterMarker, ...extraAfterVariants.filter(Boolean)];
+    if (!beforeVariants.includes(open)) beforeVariants.push(open);
+    if (!afterVariants.includes(close)) afterVariants.push(close);
     const scrollTop = textarea.scrollTop;
     let value = textarea.value;
+
+    const sliceMatches = (source, start, markerList) => {
+      if (start < 0) return false;
+      return markerList.some(marker =>
+        marker && start >= marker.length && source.slice(start - marker.length, start) === marker
+      );
+    };
+
+    const sliceMatchesAfter = (source, start, markerList) => {
+      return markerList.some(marker =>
+        marker && source.slice(start, start + marker.length) === marker
+      );
+    };
+
+    const removeRange = (source, start, end, beforeList, afterList) => {
+      let from = start;
+      let to = end;
+      const beforeMarker = beforeList.find(marker => marker && start >= marker.length && source.slice(start - marker.length, start) === marker);
+      const afterMarker = afterList.find(marker => marker && source.slice(end, end + marker.length) === marker);
+      if (!beforeMarker || !afterMarker) {
+        return null;
+      }
+      from -= beforeMarker.length;
+      to += afterMarker.length;
+      return {
+        value: source.slice(0, from) + source.slice(to),
+        selectionStart: start - beforeMarker.length,
+        selectionEnd: end - beforeMarker.length
+      };
+    };
 
     if (combined) {
       const first = segments[0];
       const last = segments[segments.length - 1];
-      value = value.slice(0, first.start) + beforeMarker + value.slice(first.start);
-      const closingPos = last.end + beforeMarker.length;
-      value = value.slice(0, closingPos) + afterMarker + value.slice(closingPos);
-      textarea.value = value;
-      textarea.selectionStart = first.start;
-      textarea.selectionEnd = closingPos + afterMarker.length;
-    } else {
-      const selectionStart = segments[0].start;
-      const selectionEnd = segments[segments.length - 1].end;
-      for (let i = segments.length - 1; i >= 0; i--) {
-        const seg = segments[i];
-        value = value.slice(0, seg.start) + beforeMarker + value.slice(seg.start, seg.end) + afterMarker + value.slice(seg.end);
+      const removeResult = removeRange(value, first.start, last.end, beforeVariants, afterVariants);
+
+      if (removeResult) {
+        textarea.value = removeResult.value;
+        textarea.selectionStart = removeResult.selectionStart;
+        textarea.selectionEnd = removeResult.selectionEnd;
+      } else {
+        value = value.slice(0, first.start) + beforeMarker + value.slice(first.start);
+        const closingPos = last.end + beforeMarker.length;
+        value = value.slice(0, closingPos) + afterMarker + value.slice(closingPos);
+        textarea.value = value;
+        textarea.selectionStart = first.start;
+        textarea.selectionEnd = closingPos + afterMarker.length;
       }
-      textarea.value = value;
-      const insertLen = segments.length * (beforeMarker.length + afterMarker.length);
-      textarea.selectionStart = selectionStart;
-      textarea.selectionEnd = selectionEnd + insertLen;
+    } else {
+      const allWrapped = segments.every(seg =>
+        sliceMatches(value, seg.start, beforeVariants) &&
+        sliceMatchesAfter(value, seg.end, afterVariants)
+      );
+
+      if (allWrapped) {
+        const removalInfo = segments.map(seg => {
+          const beforeMatch = beforeVariants.find(marker => marker && value.slice(seg.start - marker.length, seg.start) === marker);
+          const afterMatch = afterVariants.find(marker => marker && value.slice(seg.end, seg.end + marker.length) === marker);
+          return { seg, beforeMatch, afterMatch };
+        });
+
+        for (let i = segments.length - 1; i >= 0; i--) {
+          const info = removalInfo[i];
+          if (!info.beforeMatch || !info.afterMatch) continue;
+          const start = info.seg.start - info.beforeMatch.length;
+          const end = info.seg.end + info.afterMatch.length;
+          value = value.slice(0, start) + value.slice(end);
+        }
+
+        textarea.value = value;
+
+        const removedBeforeLast = removalInfo.slice(0, -1).reduce((sum, info) => {
+          if (!info.beforeMatch || !info.afterMatch) return sum;
+          return sum + info.beforeMatch.length + info.afterMatch.length;
+        }, 0);
+        const firstInfo = removalInfo[0];
+        const lastInfo = removalInfo[removalInfo.length - 1];
+        const startOffset = firstInfo?.beforeMatch?.length ?? 0;
+        const lastBefore = lastInfo?.beforeMatch?.length ?? 0;
+        textarea.selectionStart = segments[0].start - startOffset;
+        textarea.selectionEnd = segments[segments.length - 1].end - removedBeforeLast - lastBefore;
+      } else {
+        let insertedTotal = 0;
+        for (let i = segments.length - 1; i >= 0; i--) {
+          const seg = segments[i];
+          if (sliceMatches(value, seg.start, beforeVariants) && sliceMatchesAfter(value, seg.end, afterVariants)) {
+            continue;
+          }
+          value = value.slice(0, seg.start) + beforeMarker + value.slice(seg.start, seg.end) + afterMarker + value.slice(seg.end);
+          insertedTotal += beforeMarker.length + afterMarker.length;
+        }
+        textarea.value = value;
+        const selectionStart = segments[0].start;
+        const selectionEnd = segments[segments.length - 1].end + insertedTotal;
+        textarea.selectionStart = selectionStart;
+        textarea.selectionEnd = selectionEnd;
+      }
     }
 
     textarea.scrollTop = scrollTop;
@@ -3191,22 +3307,52 @@ const slideTemplate = (slideHTML) => `
 
     switch (action) {
       case 'bold':
-        applyMarkersForSelection(textarea, segments, '**', '**');
+        applyMarkersForSelection(textarea, segments, {
+          open: '**',
+          close: '**'
+        });
         break;
       case 'italic':
-        applyMarkersForSelection(textarea, segments, '*', '*');
+        applyMarkersForSelection(textarea, segments, {
+          open: '*',
+          close: '*'
+        });
         break;
       case 'bolditalic':
-        applyMarkersForSelection(textarea, segments, '***', '***');
+        applyMarkersForSelection(textarea, segments, {
+          open: '***',
+          close: '***'
+        });
         break;
       case 'align-left':
-        applyMarkersForSelection(textarea, segments, '<<< ', ' <<<');
+        applyMarkersForSelection(textarea, segments, {
+          open: '<<<',
+          close: '<<<',
+          combined: true,
+          padWithSpaces: true,
+          extraBeforeVariants: ['<<<'],
+          extraAfterVariants: ['<<<']
+        });
         break;
       case 'align-center':
-        applyMarkersForSelection(textarea, segments, '||| ', ' |||');
+        applyMarkersForSelection(textarea, segments, {
+          open: '|||',
+          close: '|||',
+          combined: true,
+          padWithSpaces: true,
+          extraBeforeVariants: ['|||'],
+          extraAfterVariants: ['|||']
+        });
         break;
       case 'align-right':
-        applyMarkersForSelection(textarea, segments, '>>> ', ' >>>');
+        applyMarkersForSelection(textarea, segments, {
+          open: '>>>',
+          close: '>>>',
+          combined: true,
+          padWithSpaces: true,
+          extraBeforeVariants: ['>>>'],
+          extraAfterVariants: ['>>>']
+        });
         break;
       default:
         break;
@@ -3419,7 +3565,71 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
   }
 
   const OVERFLOW_SNIPPET_LIMIT = 20;
-  const OVERFLOW_TOLERANCE_PX = 4;
+  const OVERFLOW_TOLERANCE_PX = 1;
+  const OVERFLOW_STAGE_WIDTH = 1280;
+  const OVERFLOW_STAGE_HEIGHT = 720;
+  let overflowMeasureContext = null;
+
+  function getOverflowMeasureContext() {
+    if (overflowMeasureContext) {
+      return overflowMeasureContext;
+    }
+
+    const stage = document.createElement('div');
+    stage.id = 'overflow-measure-stage';
+    stage.className = 'presentation-viewport';
+    stage.style.width = `${OVERFLOW_STAGE_WIDTH}px`;
+    stage.style.height = `${OVERFLOW_STAGE_HEIGHT}px`;
+
+    const scaler = document.createElement('div');
+    scaler.className = 'presentation-scaler';
+    scaler.style.width = '100%';
+    scaler.style.height = '100%';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'slide-wrapper';
+
+    scaler.appendChild(wrapper);
+    stage.appendChild(scaler);
+    document.body.appendChild(stage);
+
+    overflowMeasureContext = { stage, scaler, wrapper };
+    return overflowMeasureContext;
+  }
+
+  function measureOverflowForSlide(slideEl) {
+    const { wrapper } = getOverflowMeasureContext();
+    wrapper.innerHTML = '';
+
+    const clone = slideEl.cloneNode(true);
+    clone.classList.remove('has-overflow');
+    clone.removeAttribute('data-overflow-snippets');
+    clone.querySelectorAll('.overflow-indicator').forEach(node => node.remove());
+    const notes = clone.querySelector('.notes');
+    if (notes) notes.remove();
+
+    wrapper.appendChild(clone);
+
+    const content = clone.querySelector('.slide-flow-content');
+    if (!content) {
+      return { hasOverflow: false, snippets: [] };
+    }
+
+    const contentRect = content.getBoundingClientRect();
+    if (!contentRect.width || !contentRect.height) {
+      return { hasOverflow: false, snippets: [] };
+    }
+
+    const overflowVert = content.scrollHeight - content.clientHeight > OVERFLOW_TOLERANCE_PX;
+    const overflowHoriz = content.scrollWidth - content.clientWidth > OVERFLOW_TOLERANCE_PX;
+
+    if (!overflowVert && !overflowHoriz) {
+      return { hasOverflow: false, snippets: [] };
+    }
+
+    const snippets = collectOverflowSnippets(content, contentRect);
+    return { hasOverflow: true, snippets };
+  }
 
   function collectOverflowSnippets(container, containerRect) {
     const snippets = [];
@@ -3467,17 +3677,12 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     slideEl.classList.remove('has-overflow');
     delete slideEl.dataset.overflowSnippets;
 
-    const content = slideEl.querySelector('.slide-flow-content');
-    if (!content) return;
+    const measurement = measureOverflowForSlide(slideEl);
+    if (!measurement.hasOverflow) {
+      return;
+    }
 
-    const contentRect = content.getBoundingClientRect();
-    if (!contentRect.width || !contentRect.height) return;
-
-    const overflowVert = content.scrollHeight - content.clientHeight > OVERFLOW_TOLERANCE_PX;
-    const overflowHoriz = content.scrollWidth - content.clientWidth > OVERFLOW_TOLERANCE_PX;
-    if (!overflowVert && !overflowHoriz) return;
-
-    const snippets = collectOverflowSnippets(content, contentRect);
+    const snippets = measurement.snippets;
     slideEl.classList.add('has-overflow');
     slideEl.dataset.overflowSnippets = JSON.stringify(snippets);
 
@@ -4807,15 +5012,24 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
                 const resolvedUrl = window.presentationBaseUrl
                    ? resolveImagePath(imageUrl, window.presentationBaseUrl)
                    : imageUrl;
+
+                let captionHtml = '';
+                let captionMode = inlineInfo.mode;
+                if (colCaption) {
+                  const captionRender = renderRichTextWithModes(colCaption, inlineInfo.mode);
+                  captionHtml = captionRender.html || plainTextToHtml(colCaption);
+                  if (htmlContainsVisibleText(captionHtml)) {
+                    hasTextBlock = true;
+                  }
+                  captionMode = captionRender.mode;
+                }
+
                 blocks.push(
                   `<div class="img-container">
                     <img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(colCaption)}">
-                    <div class="caption">${plainTextToHtml(colCaption)}</div>
+                    <div class="caption">${captionHtml}</div>
                   </div>`
                 );
-                if (colCaption) {
-                  hasTextBlock = true;
-                }
 
                 if (inlineInfo.afterHtml) {
                   blocks.push(inlineInfo.afterHtml);
@@ -4824,7 +5038,7 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
                   }
                 }
 
-                currentMode = inlineInfo.mode;
+                currentMode = captionMode;
                 continue;
               }
 
