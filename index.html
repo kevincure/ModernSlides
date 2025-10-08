@@ -256,6 +256,10 @@ body {
   overflow: visible;
 }
 
+.slide-content .columns .column.column--double {
+  flex: 2;
+}
+
 .slide-content .columns .column.images-only[data-imgcount]:not([data-imgcount="1"]) {
   justify-content: center;
 }
@@ -450,6 +454,42 @@ body:not(.is-edit-mode) .overflow-indicator {
   flex-direction: column;
   padding: 1rem;
   overflow: hidden;
+  position: relative;
+}
+
+.selection-toolbar {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  display: none;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--editor-border-color);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+}
+
+.selection-toolbar.visible {
+  display: inline-flex;
+  align-items: center;
+}
+
+.selection-toolbar button {
+  border: 1px solid var(--editor-border-color);
+  background: var(--editor-input-bg);
+  color: var(--editor-input-text);
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.selection-toolbar button:hover,
+.selection-toolbar button:focus {
+  border-color: var(--editor-accent-color);
+  color: var(--editor-accent-color);
 }
 
 /* ----------------------------- */
@@ -758,6 +798,45 @@ body:not(.is-edit-mode) .overflow-indicator {
   cursor: pointer;
   margin-top: 1rem;
   float: right;
+}
+
+.modal-box label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.modal-box input[type="text"] {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid var(--editor-input-border);
+  background-color: var(--editor-input-bg);
+  color: var(--editor-input-text);
+  font-family: var(--editor-ui-font-family);
+  font-size: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.modal-actions button {
+  float: none;
+  margin-top: 0;
+}
+
+.modal-actions .secondary-action {
+  background: transparent;
+  color: var(--editor-accent-color);
+  border: 1px solid var(--editor-accent-color);
+}
+
+.modal-actions .secondary-action:hover {
+  background: color-mix(in srgb, var(--editor-accent-color) 15%, transparent);
 }
 
 /* ----------------------------- */
@@ -1124,7 +1203,15 @@ body:not(.is-edit-mode) .overflow-indicator {
   <div id="editor">
     <div id="thumbs"></div>
     <div id="editor-main">
-      <textarea id="raw-text-editor" placeholder="Enter slide content here. Click Help for syntax."></textarea>
+      <textarea id="raw-text-editor" placeholder="Enter slide content here. Click Help for syntax." spellcheck="true" lang="en"></textarea>
+      <div id="selection-toolbar" class="selection-toolbar" role="toolbar" aria-hidden="true">
+        <button type="button" data-format="align-left" title="Align left">⇤</button>
+        <button type="button" data-format="align-center" title="Align center">↔</button>
+        <button type="button" data-format="align-right" title="Align right">⇥</button>
+        <button type="button" data-format="bold" title="Bold">B</button>
+        <button type="button" data-format="italic" title="Italic">I</button>
+        <button type="button" data-format="bolditalic" title="Bold Italic">BI</button>
+      </div>
       <div class="toolbar">
         <button id="add-btn"       title="New Slide">      <i class="fa-solid fa-plus"></i></button>
         <button id="del-btn"       title="Delete Slide">   <i class="fa-solid fa-minus"></i></button>
@@ -1247,7 +1334,7 @@ body:not(.is-edit-mode) .overflow-indicator {
       # - Undo and Redo are next to the style selector in the toolbar.
       # - When a thumbnail is highlighted you can use the + / - buttons on it to add or delete slides.
       # - 9 different styles are given, but you can create your own also
-      # - you can add a bullet point by typing z:
+      # - you can add a bullet point by pressing Ctrl+B.
       # - If you want images that are not web-linked, you can paste images into the textbox, and when you download, it will include those images. Keep all in the same folder wherever you store your offline slide text and images.
       </pre>
     </div>
@@ -1260,6 +1347,18 @@ body:not(.is-edit-mode) .overflow-indicator {
     <h3>Manage Images</h3>
     <p>Images pasted into this browser (IndexedDB). Delete unused ones to free space.</p>
     <div id="image-list" style="max-height:400px;overflow:auto;margin-top:1rem;"></div>
+  </div>
+</div>
+
+<div id="new-deck-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="new-deck-modal-title">
+  <div class="modal-box">
+    <h3 id="new-deck-modal-title">Name your new slideshow</h3>
+    <label for="new-deck-name">Deck name</label>
+    <input id="new-deck-name" type="text" maxlength="120" placeholder="New Presentation" />
+    <div class="modal-actions">
+      <button id="cancel-new-deck" type="button" class="secondary-action">Cancel</button>
+      <button id="confirm-new-deck" type="button" class="primary-action">Create</button>
+    </div>
   </div>
 </div>
 
@@ -1366,6 +1465,8 @@ Title: New slide
   const DEFAULT_TEXT_SCALE = 1;
   const LAST_SESSION_KEY = 'modernSlides_lastSession';
   const PREVIOUS_SESSION_KEY = 'modernSlides_previousSession';
+  const LAST_SESSION_META_KEY = 'modernSlides_lastSessionMeta';
+  const PREVIOUS_SESSION_META_KEY = 'modernSlides_previousSessionMeta';
   const DEFAULT_NEW_SLIDE_CONTENT = "Title: New Slide\n\nText: Edit this content.";
 
   function clampTextScale(value) {
@@ -1483,6 +1584,7 @@ Title: New slide
     draggedThumbIndex: null,
     placeholder: null,
     thumbnailRefreshPromise: null,
+    pendingThumbScrollIndex: null,
 
     // Overflow measurement
     pendingOverflowFrame: null,
@@ -1498,6 +1600,62 @@ Title: New slide
     statusTimeout: null,
     lastStatusMessage: ''
   };
+
+  function sanitizeDeckName(input) {
+    const fallback = 'New Presentation';
+    const cleaned = (input ?? '').replace(/[\r\n]+/g, ' ').trim();
+    return cleaned || fallback;
+  }
+
+  function escapeAttributeValue(value) {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/'/g, '&apos;');
+  }
+
+  function buildNewPresentationXML(name) {
+    const cleanName = sanitizeDeckName(name);
+    const escapedAttr = escapeAttributeValue(cleanName);
+    let xml = MINIMAL_NEW_XML.replace(/title="[^"]*"/, `title="${escapedAttr}"`);
+    xml = xml.replace(/Title: [^\r\n]*/, `Title: ${cleanName}`);
+    return xml;
+  }
+
+  function getDeckIdentityFromState() {
+    const titleAttr = state.xmlDoc?.documentElement?.getAttribute('title');
+    const fallbackName = state.currentFilename;
+    const name = sanitizeDeckName(titleAttr || fallbackName);
+    return { id: name.toLowerCase(), label: name };
+  }
+
+  function parseDeckIdentityMeta(raw) {
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.id === 'string' && typeof parsed.label === 'string') {
+        return parsed;
+      }
+    } catch (err) {}
+    return null;
+  }
+
+  function extractDeckIdentityFromXML(xmlString) {
+    if (!xmlString) return null;
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xmlString, 'text/xml');
+      if (doc.getElementsByTagName('parsererror').length > 0) return null;
+      const titleAttr = doc.documentElement?.getAttribute('title');
+      if (!titleAttr) return null;
+      const name = sanitizeDeckName(titleAttr);
+      return { id: name.toLowerCase(), label: name };
+    } catch (err) {
+      return null;
+    }
+  }
 
 
 /* ────────────────────────────────
@@ -1658,6 +1816,7 @@ const ImageStore = {
      ═══════════════════════════════════════════════════════════════ */
 
   function setupEventHandlers() {
+    initSelectionToolbar();
     // ensure print is small pdf w/ embedded websites
     window.addEventListener('beforeprint', () => {
       document.querySelectorAll('.slide iframe').forEach((f) => {
@@ -2032,11 +2191,83 @@ $("download-txt-btn").onclick = async () => {
       }, 1000);
     };
 
+    const newDeckModal = $("new-deck-modal");
+    const newDeckInput = $("new-deck-name");
+    const cancelNewDeckBtn = $("cancel-new-deck");
+    const confirmNewDeckBtn = $("confirm-new-deck");
+
+    const closeNewDeckModal = () => {
+      newDeckModal?.classList.remove('active');
+    };
+
+    const handleCreateNewDeck = () => {
+      const desiredName = sanitizeDeckName(newDeckInput ? newDeckInput.value : '');
+      const xml = buildNewPresentationXML(desiredName);
+      closeNewDeckModal();
+      window.presentationBaseUrl = undefined;
+      init(xml, { fileName: desiredName, slideIndex: 0, reason: 'new' });
+    };
+
+    if (cancelNewDeckBtn) {
+      cancelNewDeckBtn.onclick = () => {
+        closeNewDeckModal();
+      };
+    }
+
+    if (confirmNewDeckBtn) {
+      confirmNewDeckBtn.onclick = () => {
+        handleCreateNewDeck();
+      };
+    }
+
+    if (newDeckInput) {
+      newDeckInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          handleCreateNewDeck();
+        } else if (event.key === 'Escape') {
+          event.preventDefault();
+          closeNewDeckModal();
+        }
+      });
+    }
+
+    if (newDeckModal) {
+      newDeckModal.addEventListener('click', (event) => {
+        if (event.target === newDeckModal) {
+          closeNewDeckModal();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && newDeckModal.classList.contains('active')) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeNewDeckModal();
+        }
+      }, true);
+    }
+
+    const openNewDeckModal = () => {
+      if (!newDeckModal) {
+        handleCreateNewDeck();
+        return;
+      }
+      newDeckModal.classList.add('active');
+      if (newDeckInput) {
+        newDeckInput.value = sanitizeDeckName('');
+        setTimeout(() => {
+          newDeckInput.focus();
+          newDeckInput.select();
+        }, 0);
+      }
+    };
+
     // New presentation button
     $("new-presentation-btn").onclick = () => {
       const proceed = confirm('Start a new slideshow? This will replace the current deck in memory. Download first if you need a backup.');
       if (!proceed) return;
-      init(MINIMAL_NEW_XML, { fileName: 'New Presentation', slideIndex: 0, reason: 'new' });
+      openNewDeckModal();
     };
 
     // Load presentation button
@@ -2066,12 +2297,14 @@ $("download-txt-btn").onclick = async () => {
       if (!btn || btn.disabled) return;
 
       const previousSession = localStorage.getItem(PREVIOUS_SESSION_KEY);
+      const previousMeta = parseDeckIdentityMeta(localStorage.getItem(PREVIOUS_SESSION_META_KEY));
       if (!previousSession) {
         updateRestoreButtonState();
         return;
       }
 
-      const proceed = confirm('Restore the last saved slideshow? This will replace the deck you are currently editing.');
+      const label = previousMeta?.label || 'the previous deck';
+      const proceed = confirm(`Restore ${label}? This will replace the deck you are currently editing.`);
       if (!proceed) return;
 
       try {
@@ -2174,20 +2407,46 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
 
     // allow shortcuts
     $("raw-text-editor").addEventListener('keydown', (e) => {
+      const textarea = e.target;
+
+      const isBulletShortcut = (e.key === 'b' || e.key === 'B') && (e.ctrlKey || e.metaKey);
+      if (isBulletShortcut) {
+        e.preventDefault();
+
+        const { selectionStart, value } = textarea;
+        const beforeSelection = value.slice(0, selectionStart);
+        const lineStartIndex = beforeSelection.lastIndexOf('\n') + 1;
+        const insertionIndex = lineStartIndex < 0 ? 0 : lineStartIndex;
+        const bullet = '• ';
+
+        if (value.slice(insertionIndex, insertionIndex + bullet.length) === bullet) {
+          textarea.selectionStart = textarea.selectionEnd = insertionIndex + bullet.length;
+          return;
+        }
+
+        textarea.value =
+          value.slice(0, insertionIndex) +
+          bullet +
+          value.slice(insertionIndex);
+        const newCaret = insertionIndex + bullet.length;
+        textarea.selectionStart = textarea.selectionEnd = newCaret;
+        textarea.dispatchEvent(new Event('input'));
+        return;
+      }
+
       // Check if user just typed a colon after a single letter at line start
       if (e.key !== ':') return;
-      
-      const textarea = e.target;
+
       const cursorPos = textarea.selectionStart;
       const textBefore = textarea.value.substring(0, cursorPos);
-      
+
       // Check if we're at the start of a line with just a single letter
       const lines = textBefore.split('\n');
       const currentLine = lines[lines.length - 1];
-      
+
       // Match single letter at start of line
       if (currentLine.length !== 1) return;
-      
+
       const letter = currentLine;
       const shortcuts = {
         'b': 'BigText',
@@ -2201,28 +2460,27 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
         'h': 'Header',
         't': 'Title',
         'x': 'Text',
-        'z': '• ',
         'P': 'PrintNote',
         'S': 'SpeakerNote',
         'F': 'FullScreenImage',
         'B': 'Background'
       };
-      
+
       if (shortcuts[letter]) {
         e.preventDefault();
-        
+
         // Replace the letter with the full directive
         const lineStartPos = cursorPos - 1;
         const before = textarea.value.substring(0, lineStartPos);
         const after = textarea.value.substring(cursorPos);
-        
-        const precomposed = new Set(['C','T','z']);
+
+        const precomposed = new Set(['C','T']);
         const insertion = precomposed.has(letter) ? shortcuts[letter]
           : shortcuts[letter] + ': ';
-        
+
         textarea.value = before + insertion + after;
         textarea.selectionStart = textarea.selectionEnd = before.length + insertion.length;
-        
+
         // Trigger input event for live preview
         textarea.dispatchEvent(new Event('input'));
       }
@@ -2230,8 +2488,13 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
 
     // Change slideshow style
     $("theme-selector").onchange = async () => {
-      updateGroundTruth('THEME_CHANGE', { theme: $("theme-selector").value });
-      await applyTheme($("theme-selector").value);
+      const selector = $("theme-selector");
+      const themeValue = selector.value;
+      updateGroundTruth('THEME_CHANGE', { theme: themeValue });
+      state.pendingThumbScrollIndex = state.currentAbsoluteSlideIndex;
+      await applyTheme(themeValue);
+      const label = selector.options[selector.selectedIndex]?.textContent?.trim() || themeValue;
+      setEditorStatus(`Theme changed to ${label}.`);
     };
 
     // Toggle fullscreen
@@ -2701,11 +2964,13 @@ const slideTemplate = (slideHTML) => `
     if (fromIndex === toIndex) return;
     
     updateGroundTruth('REORDER', { fromIndex, toIndex });
-    
+
     await buildSlidesFromXMLDoc();
+    state.pendingThumbScrollIndex = toIndex;
     await refreshThumbnails();
     let newCurrentIndex = toIndex;
     showSlide(newCurrentIndex);
+    setEditorStatus(`Slide moved to position ${toIndex + 1}.`);
   }
 
 
@@ -2720,6 +2985,7 @@ const slideTemplate = (slideHTML) => `
     $("show-count").checked = p.getAttribute("showSlideCount") !== "false";
     $("theme-selector").value = p.getAttribute("theme") || DEFAULT_THEME;
 
+    state.pendingThumbScrollIndex = state.currentAbsoluteSlideIndex;
     refreshThumbnails();
     loadTextareaForCurrentSlide();
     updateSaveButtonGlow();
@@ -2808,14 +3074,22 @@ const slideTemplate = (slideHTML) => `
       // Wait for the browser's next painting cycle. This gives the browser
       // time to render the new thumbnails and calculate the new scroll height.
       requestAnimationFrame(() => {
-        // Now that the DOM is stable, find the selected thumb
-        const selectedThumb = thumbsContainer.querySelector('.thumb.selected');
-        if (selectedThumb) {
-          // Execute the scroll. This visually corrects the jump.
-          selectedThumb.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        let targetIndex = state.pendingThumbScrollIndex;
+        if (!Number.isInteger(targetIndex)) {
+          targetIndex = state.currentAbsoluteSlideIndex;
         }
-        // 5) Only after the scroll has been commanded, resolve the promise.
-        resolve(); 
+
+        if (Number.isInteger(targetIndex)) {
+          highlightThumb(targetIndex);
+        } else {
+          const selectedThumb = thumbsContainer.querySelector('.thumb.selected');
+          if (selectedThumb) {
+            selectedThumb.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          }
+        }
+
+        state.pendingThumbScrollIndex = null;
+        resolve();
       });
     });
 
@@ -2827,6 +3101,158 @@ const slideTemplate = (slideHTML) => `
     } finally {
       state.thumbnailRefreshPromise = null;
     }
+  }
+
+  function collectSelectionSegments(textarea) {
+    if (!textarea) return [];
+    const value = textarea.value;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    if (start === end) return [];
+
+    const segments = [];
+    let cursor = value.lastIndexOf('\n', start - 1);
+    cursor = cursor === -1 ? 0 : cursor + 1;
+
+    while (cursor < end) {
+      const lineBreakIdx = value.indexOf('\n', cursor);
+      const lineEnd = lineBreakIdx === -1 ? value.length : lineBreakIdx;
+      const selStart = Math.max(start, cursor);
+      const selEnd = Math.min(end, lineEnd);
+
+      if (selStart < selEnd) {
+        let segStart = selStart;
+        let segEnd = selEnd;
+        const colonIdx = value.indexOf(':', cursor);
+        if (colonIdx !== -1 && colonIdx < lineEnd && segStart <= colonIdx) {
+          segStart = Math.max(segStart, colonIdx + 1);
+          while (segStart < segEnd && /\s/.test(value[segStart])) {
+            segStart++;
+          }
+        }
+
+        while (segEnd > segStart && /\s/.test(value[segEnd - 1])) {
+          segEnd--;
+        }
+
+        if (segStart < segEnd) {
+          segments.push({ start: segStart, end: segEnd });
+        }
+      }
+
+      if (lineBreakIdx === -1) {
+        break;
+      }
+      cursor = lineEnd + 1;
+    }
+
+    return segments;
+  }
+
+  function applyMarkersForSelection(textarea, segments, beforeMarker, afterMarker, options = {}) {
+    if (!segments.length) return;
+    const { combined = false } = options;
+    const scrollTop = textarea.scrollTop;
+    let value = textarea.value;
+
+    if (combined) {
+      const first = segments[0];
+      const last = segments[segments.length - 1];
+      value = value.slice(0, first.start) + beforeMarker + value.slice(first.start);
+      const closingPos = last.end + beforeMarker.length;
+      value = value.slice(0, closingPos) + afterMarker + value.slice(closingPos);
+      textarea.value = value;
+      textarea.selectionStart = first.start;
+      textarea.selectionEnd = closingPos + afterMarker.length;
+    } else {
+      const selectionStart = segments[0].start;
+      const selectionEnd = segments[segments.length - 1].end;
+      for (let i = segments.length - 1; i >= 0; i--) {
+        const seg = segments[i];
+        value = value.slice(0, seg.start) + beforeMarker + value.slice(seg.start, seg.end) + afterMarker + value.slice(seg.end);
+      }
+      textarea.value = value;
+      const insertLen = segments.length * (beforeMarker.length + afterMarker.length);
+      textarea.selectionStart = selectionStart;
+      textarea.selectionEnd = selectionEnd + insertLen;
+    }
+
+    textarea.scrollTop = scrollTop;
+    textarea.dispatchEvent(new Event('input'));
+  }
+
+  function applySelectionFormatting(action) {
+    const textarea = $("raw-text-editor");
+    if (!textarea) return;
+    const segments = collectSelectionSegments(textarea);
+    if (!segments.length) return;
+
+    textarea.focus({ preventScroll: true });
+
+    switch (action) {
+      case 'bold':
+        applyMarkersForSelection(textarea, segments, '**', '**');
+        break;
+      case 'italic':
+        applyMarkersForSelection(textarea, segments, '*', '*');
+        break;
+      case 'bolditalic':
+        applyMarkersForSelection(textarea, segments, '***', '***');
+        break;
+      case 'align-left':
+        applyMarkersForSelection(textarea, segments, '<<< ', ' <<<');
+        break;
+      case 'align-center':
+        applyMarkersForSelection(textarea, segments, '||| ', ' |||');
+        break;
+      case 'align-right':
+        applyMarkersForSelection(textarea, segments, '>>> ', ' >>>');
+        break;
+      default:
+        break;
+    }
+  }
+
+  function initSelectionToolbar() {
+    const textarea = $("raw-text-editor");
+    const toolbar = $("selection-toolbar");
+    if (!textarea || !toolbar) return;
+
+    const hideToolbar = () => {
+      toolbar.classList.remove('visible');
+      toolbar.setAttribute('aria-hidden', 'true');
+    };
+
+    const updateToolbar = () => {
+      if (textarea.selectionStart === textarea.selectionEnd) {
+        hideToolbar();
+        return;
+      }
+      toolbar.classList.add('visible');
+      toolbar.setAttribute('aria-hidden', 'false');
+    };
+
+    const scheduleUpdate = () => {
+      requestAnimationFrame(updateToolbar);
+    };
+
+    textarea.addEventListener('select', scheduleUpdate);
+    textarea.addEventListener('keyup', scheduleUpdate);
+    textarea.addEventListener('mouseup', scheduleUpdate);
+    textarea.addEventListener('input', scheduleUpdate);
+    textarea.addEventListener('blur', hideToolbar);
+
+    toolbar.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+    });
+
+    toolbar.addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-format]');
+      if (!button) return;
+      event.preventDefault();
+      applySelectionFormatting(button.dataset.format);
+      scheduleUpdate();
+    });
   }
 
   function highlightThumb(index) {
@@ -2993,6 +3419,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
   }
 
   const OVERFLOW_SNIPPET_LIMIT = 20;
+  const OVERFLOW_TOLERANCE_PX = 4;
 
   function collectOverflowSnippets(container, containerRect) {
     const snippets = [];
@@ -3017,7 +3444,8 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       const rects = Array.from(range.getClientRects());
       range.detach?.();
       const isOverflowing = rects.some(rect =>
-        rect.bottom - containerRect.bottom > 1 || rect.right - containerRect.right > 1
+        rect.bottom - containerRect.bottom > OVERFLOW_TOLERANCE_PX ||
+        rect.right - containerRect.right > OVERFLOW_TOLERANCE_PX
       );
       if (isOverflowing) {
         const snippet = node.textContent.trim().replace(/\s+/g, ' ');
@@ -3045,8 +3473,8 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     const contentRect = content.getBoundingClientRect();
     if (!contentRect.width || !contentRect.height) return;
 
-    const overflowVert = content.scrollHeight - content.clientHeight > 1;
-    const overflowHoriz = content.scrollWidth - content.clientWidth > 1;
+    const overflowVert = content.scrollHeight - content.clientHeight > OVERFLOW_TOLERANCE_PX;
+    const overflowHoriz = content.scrollWidth - content.clientWidth > OVERFLOW_TOLERANCE_PX;
     if (!overflowVert && !overflowHoriz) return;
 
     const snippets = collectOverflowSnippets(content, contentRect);
@@ -3197,9 +3625,11 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     const restoreBtn = $("restore-btn");
     if (!restoreBtn) return;
     const hasPreviousSession = !!localStorage.getItem(PREVIOUS_SESSION_KEY);
+    const previousMeta = parseDeckIdentityMeta(localStorage.getItem(PREVIOUS_SESSION_META_KEY));
+    const restoreLabel = previousMeta?.label ? `Restore ${previousMeta.label}` : 'Restore most recently saved';
     restoreBtn.disabled = !hasPreviousSession;
-    restoreBtn.title = hasPreviousSession ? 'Restore most recently saved' : 'Nothing to restore yet';
-    restoreBtn.setAttribute('aria-label', hasPreviousSession ? 'Restore most recently saved slideshow' : 'Restore button disabled until another slideshow is saved');
+    restoreBtn.title = hasPreviousSession ? restoreLabel : 'Nothing to restore yet';
+    restoreBtn.setAttribute('aria-label', hasPreviousSession ? `${restoreLabel} slideshow` : 'Restore button disabled until another slideshow is saved');
   }
 
   function updateToggleHideButtonState() {
@@ -3228,8 +3658,10 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     const targetIndex = Math.max(0, Math.min(index + 1, totalSlides));
     updateGroundTruth('ADD_SLIDE', { index: targetIndex, content });
     await buildSlidesFromXMLDoc();
+    state.pendingThumbScrollIndex = targetIndex;
     await refreshThumbnails();
     showSlide(targetIndex);
+    setEditorStatus(`Slide added at position ${targetIndex + 1}.`);
   }
 
   async function removeSlideAt(index) {
@@ -3239,8 +3671,11 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     const nextIndex = clampedIndex >= totalSlides - 1 ? clampedIndex - 1 : clampedIndex;
     updateGroundTruth('DELETE_SLIDE', { index: clampedIndex });
     await buildSlidesFromXMLDoc();
+    const targetIndex = Math.max(0, nextIndex);
+    state.pendingThumbScrollIndex = targetIndex;
     await refreshThumbnails();
-    showSlide(Math.max(0, nextIndex), false, { skipEditorSave: true });
+    showSlide(targetIndex, false, { skipEditorSave: true });
+    setEditorStatus(`Slide deleted. Now viewing slide ${targetIndex + 1}.`);
   }
 
   function updateToggleCountButtonState() {
@@ -3455,11 +3890,24 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     try {
       const serializer = new XMLSerializer();
       const xmlString = serializer.serializeToString(state.xmlDoc);
-      const previous = localStorage.getItem(LAST_SESSION_KEY);
-      if (action === 'INIT' && previous && previous !== xmlString) {
-        localStorage.setItem(PREVIOUS_SESSION_KEY, previous);
+      const previousXml = localStorage.getItem(LAST_SESSION_KEY);
+      const previousMetaRaw = localStorage.getItem(LAST_SESSION_META_KEY);
+      const previousIdentity = parseDeckIdentityMeta(previousMetaRaw) || extractDeckIdentityFromXML(previousXml);
+      const currentIdentity = getDeckIdentityFromState();
+
+      if (previousXml && previousXml !== xmlString) {
+        if (!previousIdentity || previousIdentity.id !== currentIdentity.id) {
+          localStorage.setItem(PREVIOUS_SESSION_KEY, previousXml);
+          if (previousIdentity) {
+            localStorage.setItem(PREVIOUS_SESSION_META_KEY, JSON.stringify(previousIdentity));
+          } else {
+            localStorage.removeItem(PREVIOUS_SESSION_META_KEY);
+          }
+        }
       }
+
       localStorage.setItem(LAST_SESSION_KEY, xmlString);
+      localStorage.setItem(LAST_SESSION_META_KEY, JSON.stringify(currentIdentity));
       console.log('[localStorage] Session saved.');
     } catch (e) {
       console.error('[localStorage] Failed to save session:', e);
@@ -3698,10 +4146,19 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
 async function getThumbnailHTML(rawText, theme) {
   const slideElement = createSlideElement(rawText);
-  
+
   // Remove the hidden-in-presentation class for thumbnails
   slideElement.classList.remove('hidden-in-presentation');
-  
+
+  slideElement.querySelectorAll('iframe').forEach((iframe) => {
+    const wrapper = iframe.parentElement;
+    const placeholder = wrapper?.querySelector('.website-print-placeholder');
+    if (placeholder) {
+      placeholder.style.display = 'flex';
+    }
+    iframe.remove();
+  });
+
   const slideElementHTML = slideElement.outerHTML;
   
   // Get the theme CSS content
@@ -3923,15 +4380,19 @@ async function getThumbnailHTML(rawText, theme) {
       "|||": "text-align:center;",
     };
 
+    const buildAlignedFragment = (token, rawBody) => {
+      const inner = formatWithJustify(rawBody);
+      return `<div style="width:100%; ${INLINE_ALIGN[token]}">${inner}</div>`;
+    };
+
     // 1) Turn inline pairs like <<<text<<< into placeholders
     //    that will later become <p style="..."> (not <div>)
     const inlineMarkers = [];
-    const withInlinePlaceholders = text.replace(/(<<<|>>>|\|\|\|)([^\n]*?)\1/g, (_, tok, body) => {
+    const withInlinePlaceholders = text.replace(/(<<<|>>>|\|\|\|)([\s\S]*?)\1/g, (_, tok, body) => {
       const key = `__ALIGN_${inlineMarkers.length}__`;
       inlineMarkers.push({
         key,
-        // p + width:100% keeps BigText size (.large p) and spans the slide in flex
-        html: `<p style="width:100%; ${INLINE_ALIGN[tok]}">${escapeHtml(body)}</p>`,
+        html: buildAlignedFragment(tok, body),
       });
       return key;
     });
@@ -3963,11 +4424,11 @@ async function getThumbnailHTML(rawText, theme) {
     const flushBlock = (token) => {
       const bodyRaw = buf.join("\n");
       // Allow inline markers inside blocks too
-      const bodyWithPlaceholders = bodyRaw.replace(/(<<<|>>>|\|\|\|)([^\n]*?)\1/g, (_, tok, body) => {
+      const bodyWithPlaceholders = bodyRaw.replace(/(<<<|>>>|\|\|\|)([\s\S]*?)\1/g, (_, tok, body) => {
         const key = `__ALIGN_${inlineMarkers.length}__`;
         inlineMarkers.push({
           key,
-          html: `<p style="${INLINE_ALIGN[tok]}">${escapeHtml(body)}</p>`,
+          html: buildAlignedFragment(tok, body),
         });
         return key;
       });
@@ -4210,7 +4671,37 @@ case "Image": {
 }
           
         case "Columns": {
-          const parts = content.split(/^\s*---\s*$/m);
+          const rawLines = content.split(/\r?\n/);
+          const columnSegments = [];
+          let buffer = [];
+
+          const flushColumn = (makeDouble = false) => {
+            const raw = buffer.join('\n');
+            const trimmed = raw.trim();
+            if (!trimmed) {
+              if (makeDouble && columnSegments.length > 0) {
+                columnSegments[columnSegments.length - 1].double = true;
+              }
+              buffer = [];
+              return;
+            }
+            columnSegments.push({ raw, double: makeDouble });
+            buffer = [];
+          };
+
+          for (const rawLine of rawLines) {
+            if (/^\s*----\s*$/.test(rawLine)) {
+              flushColumn(true);
+              continue;
+            }
+            if (/^\s*---\s*$/.test(rawLine)) {
+              flushColumn(false);
+              continue;
+            }
+            buffer.push(rawLine);
+          }
+
+          flushColumn(false);
 
           // Allow extensions with optional ?query, data: URLs, and local pasted ids
 const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+|local-img-[^\s,]+)\s*(?:,\s*(.*))?$/i;
@@ -4270,8 +4761,8 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
             };
           };
 
-          const colsHtml = parts.map(part => {
-            const lines = part.trim().split(/\r?\n/);
+          const colsHtml = columnSegments.map(segment => {
+            const lines = segment.raw.trim().split(/\r?\n/);
 
             const blocks = [];
             let pendingText = '';
@@ -4322,6 +4813,9 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
                     <div class="caption">${plainTextToHtml(colCaption)}</div>
                   </div>`
                 );
+                if (colCaption) {
+                  hasTextBlock = true;
+                }
 
                 if (inlineInfo.afterHtml) {
                   blocks.push(inlineInfo.afterHtml);
@@ -4341,8 +4835,9 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
 
             const onlyImages = imageCount > 0 && !hasTextBlock;
             const cls  = onlyImages ? 'column images-only' : 'column';
+            const classes = segment.double ? `${cls} column--double` : cls;
             const data = onlyImages ? ` data-imgcount="${imageCount}"` : '';
-            return `<div class="${cls}"${data}>${blocks.join('')}</div>`;
+            return `<div class="${classes}"${data}>${blocks.join('')}</div>`;
           }).join('');
 
           innerHTML += `<div class="columns">${colsHtml}</div>`;
