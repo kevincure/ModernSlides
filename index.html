@@ -1478,6 +1478,7 @@ Title: New slide
                                 "PrintNote", "Break", "Logo"];
   const ALL_DIRECTIVES = [...METADATA_DIRECTIVES, ...CONTENT_DIRECTIVES];
   const INLINE_MODE_DIRECTIVE_RE = /\[\[([A-Za-z][A-Za-z0-9.]*)(?::?\s*([^\]]+))?\]\]/g;
+  const ALIGNMENT_MARKERS = ['<<<', '|||', '>>>'];
   const MIN_TEXT_SCALE = 0.2;
   const MAX_TEXT_SCALE = 5;
   const DEFAULT_TEXT_SCALE = 1;
@@ -3198,7 +3199,8 @@ const slideTemplate = (slideHTML) => `
       combined = false,
       padWithSpaces = false,
       extraBeforeVariants = [],
-      extraAfterVariants = []
+      extraAfterVariants = [],
+      alignTokens = null
     } = config;
 
     const beforeMarker = padWithSpaces ? `${open} ` : open;
@@ -3209,6 +3211,17 @@ const slideTemplate = (slideHTML) => `
     if (!afterVariants.includes(close)) afterVariants.push(close);
     const scrollTop = textarea.scrollTop;
     let value = textarea.value;
+    const alignTokensSet = Array.isArray(alignTokens) && alignTokens.length
+      ? new Set(alignTokens)
+      : null;
+
+    const identifyAlignMarker = (marker) => {
+      if (!marker || !alignTokensSet) return null;
+      for (const token of alignTokensSet) {
+        if (marker.includes(token)) return token;
+      }
+      return null;
+    };
 
     const sliceMatches = (source, start, markerList) => {
       if (start < 0) return false;
@@ -3224,19 +3237,22 @@ const slideTemplate = (slideHTML) => `
     };
 
     const removeRange = (source, start, end, beforeList, afterList) => {
-      let from = start;
-      let to = end;
       const beforeMarker = beforeList.find(marker => marker && start >= marker.length && source.slice(start - marker.length, start) === marker);
       const afterMarker = afterList.find(marker => marker && source.slice(end, end + marker.length) === marker);
       if (!beforeMarker || !afterMarker) {
         return null;
       }
-      from -= beforeMarker.length;
-      to += afterMarker.length;
+
+      const beforeStart = start - beforeMarker.length;
+      const afterEnd = end + afterMarker.length;
+      const inner = source.slice(start, end);
+      const value = source.slice(0, beforeStart) + inner + source.slice(afterEnd);
       return {
-        value: source.slice(0, from) + source.slice(to),
-        selectionStart: start - beforeMarker.length,
-        selectionEnd: end - beforeMarker.length
+        value,
+        selectionStart: beforeStart,
+        selectionEnd: beforeStart + inner.length,
+        removedBefore: beforeMarker,
+        removedAfter: afterMarker
       };
     };
 
@@ -3244,23 +3260,92 @@ const slideTemplate = (slideHTML) => `
       const first = segments[0];
       const last = segments[segments.length - 1];
       const removeResult = removeRange(value, first.start, last.end, beforeVariants, afterVariants);
+      let workingValue = value;
+      let selectionStart = first.start;
+      let selectionEnd = last.end;
+      const removedAlign = removeResult
+        ? (identifyAlignMarker(removeResult.removedBefore) || identifyAlignMarker(removeResult.removedAfter))
+        : null;
 
       if (removeResult) {
-        textarea.value = removeResult.value;
-        textarea.selectionStart = removeResult.selectionStart;
-        textarea.selectionEnd = removeResult.selectionEnd;
-      } else {
-        const insertionStart = first.start;
-        value = value.slice(0, insertionStart) + beforeMarker + value.slice(insertionStart);
-        const closingPos = last.end + beforeMarker.length;
-        value = value.slice(0, closingPos) + afterMarker + value.slice(closingPos);
-        textarea.value = value;
-        const selectionStart = insertionStart + beforeMarker.length;
-        const selectionEnd = closingPos;
+        workingValue = removeResult.value;
+        selectionStart = removeResult.selectionStart;
+        selectionEnd = removeResult.selectionEnd;
+      }
+
+      if (alignTokensSet) {
+        const shouldInsert = removedAlign !== open;
+        if (shouldInsert) {
+          const insertionStart = selectionStart;
+          const closingPos = selectionEnd;
+          workingValue = workingValue.slice(0, insertionStart)
+            + beforeMarker
+            + workingValue.slice(insertionStart);
+          const afterOpenEnd = closingPos + beforeMarker.length;
+          workingValue = workingValue.slice(0, afterOpenEnd)
+            + afterMarker
+            + workingValue.slice(afterOpenEnd);
+          selectionStart = insertionStart + beforeMarker.length;
+          selectionEnd = afterOpenEnd;
+        }
+
+        textarea.value = workingValue;
         textarea.selectionStart = selectionStart;
         textarea.selectionEnd = selectionEnd;
+      } else if (removeResult) {
+        textarea.value = workingValue;
+        textarea.selectionStart = selectionStart;
+        textarea.selectionEnd = selectionEnd;
+      } else {
+        const insertionStart = first.start;
+        workingValue = workingValue.slice(0, insertionStart) + beforeMarker + workingValue.slice(insertionStart);
+        const closingPos = last.end + beforeMarker.length;
+        workingValue = workingValue.slice(0, closingPos) + afterMarker + workingValue.slice(closingPos);
+        textarea.value = workingValue;
+        const selectionStartAfter = insertionStart + beforeMarker.length;
+        textarea.selectionStart = selectionStartAfter;
+        textarea.selectionEnd = closingPos;
       }
+
+      value = textarea.value;
     } else {
+      segments = segments.map(seg => {
+        let start = seg.start;
+        let end = seg.end;
+
+        for (const marker of ALIGNMENT_MARKERS) {
+          const leadingWithSpace = `${marker} `;
+          if (value.slice(start, start + leadingWithSpace.length) === leadingWithSpace) {
+            start += leadingWithSpace.length;
+            continue;
+          }
+          if (value.slice(start, start + marker.length) === marker) {
+            start += marker.length;
+          }
+        }
+
+        for (const marker of ALIGNMENT_MARKERS) {
+          const trailingWithSpace = ` ${marker}`;
+          if (end - trailingWithSpace.length >= start && value.slice(end - trailingWithSpace.length, end) === trailingWithSpace) {
+            end -= trailingWithSpace.length;
+            continue;
+          }
+          if (end - marker.length >= start && value.slice(end - marker.length, end) === marker) {
+            end -= marker.length;
+          }
+        }
+
+        if (start >= end) {
+          return null;
+        }
+        return { start, end };
+      }).filter(Boolean);
+
+      if (!segments.length) {
+        textarea.scrollTop = scrollTop;
+        return;
+      }
+
       const existingWraps = segments.map(seg => {
         const beforeMatch = beforeVariants.find(marker => marker && value.slice(seg.start - marker.length, seg.start) === marker);
         const afterMatch = afterVariants.find(marker => marker && value.slice(seg.end, seg.end + marker.length) === marker);
@@ -3390,8 +3475,9 @@ const slideTemplate = (slideHTML) => `
           close: '<<<',
           combined: true,
           padWithSpaces: true,
-          extraBeforeVariants: ['<<<'],
-          extraAfterVariants: ['<<<']
+          extraBeforeVariants: ['||| ', '>>> ', '<<<', '|||', '>>>'],
+          extraAfterVariants: [' |||', ' >>>', '<<<', '|||', '>>>'],
+          alignTokens: ALIGNMENT_MARKERS
         });
         break;
       case 'align-center':
@@ -3400,8 +3486,9 @@ const slideTemplate = (slideHTML) => `
           close: '|||',
           combined: true,
           padWithSpaces: true,
-          extraBeforeVariants: ['|||'],
-          extraAfterVariants: ['|||']
+          extraBeforeVariants: ['<<< ', '>>> ', '<<<', '|||', '>>>'],
+          extraAfterVariants: [' <<<', ' >>>', '<<<', '|||', '>>>'],
+          alignTokens: ALIGNMENT_MARKERS
         });
         break;
       case 'align-right':
@@ -3410,8 +3497,9 @@ const slideTemplate = (slideHTML) => `
           close: '>>>',
           combined: true,
           padWithSpaces: true,
-          extraBeforeVariants: ['>>>'],
-          extraAfterVariants: ['>>>']
+          extraBeforeVariants: ['<<< ', '||| ', '<<<', '|||', '>>>'],
+          extraAfterVariants: [' <<<', ' |||', '<<<', '|||', '>>>'],
+          alignTokens: ALIGNMENT_MARKERS
         });
         break;
       default:
@@ -5087,8 +5175,9 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
               const inlineInfo = processInlineModesForImageLine(rawLine, currentMode);
               const sanitized = inlineInfo.sanitizedLine.trim();
               const match = sanitized ? sanitized.match(imgLineRe) : null;
+              const rawMatch = !match ? rawLine.trim().match(imgLineRe) : null;
 
-              if (match) {
+              if (match || rawMatch) {
                 flushText();
 
                 if (inlineInfo.beforeHtml) {
@@ -5099,8 +5188,9 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
                 }
 
                 imageCount++;
-                const imageUrl = match[1].trim();
-                const colCaption = (match[2] || '').trim();
+                const imageGroups = match || rawMatch;
+                const imageUrl = imageGroups[1].trim();
+                const colCaption = (imageGroups[2] || '').trim();
                 const resolvedUrl = resolveImagePath(imageUrl, window.presentationBaseUrl);
 
                 let captionHtml = '';
@@ -5213,10 +5303,10 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
   
   const $ = (id) => document.getElementById(id);
 
-  const SPELLCHECK_GUARD_CHAR = String.fromCodePoint(0x2060);
+  const SPELLCHECK_GUARD_CHAR = String.fromCodePoint(0x200B);
   const SPELLCHECK_GUARD_CODE = SPELLCHECK_GUARD_CHAR.codePointAt(0);
   const SPELLCHECK_GUARD_STRIP_RE = new RegExp(SPELLCHECK_GUARD_CHAR, 'g');
-  const COMMAND_GUARD_REGEX = /\b(?:BigText|SmallText|TinyText)(?=\s*:|\]\])/gi;
+  const COMMAND_GUARD_REGEX = /\b(BigText|SmallText|TinyText)(?=\s*:|\]\])/gi;
 
   const createCommandGuardRegex = () => new RegExp(COMMAND_GUARD_REGEX.source, 'gi');
 
@@ -5231,7 +5321,11 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
     const regex = createCommandGuardRegex();
     let match;
     while ((match = regex.exec(cleanText)) !== null) {
-      positions.push(match.index + match[0].length);
+      const command = match[1] || match[0];
+      const lower = command.toLowerCase();
+      const splitIndex = lower.indexOf('text');
+      const guardOffset = splitIndex > 0 ? splitIndex : command.length;
+      positions.push(match.index + guardOffset);
     }
     return positions;
   }
