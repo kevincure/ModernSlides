@@ -136,6 +136,7 @@ body {
   padding: 4cqw;
   display: flex;
   position: relative;
+  text-align: left;
 }
 
 .slide-content.has-background-image {
@@ -194,7 +195,7 @@ body {
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
   line-height: 1.6;
   margin-bottom: calc(var(--base-font-size) * 0.3);
-  text-align: left;
+  text-align: inherit;
 }
 
 .slide-content .text-center { text-align: center; }
@@ -202,10 +203,11 @@ body {
 .slide-content .large {
   --text-scale: 1.6;
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
+  text-align: center;
 }
 
 .slide-content .large p {
-  text-align: center;
+  text-align: inherit;
   margin: calc(var(--base-font-size) * 0.5) auto;
 }
 
@@ -2064,8 +2066,13 @@ const ImageStore = {
       updateSaveButtonGlow();
 
       // Update the textarea if we're editing this slide
-      if (state.editMode && $("raw-text-editor")) {
-        $("raw-text-editor").value = newRawText;
+      if (state.editMode) {
+        const textarea = $("raw-text-editor");
+        if (textarea) {
+          textarea.value = addCommandGuardsToText(newRawText);
+          textarea.selectionStart = textarea.selectionEnd = 0;
+          validateAndUpdateTextarea();
+        }
       }
     };
 
@@ -3243,12 +3250,15 @@ const slideTemplate = (slideHTML) => `
         textarea.selectionStart = removeResult.selectionStart;
         textarea.selectionEnd = removeResult.selectionEnd;
       } else {
-        value = value.slice(0, first.start) + beforeMarker + value.slice(first.start);
+        const insertionStart = first.start;
+        value = value.slice(0, insertionStart) + beforeMarker + value.slice(insertionStart);
         const closingPos = last.end + beforeMarker.length;
         value = value.slice(0, closingPos) + afterMarker + value.slice(closingPos);
         textarea.value = value;
-        textarea.selectionStart = first.start;
-        textarea.selectionEnd = closingPos + afterMarker.length;
+        const selectionStart = insertionStart + beforeMarker.length;
+        const selectionEnd = closingPos;
+        textarea.selectionStart = selectionStart;
+        textarea.selectionEnd = selectionEnd;
       }
     } else {
       const existingWraps = segments.map(seg => {
@@ -3486,12 +3496,18 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
   function loadTextareaForCurrentSlide() {
     // Always load directly from the single source of truth: the xmlDoc.
-    $("raw-text-editor").value = getRawTextForSlide(state.currentAbsoluteSlideIndex);
+    const textarea = $("raw-text-editor");
+    if (!textarea) return;
+    const raw = getRawTextForSlide(state.currentAbsoluteSlideIndex);
+    textarea.value = addCommandGuardsToText(raw);
+    textarea.selectionStart = textarea.selectionEnd = 0;
     validateAndUpdateTextarea();
   }
 
   async function validateAndUpdateTextarea() {
-    const rawText = $("raw-text-editor").value;
+    const textarea = $("raw-text-editor");
+    if (!textarea) return;
+    const rawText = normalizeTextareaCommandGuards(textarea);
 
     // Update the live thumbnail preview without mutating XML.
     const thumbIframe = document.querySelector(
@@ -3596,7 +3612,9 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     if (!rawNode) return false;
 
     const previous = rawNode.textContent || '';
-    const next = typeof sourceText === 'string' ? sourceText : previous;
+    const next = typeof sourceText === 'string'
+      ? stripCommandSpellcheckGuards(sourceText)
+      : previous;
     if (previous === next) return false;
 
     recordSnapshot(reason);
@@ -4751,11 +4769,11 @@ async function getThumbnailHTML(rawText, theme) {
 
     switch (normalized.name) {
       case 'BigText':
-        return `<div class="large" spellcheck="false">${html}</div>`;
+        return `<div class="large">${html}</div>`;
       case 'SmallText':
-        return `<div class="small" spellcheck="false">${html}</div>`;
+        return `<div class="small">${html}</div>`;
       case 'TinyText':
-        return `<div class="tiny" spellcheck="false">${html}</div>`;
+        return `<div class="tiny">${html}</div>`;
       case 'Text': {
         const scale = normalized.textScale ?? DEFAULT_TEXT_SCALE;
         if (Math.abs(scale - DEFAULT_TEXT_SCALE) > 1e-6) {
@@ -5083,9 +5101,7 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
                 imageCount++;
                 const imageUrl = match[1].trim();
                 const colCaption = (match[2] || '').trim();
-                const resolvedUrl = window.presentationBaseUrl
-                   ? resolveImagePath(imageUrl, window.presentationBaseUrl)
-                   : imageUrl;
+                const resolvedUrl = resolveImagePath(imageUrl, window.presentationBaseUrl);
 
                 let captionHtml = '';
                 let captionMode = inlineInfo.mode;
@@ -5196,6 +5212,93 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
      ═══════════════════════════════════════════════════════════════ */
   
   const $ = (id) => document.getElementById(id);
+
+  const SPELLCHECK_GUARD_CHAR = String.fromCodePoint(0x2060);
+  const SPELLCHECK_GUARD_CODE = SPELLCHECK_GUARD_CHAR.codePointAt(0);
+  const SPELLCHECK_GUARD_STRIP_RE = new RegExp(SPELLCHECK_GUARD_CHAR, 'g');
+  const COMMAND_GUARD_REGEX = /\b(?:BigText|SmallText|TinyText)(?=\s*:|\]\])/gi;
+
+  const createCommandGuardRegex = () => new RegExp(COMMAND_GUARD_REGEX.source, 'gi');
+
+  function stripCommandSpellcheckGuards(text) {
+    if (!text) return '';
+    return text.replace(SPELLCHECK_GUARD_STRIP_RE, '');
+  }
+
+  function getCommandGuardPositions(cleanText) {
+    if (!cleanText) return [];
+    const positions = [];
+    const regex = createCommandGuardRegex();
+    let match;
+    while ((match = regex.exec(cleanText)) !== null) {
+      positions.push(match.index + match[0].length);
+    }
+    return positions;
+  }
+
+  function insertCommandGuards(cleanText, positions) {
+    if (!positions.length) return cleanText;
+    let result = '';
+    let lastIndex = 0;
+    for (const pos of positions) {
+      result += cleanText.slice(lastIndex, pos) + SPELLCHECK_GUARD_CHAR;
+      lastIndex = pos;
+    }
+    result += cleanText.slice(lastIndex);
+    return result;
+  }
+
+  function mapCleanIndexToGuarded(cleanIndex, positions) {
+    if (!positions.length) return cleanIndex;
+    let offset = 0;
+    for (const pos of positions) {
+      if (pos <= cleanIndex) {
+        offset++;
+      } else {
+        break;
+      }
+    }
+    return cleanIndex + offset;
+  }
+
+  function countGuardsBefore(text, index) {
+    if (!text || index <= 0) return 0;
+    let count = 0;
+    const limit = Math.min(index, text.length);
+    for (let i = 0; i < limit; i++) {
+      if (text.codePointAt(i) === SPELLCHECK_GUARD_CODE) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  function addCommandGuardsToText(text) {
+    if (!text) return '';
+    const clean = stripCommandSpellcheckGuards(text);
+    return insertCommandGuards(clean, getCommandGuardPositions(clean));
+  }
+
+  function normalizeTextareaCommandGuards(textarea) {
+    if (!textarea) return '';
+    const originalValue = textarea.value || '';
+    const cleanValue = stripCommandSpellcheckGuards(originalValue);
+    const guardPositions = getCommandGuardPositions(cleanValue);
+    const guardedValue = insertCommandGuards(cleanValue, guardPositions);
+
+    if (guardedValue !== originalValue) {
+      const selectionStart = textarea.selectionStart ?? originalValue.length;
+      const selectionEnd = textarea.selectionEnd ?? originalValue.length;
+      const cleanStart = selectionStart - countGuardsBefore(originalValue, selectionStart);
+      const cleanEnd = selectionEnd - countGuardsBefore(originalValue, selectionEnd);
+
+      textarea.value = guardedValue;
+      textarea.selectionStart = mapCleanIndexToGuarded(cleanStart, guardPositions);
+      textarea.selectionEnd = mapCleanIndexToGuarded(cleanEnd, guardPositions);
+    }
+
+    return cleanValue;
+  }
   
   const escapeHtml = (s) =>
     s.replace(/[&<>"']/g, c =>
@@ -5412,13 +5515,6 @@ function wrapSlideshowFor16x9() {
     const targetAbsIndex = Math.max(0, Math.min(requestedIndex, maxIndex));
     state.currentAbsoluteSlideIndex = targetAbsIndex;
 
-    if (state.editMode) {
-      const editor = $("raw-text-editor");
-      if (editor) {
-        editor.value = getRawTextForSlide(targetAbsIndex);
-      }
-    }
-
     const visibleIndex = resolveVisibleIndexForAbsolute(targetAbsIndex);
     if (state.editMode) {
       showSlide(targetAbsIndex, false);
@@ -5437,7 +5533,9 @@ function wrapSlideshowFor16x9() {
       requestWakeLock();
     }
 
-    $("raw-text-editor").value = getRawTextForSlide(state.currentAbsoluteSlideIndex);
+    if (state.editMode) {
+      loadTextareaForCurrentSlide();
+    }
   }
   
   // Main entry point
