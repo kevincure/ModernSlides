@@ -136,6 +136,7 @@ body {
   padding: 4cqw;
   display: flex;
   position: relative;
+  text-align: left;
 }
 
 .slide-content.has-background-image {
@@ -194,7 +195,7 @@ body {
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
   line-height: 1.6;
   margin-bottom: calc(var(--base-font-size) * 0.3);
-  text-align: left;
+  text-align: inherit;
 }
 
 .slide-content .text-center { text-align: center; }
@@ -202,10 +203,11 @@ body {
 .slide-content .large {
   --text-scale: 1.6;
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
+  text-align: center;
 }
 
 .slide-content .large p {
-  text-align: center;
+  text-align: inherit;
   margin: calc(var(--base-font-size) * 0.5) auto;
 }
 
@@ -254,6 +256,10 @@ body {
   min-height: 0;
   justify-content: center;
   overflow: visible;
+}
+
+.slide-content .columns .column.column--double {
+  flex: 2;
 }
 
 .slide-content .columns .column.images-only[data-imgcount]:not([data-imgcount="1"]) {
@@ -450,6 +456,42 @@ body:not(.is-edit-mode) .overflow-indicator {
   flex-direction: column;
   padding: 1rem;
   overflow: hidden;
+  position: relative;
+}
+
+.selection-toolbar {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  display: none;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--editor-border-color);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+}
+
+.selection-toolbar.visible {
+  display: inline-flex;
+  align-items: center;
+}
+
+.selection-toolbar button {
+  border: 1px solid var(--editor-border-color);
+  background: var(--editor-input-bg);
+  color: var(--editor-input-text);
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.selection-toolbar button:hover,
+.selection-toolbar button:focus {
+  border-color: var(--editor-accent-color);
+  color: var(--editor-accent-color);
 }
 
 /* ----------------------------- */
@@ -592,6 +634,22 @@ body:not(.is-edit-mode) .overflow-indicator {
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow: auto;
+}
+
+#overflow-measure-stage {
+  position: fixed;
+  top: -3000px;
+  left: -3000px;
+  width: 1280px;
+  height: 720px;
+  pointer-events: none;
+  visibility: hidden;
+  z-index: -1;
+}
+
+#overflow-measure-stage .presentation-scaler {
+  width: 100%;
+  height: 100%;
 }
 
 .toolbar {
@@ -758,6 +816,45 @@ body:not(.is-edit-mode) .overflow-indicator {
   cursor: pointer;
   margin-top: 1rem;
   float: right;
+}
+
+.modal-box label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.modal-box input[type="text"] {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid var(--editor-input-border);
+  background-color: var(--editor-input-bg);
+  color: var(--editor-input-text);
+  font-family: var(--editor-ui-font-family);
+  font-size: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.modal-actions button {
+  float: none;
+  margin-top: 0;
+}
+
+.modal-actions .secondary-action {
+  background: transparent;
+  color: var(--editor-accent-color);
+  border: 1px solid var(--editor-accent-color);
+}
+
+.modal-actions .secondary-action:hover {
+  background: color-mix(in srgb, var(--editor-accent-color) 15%, transparent);
 }
 
 /* ----------------------------- */
@@ -1124,7 +1221,15 @@ body:not(.is-edit-mode) .overflow-indicator {
   <div id="editor">
     <div id="thumbs"></div>
     <div id="editor-main">
-      <textarea id="raw-text-editor" placeholder="Enter slide content here. Click Help for syntax."></textarea>
+      <textarea id="raw-text-editor" placeholder="Enter slide content here. Click Help for syntax." spellcheck="true" lang="en"></textarea>
+      <div id="selection-toolbar" class="selection-toolbar" role="toolbar" aria-hidden="true">
+        <button type="button" data-format="align-left" title="Align left">⇤</button>
+        <button type="button" data-format="align-center" title="Align center">↔</button>
+        <button type="button" data-format="align-right" title="Align right">⇥</button>
+        <button type="button" data-format="bold" title="Bold">B</button>
+        <button type="button" data-format="italic" title="Italic">I</button>
+        <button type="button" data-format="bolditalic" title="Bold Italic">BI</button>
+      </div>
       <div class="toolbar">
         <button id="add-btn"       title="New Slide">      <i class="fa-solid fa-plus"></i></button>
         <button id="del-btn"       title="Delete Slide">   <i class="fa-solid fa-minus"></i></button>
@@ -1247,7 +1352,7 @@ body:not(.is-edit-mode) .overflow-indicator {
       # - Undo and Redo are next to the style selector in the toolbar.
       # - When a thumbnail is highlighted you can use the + / - buttons on it to add or delete slides.
       # - 9 different styles are given, but you can create your own also
-      # - you can add a bullet point by typing z:
+      # - you can add a bullet point by pressing Ctrl+B.
       # - If you want images that are not web-linked, you can paste images into the textbox, and when you download, it will include those images. Keep all in the same folder wherever you store your offline slide text and images.
       </pre>
     </div>
@@ -1260,6 +1365,18 @@ body:not(.is-edit-mode) .overflow-indicator {
     <h3>Manage Images</h3>
     <p>Images pasted into this browser (IndexedDB). Delete unused ones to free space.</p>
     <div id="image-list" style="max-height:400px;overflow:auto;margin-top:1rem;"></div>
+  </div>
+</div>
+
+<div id="new-deck-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="new-deck-modal-title">
+  <div class="modal-box">
+    <h3 id="new-deck-modal-title">Name your new slideshow</h3>
+    <label for="new-deck-name">Deck name</label>
+    <input id="new-deck-name" type="text" maxlength="120" placeholder="New Presentation" />
+    <div class="modal-actions">
+      <button id="cancel-new-deck" type="button" class="secondary-action">Cancel</button>
+      <button id="confirm-new-deck" type="button" class="primary-action">Create</button>
+    </div>
   </div>
 </div>
 
@@ -1361,11 +1478,14 @@ Title: New slide
                                 "PrintNote", "Break", "Logo"];
   const ALL_DIRECTIVES = [...METADATA_DIRECTIVES, ...CONTENT_DIRECTIVES];
   const INLINE_MODE_DIRECTIVE_RE = /\[\[([A-Za-z][A-Za-z0-9.]*)(?::?\s*([^\]]+))?\]\]/g;
+  const ALIGNMENT_MARKERS = ['<<<', '|||', '>>>'];
   const MIN_TEXT_SCALE = 0.2;
   const MAX_TEXT_SCALE = 5;
   const DEFAULT_TEXT_SCALE = 1;
   const LAST_SESSION_KEY = 'modernSlides_lastSession';
   const PREVIOUS_SESSION_KEY = 'modernSlides_previousSession';
+  const LAST_SESSION_META_KEY = 'modernSlides_lastSessionMeta';
+  const PREVIOUS_SESSION_META_KEY = 'modernSlides_previousSessionMeta';
   const DEFAULT_NEW_SLIDE_CONTENT = "Title: New Slide\n\nText: Edit this content.";
 
   function clampTextScale(value) {
@@ -1483,6 +1603,7 @@ Title: New slide
     draggedThumbIndex: null,
     placeholder: null,
     thumbnailRefreshPromise: null,
+    pendingThumbScrollIndex: null,
 
     // Overflow measurement
     pendingOverflowFrame: null,
@@ -1498,6 +1619,62 @@ Title: New slide
     statusTimeout: null,
     lastStatusMessage: ''
   };
+
+  function sanitizeDeckName(input) {
+    const fallback = 'New Presentation';
+    const cleaned = (input ?? '').replace(/[\r\n]+/g, ' ').trim();
+    return cleaned || fallback;
+  }
+
+  function escapeAttributeValue(value) {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/'/g, '&apos;');
+  }
+
+  function buildNewPresentationXML(name) {
+    const cleanName = sanitizeDeckName(name);
+    const escapedAttr = escapeAttributeValue(cleanName);
+    let xml = MINIMAL_NEW_XML.replace(/title="[^"]*"/, `title="${escapedAttr}"`);
+    xml = xml.replace(/Title: [^\r\n]*/, `Title: ${cleanName}`);
+    return xml;
+  }
+
+  function getDeckIdentityFromState() {
+    const titleAttr = state.xmlDoc?.documentElement?.getAttribute('title');
+    const fallbackName = state.currentFilename;
+    const name = sanitizeDeckName(titleAttr || fallbackName);
+    return { id: name.toLowerCase(), label: name };
+  }
+
+  function parseDeckIdentityMeta(raw) {
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.id === 'string' && typeof parsed.label === 'string') {
+        return parsed;
+      }
+    } catch (err) {}
+    return null;
+  }
+
+  function extractDeckIdentityFromXML(xmlString) {
+    if (!xmlString) return null;
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xmlString, 'text/xml');
+      if (doc.getElementsByTagName('parsererror').length > 0) return null;
+      const titleAttr = doc.documentElement?.getAttribute('title');
+      if (!titleAttr) return null;
+      const name = sanitizeDeckName(titleAttr);
+      return { id: name.toLowerCase(), label: name };
+    } catch (err) {
+      return null;
+    }
+  }
 
 
 /* ────────────────────────────────
@@ -1658,6 +1835,7 @@ const ImageStore = {
      ═══════════════════════════════════════════════════════════════ */
 
   function setupEventHandlers() {
+    initSelectionToolbar();
     // ensure print is small pdf w/ embedded websites
     window.addEventListener('beforeprint', () => {
       document.querySelectorAll('.slide iframe').forEach((f) => {
@@ -1889,8 +2067,13 @@ const ImageStore = {
       updateSaveButtonGlow();
 
       // Update the textarea if we're editing this slide
-      if (state.editMode && $("raw-text-editor")) {
-        $("raw-text-editor").value = newRawText;
+      if (state.editMode) {
+        const textarea = $("raw-text-editor");
+        if (textarea) {
+          textarea.value = addCommandGuardsToText(newRawText);
+          textarea.selectionStart = textarea.selectionEnd = 0;
+          validateAndUpdateTextarea();
+        }
       }
     };
 
@@ -1928,6 +2111,10 @@ $("download-txt-btn").onclick = async () => {
       await w.write(new Blob([fileContents], { type: 'text/plain' }));
       await w.close();
     } catch (err) {
+      if (err?.name === 'AbortError') {
+        console.info('Text download cancelled by user.');
+        return;
+      }
       console.warn("Save picker failed; falling back to anchor download.", err);
       const blob = new Blob([fileContents], { type: 'text/plain' });
       const a = Object.assign(document.createElement('a'), {
@@ -1972,6 +2159,10 @@ $("download-txt-btn").onclick = async () => {
       await w.write(zipBlob);
       await w.close();
     } catch (err) {
+      if (err?.name === 'AbortError') {
+        console.info('ZIP download cancelled by user.');
+        return;
+      }
       console.warn("Save picker failed; falling back to anchor ZIP download.", err);
       const a = Object.assign(document.createElement('a'), {
         href: URL.createObjectURL(zipBlob),
@@ -2032,11 +2223,81 @@ $("download-txt-btn").onclick = async () => {
       }, 1000);
     };
 
+    const newDeckModal = $("new-deck-modal");
+    const newDeckInput = $("new-deck-name");
+    const cancelNewDeckBtn = $("cancel-new-deck");
+    const confirmNewDeckBtn = $("confirm-new-deck");
+
+    const closeNewDeckModal = () => {
+      newDeckModal?.classList.remove('active');
+    };
+
+    const handleCreateNewDeck = () => {
+      const desiredName = sanitizeDeckName(newDeckInput ? newDeckInput.value : '');
+      const xml = buildNewPresentationXML(desiredName);
+      closeNewDeckModal();
+      window.presentationBaseUrl = undefined;
+      init(xml, { fileName: desiredName, slideIndex: 0, reason: 'new' });
+    };
+
+    if (cancelNewDeckBtn) {
+      cancelNewDeckBtn.onclick = () => {
+        closeNewDeckModal();
+      };
+    }
+
+    if (confirmNewDeckBtn) {
+      confirmNewDeckBtn.onclick = () => {
+        handleCreateNewDeck();
+      };
+    }
+
+    if (newDeckInput) {
+      newDeckInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          handleCreateNewDeck();
+        } else if (event.key === 'Escape') {
+          event.preventDefault();
+          closeNewDeckModal();
+        }
+      });
+    }
+
+    if (newDeckModal) {
+      newDeckModal.addEventListener('click', (event) => {
+        if (event.target === newDeckModal) {
+          closeNewDeckModal();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && newDeckModal.classList.contains('active')) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeNewDeckModal();
+        }
+      }, true);
+    }
+
+    const openNewDeckModal = () => {
+      if (!newDeckModal) {
+        handleCreateNewDeck();
+        return;
+      }
+      newDeckModal.classList.add('active');
+      if (newDeckInput) {
+        newDeckInput.value = sanitizeDeckName('');
+        setTimeout(() => {
+          newDeckInput.focus();
+          newDeckInput.select();
+        }, 0);
+      }
+    };
+
     // New presentation button
     $("new-presentation-btn").onclick = () => {
-      const proceed = confirm('Start a new slideshow? This will replace the current deck in memory. Download first if you need a backup.');
-      if (!proceed) return;
-      init(MINIMAL_NEW_XML, { fileName: 'New Presentation', slideIndex: 0, reason: 'new' });
+      openNewDeckModal();
     };
 
     // Load presentation button
@@ -2066,12 +2327,14 @@ $("download-txt-btn").onclick = async () => {
       if (!btn || btn.disabled) return;
 
       const previousSession = localStorage.getItem(PREVIOUS_SESSION_KEY);
+      const previousMeta = parseDeckIdentityMeta(localStorage.getItem(PREVIOUS_SESSION_META_KEY));
       if (!previousSession) {
         updateRestoreButtonState();
         return;
       }
 
-      const proceed = confirm('Restore the last saved slideshow? This will replace the deck you are currently editing.');
+      const label = previousMeta?.label || 'the previous deck';
+      const proceed = confirm(`Restore ${label}? This will replace the deck you are currently editing.`);
       if (!proceed) return;
 
       try {
@@ -2174,20 +2437,46 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
 
     // allow shortcuts
     $("raw-text-editor").addEventListener('keydown', (e) => {
+      const textarea = e.target;
+
+      const isBulletShortcut = (e.key === 'b' || e.key === 'B') && (e.ctrlKey || e.metaKey);
+      if (isBulletShortcut) {
+        e.preventDefault();
+
+        const { selectionStart, value } = textarea;
+        const bullet = '• ';
+        const alreadyPresent =
+          selectionStart >= bullet.length &&
+          value.slice(selectionStart - bullet.length, selectionStart) === bullet;
+
+        if (alreadyPresent) {
+          textarea.selectionStart = textarea.selectionEnd = selectionStart;
+          return;
+        }
+
+        textarea.value =
+          value.slice(0, selectionStart) +
+          bullet +
+          value.slice(selectionStart);
+        const newCaret = selectionStart + bullet.length;
+        textarea.selectionStart = textarea.selectionEnd = newCaret;
+        textarea.dispatchEvent(new Event('input'));
+        return;
+      }
+
       // Check if user just typed a colon after a single letter at line start
       if (e.key !== ':') return;
-      
-      const textarea = e.target;
+
       const cursorPos = textarea.selectionStart;
       const textBefore = textarea.value.substring(0, cursorPos);
-      
+
       // Check if we're at the start of a line with just a single letter
       const lines = textBefore.split('\n');
       const currentLine = lines[lines.length - 1];
-      
+
       // Match single letter at start of line
       if (currentLine.length !== 1) return;
-      
+
       const letter = currentLine;
       const shortcuts = {
         'b': 'BigText',
@@ -2201,28 +2490,27 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
         'h': 'Header',
         't': 'Title',
         'x': 'Text',
-        'z': '• ',
         'P': 'PrintNote',
         'S': 'SpeakerNote',
         'F': 'FullScreenImage',
         'B': 'Background'
       };
-      
+
       if (shortcuts[letter]) {
         e.preventDefault();
-        
+
         // Replace the letter with the full directive
         const lineStartPos = cursorPos - 1;
         const before = textarea.value.substring(0, lineStartPos);
         const after = textarea.value.substring(cursorPos);
-        
-        const precomposed = new Set(['C','T','z']);
+
+        const precomposed = new Set(['C','T']);
         const insertion = precomposed.has(letter) ? shortcuts[letter]
           : shortcuts[letter] + ': ';
-        
+
         textarea.value = before + insertion + after;
         textarea.selectionStart = textarea.selectionEnd = before.length + insertion.length;
-        
+
         // Trigger input event for live preview
         textarea.dispatchEvent(new Event('input'));
       }
@@ -2230,8 +2518,13 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
 
     // Change slideshow style
     $("theme-selector").onchange = async () => {
-      updateGroundTruth('THEME_CHANGE', { theme: $("theme-selector").value });
-      await applyTheme($("theme-selector").value);
+      const selector = $("theme-selector");
+      const themeValue = selector.value;
+      updateGroundTruth('THEME_CHANGE', { theme: themeValue });
+      state.pendingThumbScrollIndex = state.currentAbsoluteSlideIndex;
+      await applyTheme(themeValue);
+      const label = selector.options[selector.selectedIndex]?.textContent?.trim() || themeValue;
+      setEditorStatus(`Theme changed to ${label}.`);
     };
 
     // Toggle fullscreen
@@ -2701,11 +2994,13 @@ const slideTemplate = (slideHTML) => `
     if (fromIndex === toIndex) return;
     
     updateGroundTruth('REORDER', { fromIndex, toIndex });
-    
+
     await buildSlidesFromXMLDoc();
+    state.pendingThumbScrollIndex = toIndex;
     await refreshThumbnails();
     let newCurrentIndex = toIndex;
     showSlide(newCurrentIndex);
+    setEditorStatus(`Slide moved to position ${toIndex + 1}.`);
   }
 
 
@@ -2717,9 +3012,21 @@ const slideTemplate = (slideHTML) => `
     const p = state.xmlDoc.querySelector("presentation");
     if (!p) return;
 
+    const editorTextarea = $("raw-text-editor");
+    if (editorTextarea) {
+      editorTextarea.setAttribute('spellcheck', 'true');
+      editorTextarea.spellcheck = true;
+      editorTextarea.setAttribute('lang', 'en-US');
+      editorTextarea.lang = 'en-US';
+      editorTextarea.setAttribute('autocapitalize', 'off');
+      editorTextarea.setAttribute('autocomplete', 'off');
+      editorTextarea.setAttribute('autocorrect', 'off');
+    }
+
     $("show-count").checked = p.getAttribute("showSlideCount") !== "false";
     $("theme-selector").value = p.getAttribute("theme") || DEFAULT_THEME;
 
+    state.pendingThumbScrollIndex = state.currentAbsoluteSlideIndex;
     refreshThumbnails();
     loadTextareaForCurrentSlide();
     updateSaveButtonGlow();
@@ -2808,14 +3115,22 @@ const slideTemplate = (slideHTML) => `
       // Wait for the browser's next painting cycle. This gives the browser
       // time to render the new thumbnails and calculate the new scroll height.
       requestAnimationFrame(() => {
-        // Now that the DOM is stable, find the selected thumb
-        const selectedThumb = thumbsContainer.querySelector('.thumb.selected');
-        if (selectedThumb) {
-          // Execute the scroll. This visually corrects the jump.
-          selectedThumb.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        let targetIndex = state.pendingThumbScrollIndex;
+        if (!Number.isInteger(targetIndex)) {
+          targetIndex = state.currentAbsoluteSlideIndex;
         }
-        // 5) Only after the scroll has been commanded, resolve the promise.
-        resolve(); 
+
+        if (Number.isInteger(targetIndex)) {
+          highlightThumb(targetIndex);
+        } else {
+          const selectedThumb = thumbsContainer.querySelector('.thumb.selected');
+          if (selectedThumb) {
+            selectedThumb.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          }
+        }
+
+        state.pendingThumbScrollIndex = null;
+        resolve();
       });
     });
 
@@ -2827,6 +3142,411 @@ const slideTemplate = (slideHTML) => `
     } finally {
       state.thumbnailRefreshPromise = null;
     }
+  }
+
+  function collectSelectionSegments(textarea) {
+    if (!textarea) return [];
+    const value = textarea.value;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    if (start === end) return [];
+
+    const segments = [];
+    let cursor = value.lastIndexOf('\n', start - 1);
+    cursor = cursor === -1 ? 0 : cursor + 1;
+
+    while (cursor < end) {
+      const lineBreakIdx = value.indexOf('\n', cursor);
+      const lineEnd = lineBreakIdx === -1 ? value.length : lineBreakIdx;
+      const selStart = Math.max(start, cursor);
+      const selEnd = Math.min(end, lineEnd);
+
+      if (selStart < selEnd) {
+        let segStart = selStart;
+        let segEnd = selEnd;
+        const colonIdx = value.indexOf(':', cursor);
+        if (colonIdx !== -1 && colonIdx < lineEnd && segStart <= colonIdx) {
+          segStart = Math.max(segStart, colonIdx + 1);
+          while (segStart < segEnd && /\s/.test(value[segStart])) {
+            segStart++;
+          }
+        }
+
+        while (segEnd > segStart && /\s/.test(value[segEnd - 1])) {
+          segEnd--;
+        }
+
+        if (segStart < segEnd) {
+          segments.push({ start: segStart, end: segEnd });
+        }
+      }
+
+      if (lineBreakIdx === -1) {
+        break;
+      }
+      cursor = lineEnd + 1;
+    }
+
+    return segments;
+  }
+
+  function applyMarkersForSelection(textarea, segments, config) {
+    if (!segments.length || !config) return;
+
+    const {
+      open,
+      close,
+      combined = false,
+      padWithSpaces = false,
+      extraBeforeVariants = [],
+      extraAfterVariants = [],
+      alignTokens = null
+    } = config;
+
+    const beforeMarker = padWithSpaces ? `${open} ` : open;
+    const afterMarker = padWithSpaces ? ` ${close}` : close;
+    const beforeVariants = [beforeMarker, ...extraBeforeVariants.filter(Boolean)];
+    const afterVariants = [afterMarker, ...extraAfterVariants.filter(Boolean)];
+    if (!beforeVariants.includes(open)) beforeVariants.push(open);
+    if (!afterVariants.includes(close)) afterVariants.push(close);
+    const scrollTop = textarea.scrollTop;
+    let value = textarea.value;
+    const alignTokensSet = Array.isArray(alignTokens) && alignTokens.length
+      ? new Set(alignTokens)
+      : null;
+
+    const identifyAlignMarker = (marker) => {
+      if (!marker || !alignTokensSet) return null;
+      for (const token of alignTokensSet) {
+        if (marker.includes(token)) return token;
+      }
+      return null;
+    };
+
+    const sliceMatches = (source, start, markerList) => {
+      if (start < 0) return false;
+      return markerList.some(marker =>
+        marker && start >= marker.length && source.slice(start - marker.length, start) === marker
+      );
+    };
+
+    const sliceMatchesAfter = (source, start, markerList) => {
+      return markerList.some(marker =>
+        marker && source.slice(start, start + marker.length) === marker
+      );
+    };
+
+    const removeRange = (source, start, end, beforeList, afterList) => {
+      const beforeMarker = beforeList.find(marker => marker && start >= marker.length && source.slice(start - marker.length, start) === marker);
+      const afterMarker = afterList.find(marker => marker && source.slice(end, end + marker.length) === marker);
+      if (!beforeMarker || !afterMarker) {
+        return null;
+      }
+
+      const beforeStart = start - beforeMarker.length;
+      const afterEnd = end + afterMarker.length;
+      const inner = source.slice(start, end);
+      const value = source.slice(0, beforeStart) + inner + source.slice(afterEnd);
+      return {
+        value,
+        selectionStart: beforeStart,
+        selectionEnd: beforeStart + inner.length,
+        removedBefore: beforeMarker,
+        removedAfter: afterMarker
+      };
+    };
+
+    if (combined) {
+      const first = segments[0];
+      const last = segments[segments.length - 1];
+      const removeResult = removeRange(value, first.start, last.end, beforeVariants, afterVariants);
+      let workingValue = value;
+      let selectionStart = first.start;
+      let selectionEnd = last.end;
+      const removedAlign = removeResult
+        ? (identifyAlignMarker(removeResult.removedBefore) || identifyAlignMarker(removeResult.removedAfter))
+        : null;
+
+      if (removeResult) {
+        workingValue = removeResult.value;
+        selectionStart = removeResult.selectionStart;
+        selectionEnd = removeResult.selectionEnd;
+      }
+
+      if (alignTokensSet) {
+        const shouldInsert = removedAlign !== open;
+        if (shouldInsert) {
+          const insertionStart = selectionStart;
+          const closingPos = selectionEnd;
+          workingValue = workingValue.slice(0, insertionStart)
+            + beforeMarker
+            + workingValue.slice(insertionStart);
+          const afterOpenEnd = closingPos + beforeMarker.length;
+          workingValue = workingValue.slice(0, afterOpenEnd)
+            + afterMarker
+            + workingValue.slice(afterOpenEnd);
+          selectionStart = insertionStart + beforeMarker.length;
+          selectionEnd = afterOpenEnd;
+        }
+
+        textarea.value = workingValue;
+        textarea.selectionStart = selectionStart;
+        textarea.selectionEnd = selectionEnd;
+      } else if (removeResult) {
+        textarea.value = workingValue;
+        textarea.selectionStart = selectionStart;
+        textarea.selectionEnd = selectionEnd;
+      } else {
+        const insertionStart = first.start;
+        workingValue = workingValue.slice(0, insertionStart) + beforeMarker + workingValue.slice(insertionStart);
+        const closingPos = last.end + beforeMarker.length;
+        workingValue = workingValue.slice(0, closingPos) + afterMarker + workingValue.slice(closingPos);
+        textarea.value = workingValue;
+        const selectionStartAfter = insertionStart + beforeMarker.length;
+        textarea.selectionStart = selectionStartAfter;
+        textarea.selectionEnd = closingPos;
+      }
+
+      value = textarea.value;
+    } else {
+      segments = segments.map(seg => {
+        let start = seg.start;
+        let end = seg.end;
+
+        for (const marker of ALIGNMENT_MARKERS) {
+          const leadingWithSpace = `${marker} `;
+          if (value.slice(start, start + leadingWithSpace.length) === leadingWithSpace) {
+            start += leadingWithSpace.length;
+            continue;
+          }
+          if (value.slice(start, start + marker.length) === marker) {
+            start += marker.length;
+          }
+        }
+
+        for (const marker of ALIGNMENT_MARKERS) {
+          const trailingWithSpace = ` ${marker}`;
+          if (end - trailingWithSpace.length >= start && value.slice(end - trailingWithSpace.length, end) === trailingWithSpace) {
+            end -= trailingWithSpace.length;
+            continue;
+          }
+          if (end - marker.length >= start && value.slice(end - marker.length, end) === marker) {
+            end -= marker.length;
+          }
+        }
+
+        if (start >= end) {
+          return null;
+        }
+        return { start, end };
+      }).filter(Boolean);
+
+      if (!segments.length) {
+        textarea.scrollTop = scrollTop;
+        return;
+      }
+
+      const existingWraps = segments.map(seg => {
+        const beforeMatch = beforeVariants.find(marker => marker && value.slice(seg.start - marker.length, seg.start) === marker);
+        const afterMatch = afterVariants.find(marker => marker && value.slice(seg.end, seg.end + marker.length) === marker);
+        if (beforeMatch && afterMatch) {
+          return { type: 'outside', segStart: seg.start, segEnd: seg.end, beforeMatch, afterMatch };
+        }
+
+        const insideBefore = beforeVariants.find(marker => marker && value.slice(seg.start, seg.start + marker.length) === marker);
+        const insideAfter = afterVariants.find(marker => marker && value.slice(seg.end - marker.length, seg.end) === marker);
+        if (insideBefore && insideAfter) {
+          return { type: 'inside', segStart: seg.start, segEnd: seg.end, beforeMatch: insideBefore, afterMatch: insideAfter };
+        }
+
+        return null;
+      });
+
+      const allWrapped = existingWraps.every(Boolean);
+
+      if (allWrapped) {
+        for (let i = segments.length - 1; i >= 0; i--) {
+          const info = existingWraps[i];
+          if (!info) continue;
+          if (info.type === 'outside') {
+            const beforeStart = info.segStart - info.beforeMatch.length;
+            const afterStart = info.segEnd;
+            value = value.slice(0, afterStart) + value.slice(afterStart + info.afterMatch.length);
+            value = value.slice(0, beforeStart) + value.slice(beforeStart + info.beforeMatch.length);
+          } else {
+            const beforeStart = info.segStart;
+            const afterStart = info.segEnd - info.afterMatch.length;
+            value = value.slice(0, afterStart) + value.slice(afterStart + info.afterMatch.length);
+            value = value.slice(0, beforeStart) + value.slice(beforeStart + info.beforeMatch.length);
+          }
+        }
+
+        textarea.value = value;
+
+        const originalRangeStart = segments[0].start;
+        const originalRangeEnd = segments[segments.length - 1].end;
+        const originalRangeLength = originalRangeEnd - originalRangeStart;
+
+        const firstInfo = existingWraps[0];
+        let startAdjustment = 0;
+        if (firstInfo?.type === 'outside') {
+          const beforePos = firstInfo.segStart - firstInfo.beforeMatch.length;
+          if (beforePos < originalRangeStart) {
+            startAdjustment = firstInfo.beforeMatch.length;
+          }
+        }
+
+        let removalWithinRange = 0;
+        existingWraps.forEach(info => {
+          if (!info) return;
+          if (info.type === 'outside') {
+            const beforePos = info.segStart - info.beforeMatch.length;
+            if (beforePos >= originalRangeStart) {
+              removalWithinRange += info.beforeMatch.length;
+            }
+            const afterPos = info.segEnd;
+            if (afterPos <= originalRangeEnd) {
+              removalWithinRange += info.afterMatch.length;
+            }
+          } else {
+            removalWithinRange += info.beforeMatch.length + info.afterMatch.length;
+          }
+        });
+
+        const newSelectionStart = originalRangeStart - startAdjustment;
+        const newSelectionEnd = newSelectionStart + (originalRangeLength - removalWithinRange);
+        textarea.selectionStart = newSelectionStart;
+        textarea.selectionEnd = Math.max(newSelectionStart, newSelectionEnd);
+      } else {
+        let insertedTotal = 0;
+        for (let i = segments.length - 1; i >= 0; i--) {
+          const seg = segments[i];
+          const hasOuterWrap = sliceMatches(value, seg.start, beforeVariants) && sliceMatchesAfter(value, seg.end, afterVariants);
+          const hasInnerWrap = beforeVariants.some(marker => marker && value.slice(seg.start, seg.start + marker.length) === marker)
+            && afterVariants.some(marker => marker && value.slice(seg.end - marker.length, seg.end) === marker);
+          if (hasOuterWrap || hasInnerWrap) {
+            continue;
+          }
+          value = value.slice(0, seg.start) + beforeMarker + value.slice(seg.start, seg.end) + afterMarker + value.slice(seg.end);
+          insertedTotal += beforeMarker.length + afterMarker.length;
+        }
+        textarea.value = value;
+        const selectionStart = segments[0].start;
+        const selectionEnd = segments[segments.length - 1].end + insertedTotal;
+        textarea.selectionStart = selectionStart;
+        textarea.selectionEnd = selectionEnd;
+      }
+    }
+
+    textarea.scrollTop = scrollTop;
+    textarea.dispatchEvent(new Event('input'));
+  }
+
+  function applySelectionFormatting(action) {
+    const textarea = $("raw-text-editor");
+    if (!textarea) return;
+    const segments = collectSelectionSegments(textarea);
+    if (!segments.length) return;
+
+    textarea.focus({ preventScroll: true });
+
+    switch (action) {
+      case 'bold':
+        applyMarkersForSelection(textarea, segments, {
+          open: '**',
+          close: '**'
+        });
+        break;
+      case 'italic':
+        applyMarkersForSelection(textarea, segments, {
+          open: '*',
+          close: '*'
+        });
+        break;
+      case 'bolditalic':
+        applyMarkersForSelection(textarea, segments, {
+          open: '***',
+          close: '***'
+        });
+        break;
+      case 'align-left':
+        applyMarkersForSelection(textarea, segments, {
+          open: '<<<',
+          close: '<<<',
+          combined: true,
+          padWithSpaces: true,
+          extraBeforeVariants: ['||| ', '>>> ', '<<<', '|||', '>>>'],
+          extraAfterVariants: [' |||', ' >>>', '<<<', '|||', '>>>'],
+          alignTokens: ALIGNMENT_MARKERS
+        });
+        break;
+      case 'align-center':
+        applyMarkersForSelection(textarea, segments, {
+          open: '|||',
+          close: '|||',
+          combined: true,
+          padWithSpaces: true,
+          extraBeforeVariants: ['<<< ', '>>> ', '<<<', '|||', '>>>'],
+          extraAfterVariants: [' <<<', ' >>>', '<<<', '|||', '>>>'],
+          alignTokens: ALIGNMENT_MARKERS
+        });
+        break;
+      case 'align-right':
+        applyMarkersForSelection(textarea, segments, {
+          open: '>>>',
+          close: '>>>',
+          combined: true,
+          padWithSpaces: true,
+          extraBeforeVariants: ['<<< ', '||| ', '<<<', '|||', '>>>'],
+          extraAfterVariants: [' <<<', ' |||', '<<<', '|||', '>>>'],
+          alignTokens: ALIGNMENT_MARKERS
+        });
+        break;
+      default:
+        break;
+    }
+  }
+
+  function initSelectionToolbar() {
+    const textarea = $("raw-text-editor");
+    const toolbar = $("selection-toolbar");
+    if (!textarea || !toolbar) return;
+
+    const hideToolbar = () => {
+      toolbar.classList.remove('visible');
+      toolbar.setAttribute('aria-hidden', 'true');
+    };
+
+    const updateToolbar = () => {
+      if (textarea.selectionStart === textarea.selectionEnd) {
+        hideToolbar();
+        return;
+      }
+      toolbar.classList.add('visible');
+      toolbar.setAttribute('aria-hidden', 'false');
+    };
+
+    const scheduleUpdate = () => {
+      requestAnimationFrame(updateToolbar);
+    };
+
+    textarea.addEventListener('select', scheduleUpdate);
+    textarea.addEventListener('keyup', scheduleUpdate);
+    textarea.addEventListener('mouseup', scheduleUpdate);
+    textarea.addEventListener('input', scheduleUpdate);
+    textarea.addEventListener('blur', hideToolbar);
+
+    toolbar.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+    });
+
+    toolbar.addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-format]');
+      if (!button) return;
+      event.preventDefault();
+      applySelectionFormatting(button.dataset.format);
+      scheduleUpdate();
+    });
   }
 
   function highlightThumb(index) {
@@ -2864,12 +3584,18 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
   function loadTextareaForCurrentSlide() {
     // Always load directly from the single source of truth: the xmlDoc.
-    $("raw-text-editor").value = getRawTextForSlide(state.currentAbsoluteSlideIndex);
+    const textarea = $("raw-text-editor");
+    if (!textarea) return;
+    const raw = getRawTextForSlide(state.currentAbsoluteSlideIndex);
+    textarea.value = addCommandGuardsToText(raw);
+    textarea.selectionStart = textarea.selectionEnd = 0;
     validateAndUpdateTextarea();
   }
 
   async function validateAndUpdateTextarea() {
-    const rawText = $("raw-text-editor").value;
+    const textarea = $("raw-text-editor");
+    if (!textarea) return;
+    const rawText = normalizeTextareaCommandGuards(textarea);
 
     // Update the live thumbnail preview without mutating XML.
     const thumbIframe = document.querySelector(
@@ -2974,7 +3700,9 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     if (!rawNode) return false;
 
     const previous = rawNode.textContent || '';
-    const next = typeof sourceText === 'string' ? sourceText : previous;
+    const next = typeof sourceText === 'string'
+      ? stripCommandSpellcheckGuards(sourceText)
+      : previous;
     if (previous === next) return false;
 
     recordSnapshot(reason);
@@ -2993,6 +3721,71 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
   }
 
   const OVERFLOW_SNIPPET_LIMIT = 20;
+  const OVERFLOW_TOLERANCE_PX = 1;
+  const OVERFLOW_STAGE_WIDTH = 1280;
+  const OVERFLOW_STAGE_HEIGHT = 720;
+  let overflowMeasureContext = null;
+
+  function getOverflowMeasureContext() {
+    if (overflowMeasureContext) {
+      return overflowMeasureContext;
+    }
+
+    const stage = document.createElement('div');
+    stage.id = 'overflow-measure-stage';
+    stage.className = 'presentation-viewport';
+    stage.style.width = `${OVERFLOW_STAGE_WIDTH}px`;
+    stage.style.height = `${OVERFLOW_STAGE_HEIGHT}px`;
+
+    const scaler = document.createElement('div');
+    scaler.className = 'presentation-scaler';
+    scaler.style.width = '100%';
+    scaler.style.height = '100%';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'slide-wrapper';
+
+    scaler.appendChild(wrapper);
+    stage.appendChild(scaler);
+    document.body.appendChild(stage);
+
+    overflowMeasureContext = { stage, scaler, wrapper };
+    return overflowMeasureContext;
+  }
+
+  function measureOverflowForSlide(slideEl) {
+    const { wrapper } = getOverflowMeasureContext();
+    wrapper.innerHTML = '';
+
+    const clone = slideEl.cloneNode(true);
+    clone.classList.remove('has-overflow');
+    clone.removeAttribute('data-overflow-snippets');
+    clone.querySelectorAll('.overflow-indicator').forEach(node => node.remove());
+    const notes = clone.querySelector('.notes');
+    if (notes) notes.remove();
+
+    wrapper.appendChild(clone);
+
+    const content = clone.querySelector('.slide-flow-content');
+    if (!content) {
+      return { hasOverflow: false, snippets: [] };
+    }
+
+    const contentRect = content.getBoundingClientRect();
+    if (!contentRect.width || !contentRect.height) {
+      return { hasOverflow: false, snippets: [] };
+    }
+
+    const overflowVert = Math.ceil(content.scrollHeight - content.clientHeight) > OVERFLOW_TOLERANCE_PX;
+    const overflowHoriz = Math.ceil(content.scrollWidth - content.clientWidth) > OVERFLOW_TOLERANCE_PX;
+
+    if (!overflowVert && !overflowHoriz) {
+      return { hasOverflow: false, snippets: [] };
+    }
+
+    const snippets = collectOverflowSnippets(content, contentRect);
+    return { hasOverflow: true, snippets };
+  }
 
   function collectOverflowSnippets(container, containerRect) {
     const snippets = [];
@@ -3017,7 +3810,8 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       const rects = Array.from(range.getClientRects());
       range.detach?.();
       const isOverflowing = rects.some(rect =>
-        rect.bottom - containerRect.bottom > 1 || rect.right - containerRect.right > 1
+        Math.ceil(rect.bottom - containerRect.bottom) > OVERFLOW_TOLERANCE_PX ||
+        Math.ceil(rect.right - containerRect.right) > OVERFLOW_TOLERANCE_PX
       );
       if (isOverflowing) {
         const snippet = node.textContent.trim().replace(/\s+/g, ' ');
@@ -3039,17 +3833,12 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     slideEl.classList.remove('has-overflow');
     delete slideEl.dataset.overflowSnippets;
 
-    const content = slideEl.querySelector('.slide-flow-content');
-    if (!content) return;
+    const measurement = measureOverflowForSlide(slideEl);
+    if (!measurement.hasOverflow) {
+      return;
+    }
 
-    const contentRect = content.getBoundingClientRect();
-    if (!contentRect.width || !contentRect.height) return;
-
-    const overflowVert = content.scrollHeight - content.clientHeight > 1;
-    const overflowHoriz = content.scrollWidth - content.clientWidth > 1;
-    if (!overflowVert && !overflowHoriz) return;
-
-    const snippets = collectOverflowSnippets(content, contentRect);
+    const snippets = measurement.snippets;
     slideEl.classList.add('has-overflow');
     slideEl.dataset.overflowSnippets = JSON.stringify(snippets);
 
@@ -3197,9 +3986,11 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     const restoreBtn = $("restore-btn");
     if (!restoreBtn) return;
     const hasPreviousSession = !!localStorage.getItem(PREVIOUS_SESSION_KEY);
+    const previousMeta = parseDeckIdentityMeta(localStorage.getItem(PREVIOUS_SESSION_META_KEY));
+    const restoreLabel = previousMeta?.label ? `Restore ${previousMeta.label}` : 'Restore most recently saved';
     restoreBtn.disabled = !hasPreviousSession;
-    restoreBtn.title = hasPreviousSession ? 'Restore most recently saved' : 'Nothing to restore yet';
-    restoreBtn.setAttribute('aria-label', hasPreviousSession ? 'Restore most recently saved slideshow' : 'Restore button disabled until another slideshow is saved');
+    restoreBtn.title = hasPreviousSession ? restoreLabel : 'Nothing to restore yet';
+    restoreBtn.setAttribute('aria-label', hasPreviousSession ? `${restoreLabel} slideshow` : 'Restore button disabled until another slideshow is saved');
   }
 
   function updateToggleHideButtonState() {
@@ -3228,8 +4019,10 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     const targetIndex = Math.max(0, Math.min(index + 1, totalSlides));
     updateGroundTruth('ADD_SLIDE', { index: targetIndex, content });
     await buildSlidesFromXMLDoc();
+    state.pendingThumbScrollIndex = targetIndex;
     await refreshThumbnails();
     showSlide(targetIndex);
+    setEditorStatus(`Slide added at position ${targetIndex + 1}.`);
   }
 
   async function removeSlideAt(index) {
@@ -3239,8 +4032,11 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     const nextIndex = clampedIndex >= totalSlides - 1 ? clampedIndex - 1 : clampedIndex;
     updateGroundTruth('DELETE_SLIDE', { index: clampedIndex });
     await buildSlidesFromXMLDoc();
+    const targetIndex = Math.max(0, nextIndex);
+    state.pendingThumbScrollIndex = targetIndex;
     await refreshThumbnails();
-    showSlide(Math.max(0, nextIndex), false, { skipEditorSave: true });
+    showSlide(targetIndex, false, { skipEditorSave: true });
+    setEditorStatus(`Slide deleted. Now viewing slide ${targetIndex + 1}.`);
   }
 
   function updateToggleCountButtonState() {
@@ -3455,11 +4251,24 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     try {
       const serializer = new XMLSerializer();
       const xmlString = serializer.serializeToString(state.xmlDoc);
-      const previous = localStorage.getItem(LAST_SESSION_KEY);
-      if (action === 'INIT' && previous && previous !== xmlString) {
-        localStorage.setItem(PREVIOUS_SESSION_KEY, previous);
+      const previousXml = localStorage.getItem(LAST_SESSION_KEY);
+      const previousMetaRaw = localStorage.getItem(LAST_SESSION_META_KEY);
+      const previousIdentity = parseDeckIdentityMeta(previousMetaRaw) || extractDeckIdentityFromXML(previousXml);
+      const currentIdentity = getDeckIdentityFromState();
+
+      if (previousXml && previousXml !== xmlString) {
+        if (!previousIdentity || previousIdentity.id !== currentIdentity.id) {
+          localStorage.setItem(PREVIOUS_SESSION_KEY, previousXml);
+          if (previousIdentity) {
+            localStorage.setItem(PREVIOUS_SESSION_META_KEY, JSON.stringify(previousIdentity));
+          } else {
+            localStorage.removeItem(PREVIOUS_SESSION_META_KEY);
+          }
+        }
       }
+
       localStorage.setItem(LAST_SESSION_KEY, xmlString);
+      localStorage.setItem(LAST_SESSION_META_KEY, JSON.stringify(currentIdentity));
       console.log('[localStorage] Session saved.');
     } catch (e) {
       console.error('[localStorage] Failed to save session:', e);
@@ -3698,10 +4507,19 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
 async function getThumbnailHTML(rawText, theme) {
   const slideElement = createSlideElement(rawText);
-  
+
   // Remove the hidden-in-presentation class for thumbnails
   slideElement.classList.remove('hidden-in-presentation');
-  
+
+  slideElement.querySelectorAll('iframe').forEach((iframe) => {
+    const wrapper = iframe.parentElement;
+    const placeholder = wrapper?.querySelector('.website-print-placeholder');
+    if (placeholder) {
+      placeholder.style.display = 'flex';
+    }
+    iframe.remove();
+  });
+
   const slideElementHTML = slideElement.outerHTML;
   
   // Get the theme CSS content
@@ -3916,27 +4734,47 @@ async function getThumbnailHTML(rawText, theme) {
   function formatWithJustify(text) {
     if (!text || !text.trim()) return "";
 
-    // Map markers to text-align styles
     const INLINE_ALIGN = {
       "<<<": "text-align:left;",
       ">>>": "text-align:right;",
       "|||": "text-align:center;",
     };
 
-    // 1) Turn inline pairs like <<<text<<< into placeholders
-    //    that will later become <p style="..."> (not <div>)
     const inlineMarkers = [];
-    const withInlinePlaceholders = text.replace(/(<<<|>>>|\|\|\|)([^\n]*?)\1/g, (_, tok, body) => {
+
+    const addAlignedPlaceholder = (token, rawBody, { block }) => {
       const key = `__ALIGN_${inlineMarkers.length}__`;
+      const inner = formatWithJustify(rawBody);
+      const tag = block ? 'div' : 'span';
+      const extra = block ? '' : 'display:block;';
       inlineMarkers.push({
         key,
-        // p + width:100% keeps BigText size (.large p) and spans the slide in flex
-        html: `<p style="width:100%; ${INLINE_ALIGN[tok]}">${escapeHtml(body)}</p>`,
+        html: `<${tag} style="width:100%; ${extra}${INLINE_ALIGN[token]}">${inner}</${tag}>`
       });
       return key;
+    };
+
+    const INLINE_PAIR_RE = /(<<<|>>>|\|\|\|)([\s\S]*?)\1/g;
+
+    const withInlinePlaceholders = text.replace(INLINE_PAIR_RE, (match, tok, body, offset) => {
+      const leadingBreak = text.lastIndexOf('\n', offset - 1);
+      const beforeToken = leadingBreak === -1 ? text.slice(0, offset) : text.slice(leadingBreak + 1, offset);
+      const blockOpening = /^\s*$/.test(beforeToken);
+
+      const closingIndex = offset + tok.length + body.length;
+      const closingLineBreak = text.lastIndexOf('\n', closingIndex - 1);
+      const beforeClosing = closingLineBreak === -1
+        ? text.slice(0, closingIndex)
+        : text.slice(closingLineBreak + 1, closingIndex);
+      const blockClosing = /^\s*$/.test(beforeClosing);
+
+      if (blockOpening && blockClosing) {
+        return match;
+      }
+
+      return addAlignedPlaceholder(tok, body, { block: false });
     });
 
-    // 2) Support block fences on their own lines
     const FENCES = new Set(["<<<", ">>>", "|||"]);
     const BLOCK_ALIGN_STYLE = INLINE_ALIGN;
 
@@ -3962,17 +4800,25 @@ async function getThumbnailHTML(rawText, theme) {
 
     const flushBlock = (token) => {
       const bodyRaw = buf.join("\n");
-      // Allow inline markers inside blocks too
-      const bodyWithPlaceholders = bodyRaw.replace(/(<<<|>>>|\|\|\|)([^\n]*?)\1/g, (_, tok, body) => {
-        const key = `__ALIGN_${inlineMarkers.length}__`;
-        inlineMarkers.push({
-          key,
-          html: `<p style="${INLINE_ALIGN[tok]}">${escapeHtml(body)}</p>`,
-        });
-        return key;
+      const bodyWithPlaceholders = bodyRaw.replace(INLINE_PAIR_RE, (match, tok, body, offset) => {
+        const leadingBreak = bodyRaw.lastIndexOf('\n', offset - 1);
+        const beforeToken = leadingBreak === -1 ? bodyRaw.slice(0, offset) : bodyRaw.slice(leadingBreak + 1, offset);
+        const blockOpening = /^\s*$/.test(beforeToken);
+
+        const closingIndex = offset + tok.length + body.length;
+        const closingLineBreak = bodyRaw.lastIndexOf('\n', closingIndex - 1);
+        const beforeClosing = closingLineBreak === -1
+          ? bodyRaw.slice(0, closingIndex)
+          : bodyRaw.slice(closingLineBreak + 1, closingIndex);
+        const blockClosing = /^\s*$/.test(beforeClosing);
+
+        if (blockOpening && blockClosing) {
+          return match;
+        }
+
+        return addAlignedPlaceholder(tok, body, { block: false });
       });
       const bodyHtml = replaceInlineKeys(plainTextToHtml(bodyWithPlaceholders));
-      // Make the block span the slide so text-align is meaningful in flex layout
       out.push(`<div style="width:100%; ${BLOCK_ALIGN_STYLE[token]}">${bodyHtml}</div>`);
       buf = [];
     };
@@ -4210,7 +5056,37 @@ case "Image": {
 }
           
         case "Columns": {
-          const parts = content.split(/^\s*---\s*$/m);
+          const rawLines = content.split(/\r?\n/);
+          const columnSegments = [];
+          let buffer = [];
+
+          const flushColumn = (makeDouble = false) => {
+            const raw = buffer.join('\n');
+            const trimmed = raw.trim();
+            if (!trimmed) {
+              if (makeDouble && columnSegments.length > 0) {
+                columnSegments[columnSegments.length - 1].double = true;
+              }
+              buffer = [];
+              return;
+            }
+            columnSegments.push({ raw, double: makeDouble });
+            buffer = [];
+          };
+
+          for (const rawLine of rawLines) {
+            if (/^\s*----\s*$/.test(rawLine)) {
+              flushColumn(true);
+              continue;
+            }
+            if (/^\s*---\s*$/.test(rawLine)) {
+              flushColumn(false);
+              continue;
+            }
+            buffer.push(rawLine);
+          }
+
+          flushColumn(false);
 
           // Allow extensions with optional ?query, data: URLs, and local pasted ids
 const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+|local-img-[^\s,]+)\s*(?:,\s*(.*))?$/i;
@@ -4270,8 +5146,8 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
             };
           };
 
-          const colsHtml = parts.map(part => {
-            const lines = part.trim().split(/\r?\n/);
+          const colsHtml = columnSegments.map(segment => {
+            const lines = segment.raw.trim().split(/\r?\n/);
 
             const blocks = [];
             let pendingText = '';
@@ -4299,8 +5175,9 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
               const inlineInfo = processInlineModesForImageLine(rawLine, currentMode);
               const sanitized = inlineInfo.sanitizedLine.trim();
               const match = sanitized ? sanitized.match(imgLineRe) : null;
+              const rawMatch = !match ? rawLine.trim().match(imgLineRe) : null;
 
-              if (match) {
+              if (match || rawMatch) {
                 flushText();
 
                 if (inlineInfo.beforeHtml) {
@@ -4311,15 +5188,26 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
                 }
 
                 imageCount++;
-                const imageUrl = match[1].trim();
-                const colCaption = (match[2] || '').trim();
-                const resolvedUrl = window.presentationBaseUrl
-                   ? resolveImagePath(imageUrl, window.presentationBaseUrl)
-                   : imageUrl;
+                const imageGroups = match || rawMatch;
+                const imageUrl = imageGroups[1].trim();
+                const colCaption = (imageGroups[2] || '').trim();
+                const resolvedUrl = resolveImagePath(imageUrl, window.presentationBaseUrl);
+
+                let captionHtml = '';
+                let captionMode = inlineInfo.mode;
+                if (colCaption) {
+                  const captionRender = renderRichTextWithModes(colCaption, inlineInfo.mode);
+                  captionHtml = captionRender.html || plainTextToHtml(colCaption);
+                  if (htmlContainsVisibleText(captionHtml)) {
+                    hasTextBlock = true;
+                  }
+                  captionMode = captionRender.mode;
+                }
+
                 blocks.push(
                   `<div class="img-container">
                     <img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(colCaption)}">
-                    <div class="caption">${plainTextToHtml(colCaption)}</div>
+                    <div class="caption">${captionHtml}</div>
                   </div>`
                 );
 
@@ -4330,7 +5218,7 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
                   }
                 }
 
-                currentMode = inlineInfo.mode;
+                currentMode = captionMode;
                 continue;
               }
 
@@ -4341,8 +5229,9 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
 
             const onlyImages = imageCount > 0 && !hasTextBlock;
             const cls  = onlyImages ? 'column images-only' : 'column';
+            const classes = segment.double ? `${cls} column--double` : cls;
             const data = onlyImages ? ` data-imgcount="${imageCount}"` : '';
-            return `<div class="${cls}"${data}>${blocks.join('')}</div>`;
+            return `<div class="${classes}"${data}>${blocks.join('')}</div>`;
           }).join('');
 
           innerHTML += `<div class="columns">${colsHtml}</div>`;
@@ -4383,6 +5272,11 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
     for (const line of lines) {
       const match = line.match(/^([A-Za-z][A-Za-z0-9.]*):\s*(.*)/);
       if (match) {
+        if (currentDirective && currentDirective.name === 'Columns') {
+          buffer.push(line);
+          continue;
+        }
+
         const directiveInfo = resolveDirectiveToken(match[1]);
         if (directiveInfo) {
           processBuffer();
@@ -4408,6 +5302,97 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
      ═══════════════════════════════════════════════════════════════ */
   
   const $ = (id) => document.getElementById(id);
+
+  const SPELLCHECK_GUARD_CHAR = String.fromCodePoint(0x200B);
+  const SPELLCHECK_GUARD_CODE = SPELLCHECK_GUARD_CHAR.codePointAt(0);
+  const SPELLCHECK_GUARD_STRIP_RE = new RegExp(SPELLCHECK_GUARD_CHAR, 'g');
+  const COMMAND_GUARD_REGEX = /\b(BigText|SmallText|TinyText)(?=\s*:|\]\])/gi;
+
+  const createCommandGuardRegex = () => new RegExp(COMMAND_GUARD_REGEX.source, 'gi');
+
+  function stripCommandSpellcheckGuards(text) {
+    if (!text) return '';
+    return text.replace(SPELLCHECK_GUARD_STRIP_RE, '');
+  }
+
+  function getCommandGuardPositions(cleanText) {
+    if (!cleanText) return [];
+    const positions = [];
+    const regex = createCommandGuardRegex();
+    let match;
+    while ((match = regex.exec(cleanText)) !== null) {
+      const command = match[1] || match[0];
+      const lower = command.toLowerCase();
+      const splitIndex = lower.indexOf('text');
+      const guardOffset = splitIndex > 0 ? splitIndex : command.length;
+      positions.push(match.index + guardOffset);
+    }
+    return positions;
+  }
+
+  function insertCommandGuards(cleanText, positions) {
+    if (!positions.length) return cleanText;
+    let result = '';
+    let lastIndex = 0;
+    for (const pos of positions) {
+      result += cleanText.slice(lastIndex, pos) + SPELLCHECK_GUARD_CHAR;
+      lastIndex = pos;
+    }
+    result += cleanText.slice(lastIndex);
+    return result;
+  }
+
+  function mapCleanIndexToGuarded(cleanIndex, positions) {
+    if (!positions.length) return cleanIndex;
+    let offset = 0;
+    for (const pos of positions) {
+      if (pos <= cleanIndex) {
+        offset++;
+      } else {
+        break;
+      }
+    }
+    return cleanIndex + offset;
+  }
+
+  function countGuardsBefore(text, index) {
+    if (!text || index <= 0) return 0;
+    let count = 0;
+    const limit = Math.min(index, text.length);
+    for (let i = 0; i < limit; i++) {
+      if (text.codePointAt(i) === SPELLCHECK_GUARD_CODE) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  function addCommandGuardsToText(text) {
+    if (!text) return '';
+    const clean = stripCommandSpellcheckGuards(text);
+    return insertCommandGuards(clean, getCommandGuardPositions(clean));
+  }
+
+  function normalizeTextareaCommandGuards(textarea) {
+    if (!textarea) return '';
+    const originalValue = textarea.value || '';
+    const cleanValue = stripCommandSpellcheckGuards(originalValue);
+    const guardPositions = getCommandGuardPositions(cleanValue);
+    const guardedValue = insertCommandGuards(cleanValue, guardPositions);
+
+    if (guardedValue !== originalValue) {
+      const selectionStart = textarea.selectionStart ?? originalValue.length;
+      const selectionEnd = textarea.selectionEnd ?? originalValue.length;
+      const cleanStart = selectionStart - countGuardsBefore(originalValue, selectionStart);
+      const cleanEnd = selectionEnd - countGuardsBefore(originalValue, selectionEnd);
+
+      textarea.value = guardedValue;
+      textarea.selectionStart = mapCleanIndexToGuarded(cleanStart, guardPositions);
+      textarea.selectionEnd = mapCleanIndexToGuarded(cleanEnd, guardPositions);
+    }
+
+    return cleanValue;
+  }
   
   const escapeHtml = (s) =>
     s.replace(/[&<>"']/g, c =>
@@ -4624,13 +5609,6 @@ function wrapSlideshowFor16x9() {
     const targetAbsIndex = Math.max(0, Math.min(requestedIndex, maxIndex));
     state.currentAbsoluteSlideIndex = targetAbsIndex;
 
-    if (state.editMode) {
-      const editor = $("raw-text-editor");
-      if (editor) {
-        editor.value = getRawTextForSlide(targetAbsIndex);
-      }
-    }
-
     const visibleIndex = resolveVisibleIndexForAbsolute(targetAbsIndex);
     if (state.editMode) {
       showSlide(targetAbsIndex, false);
@@ -4649,7 +5627,9 @@ function wrapSlideshowFor16x9() {
       requestWakeLock();
     }
 
-    $("raw-text-editor").value = getRawTextForSlide(state.currentAbsoluteSlideIndex);
+    if (state.editMode) {
+      loadTextareaForCurrentSlide();
+    }
   }
   
   // Main entry point
