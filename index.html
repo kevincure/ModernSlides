@@ -2103,6 +2103,10 @@ $("download-txt-btn").onclick = async () => {
       await w.write(new Blob([fileContents], { type: 'text/plain' }));
       await w.close();
     } catch (err) {
+      if (err?.name === 'AbortError') {
+        console.info('Text download cancelled by user.');
+        return;
+      }
       console.warn("Save picker failed; falling back to anchor download.", err);
       const blob = new Blob([fileContents], { type: 'text/plain' });
       const a = Object.assign(document.createElement('a'), {
@@ -2147,6 +2151,10 @@ $("download-txt-btn").onclick = async () => {
       await w.write(zipBlob);
       await w.close();
     } catch (err) {
+      if (err?.name === 'AbortError') {
+        console.info('ZIP download cancelled by user.');
+        return;
+      }
       console.warn("Save picker failed; falling back to anchor ZIP download.", err);
       const a = Object.assign(document.createElement('a'), {
         href: URL.createObjectURL(zipBlob),
@@ -3243,43 +3251,85 @@ const slideTemplate = (slideHTML) => `
         textarea.selectionEnd = closingPos + afterMarker.length;
       }
     } else {
-      const allWrapped = segments.every(seg =>
-        sliceMatches(value, seg.start, beforeVariants) &&
-        sliceMatchesAfter(value, seg.end, afterVariants)
-      );
+      const existingWraps = segments.map(seg => {
+        const beforeMatch = beforeVariants.find(marker => marker && value.slice(seg.start - marker.length, seg.start) === marker);
+        const afterMatch = afterVariants.find(marker => marker && value.slice(seg.end, seg.end + marker.length) === marker);
+        if (beforeMatch && afterMatch) {
+          return { type: 'outside', segStart: seg.start, segEnd: seg.end, beforeMatch, afterMatch };
+        }
+
+        const insideBefore = beforeVariants.find(marker => marker && value.slice(seg.start, seg.start + marker.length) === marker);
+        const insideAfter = afterVariants.find(marker => marker && value.slice(seg.end - marker.length, seg.end) === marker);
+        if (insideBefore && insideAfter) {
+          return { type: 'inside', segStart: seg.start, segEnd: seg.end, beforeMatch: insideBefore, afterMatch: insideAfter };
+        }
+
+        return null;
+      });
+
+      const allWrapped = existingWraps.every(Boolean);
 
       if (allWrapped) {
-        const removalInfo = segments.map(seg => {
-          const beforeMatch = beforeVariants.find(marker => marker && value.slice(seg.start - marker.length, seg.start) === marker);
-          const afterMatch = afterVariants.find(marker => marker && value.slice(seg.end, seg.end + marker.length) === marker);
-          return { seg, beforeMatch, afterMatch };
-        });
-
         for (let i = segments.length - 1; i >= 0; i--) {
-          const info = removalInfo[i];
-          if (!info.beforeMatch || !info.afterMatch) continue;
-          const start = info.seg.start - info.beforeMatch.length;
-          const end = info.seg.end + info.afterMatch.length;
-          value = value.slice(0, start) + value.slice(end);
+          const info = existingWraps[i];
+          if (!info) continue;
+          if (info.type === 'outside') {
+            const beforeStart = info.segStart - info.beforeMatch.length;
+            const afterStart = info.segEnd;
+            value = value.slice(0, afterStart) + value.slice(afterStart + info.afterMatch.length);
+            value = value.slice(0, beforeStart) + value.slice(beforeStart + info.beforeMatch.length);
+          } else {
+            const beforeStart = info.segStart;
+            const afterStart = info.segEnd - info.afterMatch.length;
+            value = value.slice(0, afterStart) + value.slice(afterStart + info.afterMatch.length);
+            value = value.slice(0, beforeStart) + value.slice(beforeStart + info.beforeMatch.length);
+          }
         }
 
         textarea.value = value;
 
-        const removedBeforeLast = removalInfo.slice(0, -1).reduce((sum, info) => {
-          if (!info.beforeMatch || !info.afterMatch) return sum;
-          return sum + info.beforeMatch.length + info.afterMatch.length;
-        }, 0);
-        const firstInfo = removalInfo[0];
-        const lastInfo = removalInfo[removalInfo.length - 1];
-        const startOffset = firstInfo?.beforeMatch?.length ?? 0;
-        const lastBefore = lastInfo?.beforeMatch?.length ?? 0;
-        textarea.selectionStart = segments[0].start - startOffset;
-        textarea.selectionEnd = segments[segments.length - 1].end - removedBeforeLast - lastBefore;
+        const originalRangeStart = segments[0].start;
+        const originalRangeEnd = segments[segments.length - 1].end;
+        const originalRangeLength = originalRangeEnd - originalRangeStart;
+
+        const firstInfo = existingWraps[0];
+        let startAdjustment = 0;
+        if (firstInfo?.type === 'outside') {
+          const beforePos = firstInfo.segStart - firstInfo.beforeMatch.length;
+          if (beforePos < originalRangeStart) {
+            startAdjustment = firstInfo.beforeMatch.length;
+          }
+        }
+
+        let removalWithinRange = 0;
+        existingWraps.forEach(info => {
+          if (!info) return;
+          if (info.type === 'outside') {
+            const beforePos = info.segStart - info.beforeMatch.length;
+            if (beforePos >= originalRangeStart) {
+              removalWithinRange += info.beforeMatch.length;
+            }
+            const afterPos = info.segEnd;
+            if (afterPos <= originalRangeEnd) {
+              removalWithinRange += info.afterMatch.length;
+            }
+          } else {
+            removalWithinRange += info.beforeMatch.length + info.afterMatch.length;
+          }
+        });
+
+        const newSelectionStart = originalRangeStart - startAdjustment;
+        const newSelectionEnd = newSelectionStart + (originalRangeLength - removalWithinRange);
+        textarea.selectionStart = newSelectionStart;
+        textarea.selectionEnd = Math.max(newSelectionStart, newSelectionEnd);
       } else {
         let insertedTotal = 0;
         for (let i = segments.length - 1; i >= 0; i--) {
           const seg = segments[i];
-          if (sliceMatches(value, seg.start, beforeVariants) && sliceMatchesAfter(value, seg.end, afterVariants)) {
+          const hasOuterWrap = sliceMatches(value, seg.start, beforeVariants) && sliceMatchesAfter(value, seg.end, afterVariants);
+          const hasInnerWrap = beforeVariants.some(marker => marker && value.slice(seg.start, seg.start + marker.length) === marker)
+            && afterVariants.some(marker => marker && value.slice(seg.end - marker.length, seg.end) === marker);
+          if (hasOuterWrap || hasInnerWrap) {
             continue;
           }
           value = value.slice(0, seg.start) + beforeMarker + value.slice(seg.start, seg.end) + afterMarker + value.slice(seg.end);
@@ -3620,8 +3670,8 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       return { hasOverflow: false, snippets: [] };
     }
 
-    const overflowVert = content.scrollHeight - content.clientHeight > OVERFLOW_TOLERANCE_PX;
-    const overflowHoriz = content.scrollWidth - content.clientWidth > OVERFLOW_TOLERANCE_PX;
+    const overflowVert = Math.ceil(content.scrollHeight - content.clientHeight) > OVERFLOW_TOLERANCE_PX;
+    const overflowHoriz = Math.ceil(content.scrollWidth - content.clientWidth) > OVERFLOW_TOLERANCE_PX;
 
     if (!overflowVert && !overflowHoriz) {
       return { hasOverflow: false, snippets: [] };
@@ -3654,8 +3704,8 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       const rects = Array.from(range.getClientRects());
       range.detach?.();
       const isOverflowing = rects.some(rect =>
-        rect.bottom - containerRect.bottom > OVERFLOW_TOLERANCE_PX ||
-        rect.right - containerRect.right > OVERFLOW_TOLERANCE_PX
+        Math.ceil(rect.bottom - containerRect.bottom) > OVERFLOW_TOLERANCE_PX ||
+        Math.ceil(rect.right - containerRect.right) > OVERFLOW_TOLERANCE_PX
       );
       if (isOverflowing) {
         const snippet = node.textContent.trim().replace(/\s+/g, ' ');
@@ -4578,31 +4628,47 @@ async function getThumbnailHTML(rawText, theme) {
   function formatWithJustify(text) {
     if (!text || !text.trim()) return "";
 
-    // Map markers to text-align styles
     const INLINE_ALIGN = {
       "<<<": "text-align:left;",
       ">>>": "text-align:right;",
       "|||": "text-align:center;",
     };
 
-    const buildAlignedFragment = (token, rawBody) => {
-      const inner = formatWithJustify(rawBody);
-      return `<div style="width:100%; ${INLINE_ALIGN[token]}">${inner}</div>`;
-    };
-
-    // 1) Turn inline pairs like <<<text<<< into placeholders
-    //    that will later become <p style="..."> (not <div>)
     const inlineMarkers = [];
-    const withInlinePlaceholders = text.replace(/(<<<|>>>|\|\|\|)([\s\S]*?)\1/g, (_, tok, body) => {
+
+    const addAlignedPlaceholder = (token, rawBody, { block }) => {
       const key = `__ALIGN_${inlineMarkers.length}__`;
+      const inner = formatWithJustify(rawBody);
+      const tag = block ? 'div' : 'span';
+      const extra = block ? '' : 'display:block;';
       inlineMarkers.push({
         key,
-        html: buildAlignedFragment(tok, body),
+        html: `<${tag} style="width:100%; ${extra}${INLINE_ALIGN[token]}">${inner}</${tag}>`
       });
       return key;
+    };
+
+    const INLINE_PAIR_RE = /(<<<|>>>|\|\|\|)([\s\S]*?)\1/g;
+
+    const withInlinePlaceholders = text.replace(INLINE_PAIR_RE, (match, tok, body, offset) => {
+      const leadingBreak = text.lastIndexOf('\n', offset - 1);
+      const beforeToken = leadingBreak === -1 ? text.slice(0, offset) : text.slice(leadingBreak + 1, offset);
+      const blockOpening = /^\s*$/.test(beforeToken);
+
+      const closingIndex = offset + tok.length + body.length;
+      const closingLineBreak = text.lastIndexOf('\n', closingIndex - 1);
+      const beforeClosing = closingLineBreak === -1
+        ? text.slice(0, closingIndex)
+        : text.slice(closingLineBreak + 1, closingIndex);
+      const blockClosing = /^\s*$/.test(beforeClosing);
+
+      if (blockOpening && blockClosing) {
+        return match;
+      }
+
+      return addAlignedPlaceholder(tok, body, { block: false });
     });
 
-    // 2) Support block fences on their own lines
     const FENCES = new Set(["<<<", ">>>", "|||"]);
     const BLOCK_ALIGN_STYLE = INLINE_ALIGN;
 
@@ -4628,17 +4694,25 @@ async function getThumbnailHTML(rawText, theme) {
 
     const flushBlock = (token) => {
       const bodyRaw = buf.join("\n");
-      // Allow inline markers inside blocks too
-      const bodyWithPlaceholders = bodyRaw.replace(/(<<<|>>>|\|\|\|)([\s\S]*?)\1/g, (_, tok, body) => {
-        const key = `__ALIGN_${inlineMarkers.length}__`;
-        inlineMarkers.push({
-          key,
-          html: buildAlignedFragment(tok, body),
-        });
-        return key;
+      const bodyWithPlaceholders = bodyRaw.replace(INLINE_PAIR_RE, (match, tok, body, offset) => {
+        const leadingBreak = bodyRaw.lastIndexOf('\n', offset - 1);
+        const beforeToken = leadingBreak === -1 ? bodyRaw.slice(0, offset) : bodyRaw.slice(leadingBreak + 1, offset);
+        const blockOpening = /^\s*$/.test(beforeToken);
+
+        const closingIndex = offset + tok.length + body.length;
+        const closingLineBreak = bodyRaw.lastIndexOf('\n', closingIndex - 1);
+        const beforeClosing = closingLineBreak === -1
+          ? bodyRaw.slice(0, closingIndex)
+          : bodyRaw.slice(closingLineBreak + 1, closingIndex);
+        const blockClosing = /^\s*$/.test(beforeClosing);
+
+        if (blockOpening && blockClosing) {
+          return match;
+        }
+
+        return addAlignedPlaceholder(tok, body, { block: false });
       });
       const bodyHtml = replaceInlineKeys(plainTextToHtml(bodyWithPlaceholders));
-      // Make the block span the slide so text-align is meaningful in flex layout
       out.push(`<div style="width:100%; ${BLOCK_ALIGN_STYLE[token]}">${bodyHtml}</div>`);
       buf = [];
     };
@@ -4677,11 +4751,11 @@ async function getThumbnailHTML(rawText, theme) {
 
     switch (normalized.name) {
       case 'BigText':
-        return `<div class="large">${html}</div>`;
+        return `<div class="large" spellcheck="false">${html}</div>`;
       case 'SmallText':
-        return `<div class="small">${html}</div>`;
+        return `<div class="small" spellcheck="false">${html}</div>`;
       case 'TinyText':
-        return `<div class="tiny">${html}</div>`;
+        return `<div class="tiny" spellcheck="false">${html}</div>`;
       case 'Text': {
         const scale = normalized.textScale ?? DEFAULT_TEXT_SCALE;
         if (Math.abs(scale - DEFAULT_TEXT_SCALE) > 1e-6) {
@@ -5092,6 +5166,11 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
     for (const line of lines) {
       const match = line.match(/^([A-Za-z][A-Za-z0-9.]*):\s*(.*)/);
       if (match) {
+        if (currentDirective && currentDirective.name === 'Columns') {
+          buffer.push(line);
+          continue;
+        }
+
         const directiveInfo = resolveDirectiveToken(match[1]);
         if (directiveInfo) {
           processBuffer();
