@@ -40,6 +40,7 @@ Examples and common directives are shown below (use the exact directive names):
       <<< Text on Left <<<, >>> Text on Right >>>, and ||| Text is centered ||| align any paragraph, even when using Text# or
       inline modes.  
       *some text* is italic, **some text** is bold, and ***some text*** is bold italic.
+      You can also highlight text and choose any of these features.
 
       Notes: For notes seen on presented slide. (n:)
         These appear in a special position.
@@ -48,7 +49,7 @@ Examples and common directives are shown below (use the exact directive names):
 
       PrintNote: notes about the slide to appear only when printed from the 'print' button in Edit (if you print directly from the slides, you won't get these) (P:)
 
-      Image: image-url.jpg (or a weblink to jpg/png/gif), An optional caption for image after the comma (I:)
+      Image: image-url.jpg (or a weblink to jpg/png/gif), An optional caption for image after the comma (I:). Images can also be pasted in with Ctrl-C, in which case they will saved browser-side and will download with your slide text automatically in a .zip. You can click the "images" list to delete any of these if you no longer need them.
 
       FullScreenWebsite: https://example.com. If the website shows as broken, it is being blocked on the other website's end. Your personal website should work fine. You can use this to embed a Youtube video including the start time by clicking 'share' and then 'embed' and copying the embed url on Youtube. (F:)
 
@@ -73,6 +74,8 @@ Examples and common directives are shown below (use the exact directive names):
       # --- NOTES ---
       # - Download Raw Deck and Load Deck give you your slides but you will still need any images referred to in the same folder
       # - If you want images that are not web-linked, you can paste images into the textbox, and when you download, it will include those images. Keep all in the same folder wherever you store your offline slide text and images.
+      # - Ctrl-B makes a bullet point.
+      # - If you have browser-side spellcheck turned on, this will work in the slide editor box.
       # - If you print from your browser, it will give slides with PrintNotes. 
       # - If you print from the print icon in Edit mode, it will show the PrintNotes.
       # - If no directive is given, text defaults to `Text:`.
