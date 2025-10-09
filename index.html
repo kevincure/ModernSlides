@@ -5272,12 +5272,33 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
     for (const line of lines) {
       const match = line.match(/^([A-Za-z][A-Za-z0-9.]*):\s*(.*)/);
       if (match) {
+        const directiveInfo = resolveDirectiveToken(match[1]);
         if (currentDirective && currentDirective.name === 'Columns') {
-          buffer.push(line);
-          continue;
+          const hasContentInCurrentColumn = () => {
+            for (let i = buffer.length - 1; i >= 0; i--) {
+              const trimmed = buffer[i].trim();
+              if (!trimmed) continue;
+              if (trimmed === '---' || trimmed === '----') {
+                return false;
+              }
+              return true;
+            }
+            return false;
+          };
+
+          const hasNonEmptyContent = hasContentInCurrentColumn();
+          const isMetadataDirective = !!(directiveInfo && directiveInfo.isMetadata);
+
+          if (!hasNonEmptyContent && !isMetadataDirective) {
+            buffer.push(line);
+            continue;
+          }
+
+          processBuffer();
+          buffer = [];
+          currentDirective = { name: 'Text', isMetadata: false, textScale: DEFAULT_TEXT_SCALE };
         }
 
-        const directiveInfo = resolveDirectiveToken(match[1]);
         if (directiveInfo) {
           processBuffer();
           const nextDirective = { ...directiveInfo };
@@ -5610,10 +5631,12 @@ function wrapSlideshowFor16x9() {
     state.currentAbsoluteSlideIndex = targetAbsIndex;
 
     const visibleIndex = resolveVisibleIndexForAbsolute(targetAbsIndex);
+    const initNavigationOptions = { skipEditorSave: true };
+
     if (state.editMode) {
-      showSlide(targetAbsIndex, false);
+      showSlide(targetAbsIndex, false, initNavigationOptions);
     } else {
-      showSlide(visibleIndex, true);
+      showSlide(visibleIndex, true, initNavigationOptions);
     }
     updateHUD();
     updateToggleCountButtonState();
