@@ -1791,32 +1791,32 @@ const ImageStore = {
                           HELPER FOR PRINTING
      ═══════════════════════════════════════════════════════════════ */
 
-function fitPrintNotesToBox() {
-  if (!document.body.classList.contains('print-with-notes')) return;
+  function fitPrintNotesToBox() {
+    if (!document.body.classList.contains('print-with-notes')) return;
 
-  const notesEls = document.querySelectorAll('.print-notes-content');
-  if (!notesEls.length) return;
+    const notesEls = document.querySelectorAll('.print-notes-content');
+    if (!notesEls.length) return;
 
-  notesEls.forEach((el) => {
-  const pageW = el.getBoundingClientRect().width || window.innerWidth;
-  const notesHeightPx = pageW * 0.18; 
-    
-    el.style.setProperty('height', notesHeightPx + 'px', 'important');
-    el.style.setProperty('overflow', 'hidden', 'important');
-    
-    // Start large and shrink
-    let fontSizePx = 36; 
-    el.style.setProperty('font-size', fontSizePx + 'px', 'important');
+    notesEls.forEach((el) => {
+      const pageW = el.getBoundingClientRect().width || window.innerWidth;
+      const notesHeightPx = pageW * 0.18;
 
-    const minFontPx = 8;
-    
-    // Shrink until it fits
-    while (el.scrollHeight > el.clientHeight && fontSizePx > minFontPx) {
-      fontSizePx -= 1;
+      el.style.setProperty('height', notesHeightPx + 'px', 'important');
+      el.style.setProperty('overflow', 'hidden', 'important');
+
+      // Start large and shrink
+      let fontSizePx = 36;
       el.style.setProperty('font-size', fontSizePx + 'px', 'important');
-    }
-  });
-}
+
+      const minFontPx = 8;
+
+      // Shrink until it fits
+      while (el.scrollHeight > el.clientHeight && fontSizePx > minFontPx) {
+        fontSizePx -= 1;
+        el.style.setProperty('font-size', fontSizePx + 'px', 'important');
+      }
+    });
+  }
 
 /* ═══════════════════════════════════════════════════════════════
                           EVENT HANDLERS
@@ -4711,133 +4711,133 @@ async function getThumbnailHTML(rawText, theme) {
   /* ═══════════════════════════════════════════════════════════════
                       TEXT PARSING & HTML GENERATION
      ═══════════════════════════════════════════════════════════════ */
-function maskMathSegmentsForMarkdown(text) {
-  if (!text) return { masked: text, segments: [] };
+  function maskMathSegmentsForMarkdown(text) {
+    if (!text) return { masked: text, segments: [] };
 
-  const segments = [];
-  let result = '';
-  let i = 0;
-  const len = text.length;
+    const segments = [];
+    let result = '';
+    let i = 0;
+    const len = text.length;
 
-  const makeToken = (idx) => `__MS_MATH_TOKEN_${idx}__`;
+    const makeToken = (idx) => `__MS_MATH_TOKEN_${idx}__`;
 
-  while (i < len) {
-    const ch = text[i];
-    const next = i + 1 < len ? text[i + 1] : '';
+    while (i < len) {
+      const ch = text[i];
+      const next = i + 1 < len ? text[i + 1] : '';
 
-    // $$ ... $$
-    if (ch === '$' && next === '$') {
-      const start = i;
-      let j = i + 2;
-      let found = false;
-      while (j < len - 1) {
-        if (text[j] === '$' && text[j + 1] === '$') {
-          found = true;
-          break;
+      // $$ ... $$
+      if (ch === '$' && next === '$') {
+        const start = i;
+        let j = i + 2;
+        let found = false;
+        while (j < len - 1) {
+          if (text[j] === '$' && text[j + 1] === '$') {
+            found = true;
+            break;
+          }
+          j++;
         }
-        j++;
+        if (found) {
+          const seg = text.slice(start, j + 2);
+          const idx = segments.length;
+          segments.push(seg);
+          result += makeToken(idx);
+          i = j + 2;
+          continue;
+        }
       }
-      if (found) {
-        const seg = text.slice(start, j + 2);
-        const idx = segments.length;
-        segments.push(seg);
-        result += makeToken(idx);
-        i = j + 2;
-        continue;
+
+      // \[ ... \]
+      if (ch === '\\' && next === '[') {
+        const start = i;
+        let j = i + 2;
+        let found = false;
+        while (j < len - 1) {
+          if (text[j] === '\\' && text[j + 1] === ']') {
+            found = true;
+            break;
+          }
+          j++;
+        }
+        if (found) {
+          const seg = text.slice(start, j + 2);
+          const idx = segments.length;
+          segments.push(seg);
+          result += makeToken(idx);
+          i = j + 2;
+          continue;
+        }
       }
+
+      // \( ... \)
+      if (ch === '\\' && next === '(') {
+        const start = i;
+        let j = i + 2;
+        let found = false;
+        while (j < len - 1) {
+          if (text[j] === '\\' && text[j + 1] === ')') {
+            found = true;
+            break;
+          }
+          j++;
+        }
+        if (found) {
+          const seg = text.slice(start, j + 2);
+          const idx = segments.length;
+          segments.push(seg);
+          result += makeToken(idx);
+          i = j + 2;
+          continue;
+        }
+      }
+
+      // $ ... $
+      if (ch === '$' && next !== '$') {
+        // Respect escaped \$ – leave it alone
+        if (i > 0 && text[i - 1] === '\\') {
+          result += ch;
+          i++;
+          continue;
+        }
+        const start = i;
+        let j = i + 1;
+        let found = false;
+        while (j < len) {
+          if (text[j] === '$' && text[j - 1] !== '\\') {
+            found = true;
+            break;
+          }
+          j++;
+        }
+        if (found) {
+          const seg = text.slice(start, j + 1);
+          const idx = segments.length;
+          segments.push(seg);
+          result += makeToken(idx);
+          i = j + 1;
+          continue;
+        }
+      }
+
+      // Default: copy character through
+      result += ch;
+      i++;
     }
 
-    // \[ ... \]
-    if (ch === '\\' && next === '[') {
-      const start = i;
-      let j = i + 2;
-      let found = false;
-      while (j < len - 1) {
-        if (text[j] === '\\' && text[j + 1] === ']') {
-          found = true;
-          break;
-        }
-        j++;
-      }
-      if (found) {
-        const seg = text.slice(start, j + 2);
-        const idx = segments.length;
-        segments.push(seg);
-        result += makeToken(idx);
-        i = j + 2;
-        continue;
-      }
-    }
-
-    // \( ... \)
-    if (ch === '\\' && next === '(') {
-      const start = i;
-      let j = i + 2;
-      let found = false;
-      while (j < len - 1) {
-        if (text[j] === '\\' && text[j + 1] === ')') {
-          found = true;
-          break;
-        }
-        j++;
-      }
-      if (found) {
-        const seg = text.slice(start, j + 2);
-        const idx = segments.length;
-        segments.push(seg);
-        result += makeToken(idx);
-        i = j + 2;
-        continue;
-      }
-    }
-
-    // $ ... $
-    if (ch === '$' && next !== '$') {
-      // Respect escaped \$ – leave it alone
-      if (i > 0 && text[i - 1] === '\\') {
-        result += ch;
-        i++;
-        continue;
-      }
-      const start = i;
-      let j = i + 1;
-      let found = false;
-      while (j < len) {
-        if (text[j] === '$' && text[j - 1] !== '\\') {
-          found = true;
-          break;
-        }
-        j++;
-      }
-      if (found) {
-        const seg = text.slice(start, j + 1);
-        const idx = segments.length;
-        segments.push(seg);
-        result += makeToken(idx);
-        i = j + 1;
-        continue;
-      }
-    }
-
-    // Default: copy character through
-    result += ch;
-    i++;
+    return { masked: result, segments };
   }
 
-  return { masked: result, segments };
-}
-
-function unmaskMathSegmentsForMarkdown(text, segments) {
-  if (!segments || !segments.length) return text;
-  let out = text;
-  segments.forEach((seg, idx) => {
-    const token = `__MS_MATH_TOKEN_${idx}__`;
-    // Keep escaping behaviour consistent with the rest of the pipeline
-    const escapedSeg = escapeHtml(seg);
-    out = out.split(token).join(escapedSeg);
-  });
-  return out;
-}
+  function unmaskMathSegmentsForMarkdown(text, segments) {
+    if (!segments || !segments.length) return text;
+    let out = text;
+    segments.forEach((seg, idx) => {
+      const token = `__MS_MATH_TOKEN_${idx}__`;
+      // Keep escaping behaviour consistent with the rest of the pipeline
+      const escapedSeg = escapeHtml(seg);
+      out = out.split(token).join(escapedSeg);
+    });
+    return out;
+  }
 
   function plainTextToHtml(text) {
     if (!text || !text.trim()) return "";
@@ -5121,11 +5121,11 @@ function unmaskMathSegmentsForMarkdown(text, segments) {
     return null;
   }
 
-function parseRawText(rawText) {
+  function parseRawText(rawText) {
     const attributes = {};
     let innerHTML = '';
     const lines = (rawText || '').split('\n');
-    
+
     let currentDirective = { name: 'Text', isMetadata: false, textScale: DEFAULT_TEXT_SCALE, args: null };
     let buffer = [];
 
@@ -5138,7 +5138,7 @@ function parseRawText(rawText) {
       if (!content) return;
 
       const directiveName = currentDirective.name || 'Text';
-      const directiveArgs = currentDirective.args; 
+      const directiveArgs = currentDirective.args;
 
       if (currentDirective.isMetadata || METADATA_DIRECTIVES.includes(directiveName)) {
         attributes[directiveName.toLowerCase()] = content;
@@ -5162,8 +5162,8 @@ function parseRawText(rawText) {
         case "FullScreenWebsite":
           attributes.fullscreenWebsite = content.trim();
           break;
-        case "Header": 
-          attributes.header = content; 
+        case "Header":
+          attributes.header = content;
           break;
         case "Title":
           attributes.title = content.split('\n')[0].trim();
@@ -5206,7 +5206,7 @@ function parseRawText(rawText) {
           const resolvedUrl = resolveImagePath(url.trim(), window.presentationBaseUrl);
           innerHTML += `<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(caption)}"><div class="caption">${plainTextToHtml(caption)}</div></div>`;
           break;
-          
+
         case "Columns": {
           const rawLines = content.split(/\r?\n/);
           const columnSegments = [];
@@ -5229,7 +5229,7 @@ function parseRawText(rawText) {
 
           // Regexes for Columns parsing
           const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+|local-img-[^\s,]+)\s*(?:,\s*(.*))?$/i;
-          const bqLineRe  = /^\s*Blockquote(?:\(([^)]+)\))?:\s*(.*)/i; 
+          const bqLineRe  = /^\s*Blockquote(?:\(([^)]+)\))?:\s*(.*)/i;
 
           const colsHtml = columnSegments.map(segment => {
             const lines = segment.raw.trim().split(/\r?\n/);
@@ -5252,7 +5252,7 @@ function parseRawText(rawText) {
 
             for (const rawLine of lines) {
               const sanitized = rawLine.trim();
-              
+
               // 1. Check for Blockquote
               const bqMatch = rawLine.match(bqLineRe);
               if (bqMatch) {
@@ -5275,7 +5275,7 @@ function parseRawText(rawText) {
                     const dirName = dirMatch[1];
                     const lower = dirName.toLowerCase();
                     const isTextMode = lower === 'bigtext' || lower === 'smalltext' || lower === 'tinytext' || lower === 'text' || /^text\d/.test(lower);
-                    
+
                     if (isTextMode) {
                        flushText();
                        const modeState = interpretModeKeyword(dirName, dirMatch[2]);
@@ -5333,15 +5333,15 @@ function parseRawText(rawText) {
     for (const line of lines) {
       // Check for Directive: or Directive(Args):
       const match = line.match(/^([A-Za-z][A-Za-z0-9.]*)(?:\(([^)]+)\))?:\s*(.*)/);
-      
+
       if (match) {
         const rawName = match[1];
         const token = resolveDirectiveToken(rawName);
-       
+
         if (currentDirective && currentDirective.name === 'Columns') {
            if (token && NESTABLE_DIRECTIVES.includes(token.name)) {
-             
-             // 1. Are we at the start of the first column? 
+
+             // 1. Are we at the start of the first column?
              // (Buffer contains only whitespace/empty lines so far)
              const isStartOfColumn = buffer.every(line => line.trim() === '');
 
@@ -5654,27 +5654,27 @@ window.resolveImagePath = function(imageSrc, baseUrl) {
   /* ═══════════════════════════════════════════════════════════════
                           16:9 ASPECT RATIO SETUP
      ═══════════════════════════════════════════════════════════════ */
-  
-function wrapSlideshowFor16x9() {
-  const slideshow = $("slideshow");
-  if (!slideshow.parentElement.classList.contains('presentation-scaler')) {
-    const viewport = document.createElement('div');
-    viewport.className = 'presentation-viewport';
 
-    const scaler = document.createElement('div');
-    scaler.className = 'presentation-scaler';
+  function wrapSlideshowFor16x9() {
+    const slideshow = $("slideshow");
+    if (!slideshow.parentElement.classList.contains('presentation-scaler')) {
+      const viewport = document.createElement('div');
+      viewport.className = 'presentation-viewport';
 
-    slideshow.parentNode.insertBefore(viewport, slideshow);
-    viewport.appendChild(scaler);
-    scaler.appendChild(slideshow);
+      const scaler = document.createElement('div');
+      scaler.className = 'presentation-scaler';
 
-    // HUD goes on the viewport (letterbox), not over the slide
-    viewport.appendChild($("slide-counter"));
-    viewport.appendChild($("progress-bar"));
-    const logo = $("company-logo");
-    if (logo) viewport.appendChild(logo);
+      slideshow.parentNode.insertBefore(viewport, slideshow);
+      viewport.appendChild(scaler);
+      scaler.appendChild(slideshow);
+
+      // HUD goes on the viewport (letterbox), not over the slide
+      viewport.appendChild($("slide-counter"));
+      viewport.appendChild($("progress-bar"));
+      const logo = $("company-logo");
+      if (logo) viewport.appendChild(logo);
+    }
   }
-}
 
 
   
