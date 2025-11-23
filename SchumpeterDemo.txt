@@ -1,0 +1,125 @@
+# METADATA:
+Title: SchumpeterDemo
+Theme: bauhaus
+ShowSlideCount: true
+LogoUrl: 
+
+# Slide(1):
+
+Title: On Mr. Schumpeter
+BigText: "Creative Destruction" is the essential fact about capitalism. And the essential fact about slideshow programs!
+Break: 1.5
+TinyText: Nov 22 2025 • ModernSlides Demo
+
+PrintNote: This deck demonstrates ModernSlides (github.com/kevincure/ModernSlides). They run locally in your browser. If you have the ModernSlides index.html and proxy.php on your website (yourwebsite.com/Slides/index.html?xml=NameOfYourSlides.txt), you can literally run your slideshow in a browser. You can drag and drop or Ctrl-V images right into here, and they'll download with a zip - just upload the images to the same spot on your website.  Play around here: f is full screen, e toggles between edit and presentation model, and if you hit the print button here in edit mode, you'll get these comments as well. By changing the theme below from Bauhaus to one of the other themes, you can modify the full design of the slideshow all in one click.
+
+# Slide(2):
+
+BigText: Why is Progress Slow?
+1. ***New Things are Hard:*** Innovation makes old skills and capital obsolete.
+2. ***Old Things Protect:*** Society builds bottlenecks to prevent danger.
+Break: 1
+Text: *Is this why we use Powerpoint and Beamer?*
+
+PrintNote: Numbered list, text size selection, italics and bold. The critical thing is this program is that the STYLE THEME makes the design; you just type in the content!
+
+# Slide(3):
+
+Text: Consider a task with two parts. Sector 1 improves (Schumpeterian innovation). Sector 2 stagnates (Baumol effect).
+Table:
+Period & Fast & Slow & Total & Impact
+---
+$t=0$ & 20 hrs & 80 hrs & 100 & Baseline
+---
+$t=1$ & 10 hrs & 80 hrs & 90 & $\Delta 10\%$
+---
+$t=2$ & 5 hrs & 80 hrs & 85 & $\Delta 5.5\%$
+---
+$t=\infty$ & $\lim_{x \to 0}=0$ & 80 hrs & 80 & **Stagnation**
+
+PrintNote: And of course we can handle math and tables
+
+# Slide(4):
+
+Columns:
+Image: https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Portrait_of_Thomas_Midgley_Jr..jpg/500px-Portrait_of_Thomas_Midgley_Jr..jpg, Thomas Midgley Jr.
+---
+Image: https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/EthylCorporationSign.jpg/960px-EthylCorporationSign.jpg, Leaded Gasoline
+
+PrintNote: And we can handle columns well also
+
+# Slide(5):
+
+FullScreenWebsite: https://www.youtube.com/embed/JQ8ZiT1sn88?si=mjfXgxB-3bJWGCAL
+
+PrintNote: And we can embed working Youtube videos quite easily, including with time markers preloaded. Engelbart's PARC demo shows the mouse, the GUI, windows, video conferencing, hypertext, file linking, etc. Engelbart read "As We may Think" while in the Navy in '46, but wanted more civilian benefit from tech. Moved to Ames as a military wind tunnel expert before absolutely blowing people's minds with this demo in 68.
+
+# Slide(6):
+
+Title: The Baumol Effect
+Blockquote(Baumol and Bowen): The output per man-hour of the violinist playing a Schubert quartet in a standard concert hall is relatively fixed, and it is fairly difficult to reduce the number of actors necessary for a performance of Henry IV.
+
+PrintNote: Blockquotes with citations are simple; again, design and content are separated.
+
+# Slide(7):
+
+Columns: 
+BigText: But we can sometimes do useful things more quickly if we do it ourselves!
+----
+Image: https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Katalin_Karik%C3%B3_by_Michel_2024_02.jpg/500px-Katalin_Karik%C3%B3_by_Michel_2024_02.jpg, Katalin Karikó
+
+PrintNote: Uses four dashes ---- to separate columns, which makes the prior column be double-width.
+
+# Slide(8):
+
+Header: Comparison
+Title: Two Timelines
+Columns:
+Text: **Covid Vaccine (mRNA-1273)**
+1. Genome ready: Jan 10
+2. Human Trial: Mar 16
+3. Phase 3: Jul 27
+4. Approval: Dec 18
+*Be like this*
+---
+Text: **Malaria Vaccine (BNT165)**
+1. Genome: Long known
+2. Dev Start: Jul 2021
+3. Human Trial: Dec 2022
+4. Phase 3: Not started
+*Why be slower?*
+
+SpeakerNote: Check out presentation mode - press 'p' to see it!
+
+PrintNote: And some control of column content plus auto-lists from numbers. Just go 1., 2., etc.
+
+# Slide(9):
+
+Text2.4: >>> "You can just do things." >>>
+BigText: No sense just using **software** you always used.
+Text: Why not slides that separate **content** from **design**?
+SmallText: And you can just type the slides very quickly?
+TinyText: (See: Laws of Fear, Cambridge University Press, 2005)
+
+PrintNote: This slide demonstrates the variable text size capability of the tool. Better yet, highlight over any line of text and see the popup that lets you easily make the text left, right, or center justified, and bold, italic or bolditalic.
+
+# Slide(10):
+
+FullScreenImage: https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/St_Pancras_Railway_Station_2012-06-23.jpg/960px-St_Pancras_Railway_Station_2012-06-23.jpg
+
+PrintNote: Images can be full screen, or...
+
+# Slide(11):
+
+Background:  https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/St_Pancras_Railway_Station_2012-06-23.jpg/960px-St_Pancras_Railway_Station_2012-06-23.jpg
+
+Title: We can build beautiful things again
+
+PrintNote: Can be full screen with text overlays and opacity.
+
+# Slide(12):
+
+Header: Indeed, when the slideshow is in the browser, you can browse...
+FullScreenWebsite: https://www.kevinbryanecon.com/tools.html
+
+PrintNote: You can even integrate working websites into your presentation. Note that many big public websites block this, but for your personal site, no problem.

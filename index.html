@@ -7,22 +7,6 @@ Details at https://github.com/kevincure/ModernSlides/
 This is a single-file HTML application that creates an interactive slideshow system.
 The application allows users to create, edit, and present slides using a simple 
 text-based markup language.
-
-File Structure:
-- HTML structure with slideshow container and editor UI
-- CSS styles for themes and responsive design - you can create you own and add it in const AVAILABLE_THEMES
-- JavaScript application logic in a single IIFE module
-
-Key Features:
-- Multiple built-in themes (Tufte, Oxford, Bringhurst, etc.)
-- Live editing with real-time preview
-- Support for math equations (MathJax), images, tables, columns
-- Keyboard navigation and fullscreen presentation mode
-- Import/export functionality for slide decks
-- Responsive 16:9 aspect ratio design
-
-The slideshow content is stored as XML with CDATA sections containing
-the raw text markup that gets parsed into slide elements.
 -->
 <html lang="en">
 <head>
@@ -234,6 +218,43 @@ body {
 .slide-content .notes p {
   font-size: 1em;
   margin-bottom: 0.5em;
+}
+
+/* --- BLOCKQUOTE COMPONENT --- */
+.slide-content .blockquote {
+  width: 100%;
+  margin: calc(var(--base-font-size) * 0.5) 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Quote: Defaults to BigText size (scale 1.6) and Italic */
+.slide-content .blockquote .quote-text {
+  font-size: calc(var(--base-font-size) * 1.6);
+  font-style: italic;
+  line-height: 1.2;
+  margin-bottom: calc(var(--base-font-size) * 0.4);
+}
+
+.slide-content .blockquote .quote-text p {
+  font-size: inherit;
+  line-height: inherit;
+  margin: 0;
+}
+
+/* Source: Defaults to Regular size, Normal style, Right Aligned */
+.slide-content .blockquote .quote-source {
+  font-size: var(--base-font-size);
+  font-style: normal;
+  text-align: right;
+  opacity: 0.85;
+  margin-top: 0;
+}
+
+.slide-content .blockquote .quote-source p {
+  font-size: inherit;
+  line-height: inherit;
+  margin: 0;
 }
 
 /* ----------------------------- */
@@ -1031,21 +1052,41 @@ body:not(.is-edit-mode) .overflow-indicator {
 /* ----------------------------- */
 /* Hide injected print notes on screen */
 .print-notes-content { display: none; }
+
+
+body.print-with-notes .print-notes-content {
+  display: block !important;
+  position: absolute !important;
+  left: 0 !important; 
+  right: 0 !important; 
+  bottom: 0 !important;
+  /* This calculation matches your print layout (16:9 aspect ratio offset) */
+  top: calc(min(177.78vh, 100vw) * 0.5625) !important; 
+  padding: calc(var(--slide-base-font-size) * 0.4) !important;
+  background: #fff !important;
+  z-index: 2147483647 !important; /* Show on top of everything */
+  overflow: hidden !important; /* Essential for scrollHeight measurement */
+}
 /* Hide the website placeholder on screen */
 .website-print-placeholder { display: none; }
 
 @media print {
   @page {
-    size: landscape;
+    size: letter landscape;
     margin: 0;
   }
 
   /* Allow the printer to see all slides */
   html, body {
+    height: auto !important;
     overflow: visible !important;
     background: #fff !important;
     margin: 0 !important;
     padding: 0 !important;
+  }
+
+  #overflow-measure-stage, .modal, #editor {
+    display: none !important;
   }
 
   .slide.is-fullscreen-image-slide .slide-content {
@@ -1060,9 +1101,6 @@ body:not(.is-edit-mode) .overflow-indicator {
     flex: 0 0 auto !important;   /* don't stretch to fit content */
     overflow: hidden !important;  /* hard clip, like the screen view */
   }
-
-  /* Hide the iframe (already present above, safe to re-assert) */
-  .slide iframe { display: none !important; }
 
   /* Tame the inline-styled iframe wrapper used for FullScreenWebsite */
   .slide [style*="z-index: 100"] {
@@ -1126,12 +1164,17 @@ body:not(.is-edit-mode) .overflow-indicator {
     overflow: hidden !important;
     margin: 0 !important; padding: 0 !important;
     opacity: 1 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
     page-break-after: always;
-    break-after: page;'
+    break-after: page;
     background: transparent !important;
     background-image: none !important; /* keep imagery inside the 16:9 box */
   }
-  .slide:last-child { page-break-after: auto; break-after: avoid; }
+  .slide:last-of-type { 
+    page-break-after: auto !important; 
+    break-after: auto !important; 
+  }
   .slide.hidden-in-presentation { display: none !important; }
   
   /* --- 16:9 CONTENT BOX (THE "PRINTABLE SCREEN") --- */
@@ -1180,23 +1223,12 @@ body:not(.is-edit-mode) .overflow-indicator {
     top: calc(min(177.78vh, 100vw) * 0.5625) !important; /* Start exactly where the slide content ends */
     padding: calc(var(--base-font-size) * 0.4) calc(var(--base-font-size) * 0.8) !important;
     background: #fff !important;
-    font-size: calc(var(--base-font-size) * 0.8) !important;
+    height: auto; 
+    font-size: calc(var(--base-font-size) * 0.8);
     line-height: 1.4 !important;
     z-index: 2147483647 !important;
     color: #cc0000 !important; /* The requested red color */
   }
-
-  /* STEP 3: Restore the automatic font-shrinking logic based on paragraph count. */
-  body.print-with-notes .print-notes-content:has(p:nth-child(2)) { 
-    font-size: calc(var(--base-font-size) * 0.44) !important; 
-  }
-  body.print-with-notes .print-notes-content:has(p:nth-child(3)) { 
-    font-size: calc(var(--base-font-size) * 0.36) !important; 
-  }
-  body.print-with-notes .print-notes-content:has(p:nth-child(5)) { 
-    font-size: calc(var(--base-font-size) * 0.32) !important; 
-  }
-}
 }
 </style>
 </head>
@@ -1304,6 +1336,8 @@ body:not(.is-edit-mode) .overflow-indicator {
 
       TinyText: For footnote-sized text. (y:)
 
+      Blockquote(caption): Creates a blockquote with a caption below (q:)
+
       Break: 1 (or 2.2 or .7), provides a break of a set size
 
       Notes: For notes at the bottom of the slide. (n:)
@@ -1319,8 +1353,8 @@ body:not(.is-edit-mode) .overflow-indicator {
 
       Columns: (C:)
         This is the left column. Can contain any
-        amount of text, paragraphs, and $math$.
-        ---
+        amount of text, paragraphs, and $math$. The ---- instead of --- makes it double-width.
+        ----
         This is the right column. You can put an
         image here using the 'image, caption' syntax:
         test.jpg, A caption for the image in the column.
@@ -1334,8 +1368,6 @@ body:not(.is-edit-mode) .overflow-indicator {
         Cell 1.1 & Cell 1.2 & Cell 1.3
         ---
         Cell 2.1 & Cell 2.2 & $math$ is fine
-
-      [[BigText]], [[SmallText]], [[TinyText]], [[Text1.2]], and [[Break:0.5]] can be used inside Columns or Tables to keep the mode until it is changed again.
 
       *some text* is italic, **some text** is bold, ***some text*** is bold italic.
 
@@ -1393,77 +1425,7 @@ const ModernSlideshow = (function() {
                               CONSTANTS
      ═══════════════════════════════════════════════════════════════ */
   const DEFAULT_THEME = 'tufte-base';
-  const AVAILABLE_THEMES = ['tufte-base', 'oxford', 'bringhurst', 'calgary', 'swiss-modern', 'david-carson', 'gradient', 'modern-dark','japan-minimal'];
-  const DEFAULT_XML = `<presentation title="New Presentation" showSlideCount="true" theme="${DEFAULT_THEME}">
-    <slide>
-      <raw><![CDATA[
-Title: Modern Slides
-Header: Header text here
-BigText: This is a slideshow.
-Text: Press 'E' to edit, 'F' fullscreen, 'Esc' go back
-Break: 1.2
-Use arrow keys to navigate.
-SmallText: smaller
-TinyText: tiny
-    ]]></raw>
-  </slide>
-  <slide>
-    <raw><![CDATA[
-Title: Raw Text Demo
-Text: This slide *demonstrates* various **features**. For example: $e = mc^2$.
-Columns:
-  Left column.
-  ---
-  Center column. Math like $\\alpha + \\beta$.
-  A blank line creates a new paragraph.
-
-  Like this.
-  ---
-  Image: https://upload.wikimedia.org/wikipedia/commons/3/3b/BlkStdSchnauzer2.jpg, And column 3 here.
-    ]]></raw>
-  </slide>
-  <slide>
-    <raw><![CDATA[
-Text: This slide shows a table
-Table:
-  Header 1 & Header 2
-  ---
-  Value 1 & $\\sum_{i=0}^n i^2$
-  ---
-  Value 2 & Another Value
-Notes: And small notes
-PrintNote: These notes will only appear if you click print from Edit mode; if you print from the slideshow, the print preview will not show these notes.
-    ]]></raw>
-  </slide>
-  <slide>
-    <raw><![CDATA[
-FullScreenImage: https://files.worldwildlife.org/wwfcmsprod/images/Mountain_Gorilla_Silverback_WW22557/hero_full/cg47pknak_Mountain_Gorilla_Silverback_WW22557.jpg
-    ]]></raw>
-  </slide>
-  <slide>
-    <raw><![CDATA[
-FullScreenWebsite: https://www.kevinbryanecon.com
-SpeakerNote: Press p to create a presenter mode window and you'll see your note
-    ]]></raw>
-  </slide>
-  <slide>
-    <raw><![CDATA[
-Image: https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExc3p5N2UwOGppdTc4NXgzMWN1czI5eTRicGhtZzQ3ZWJ3dXUxNXF1aiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/pKf7PlSjbtJN6/giphy.gif
-Text: GIFs work too
-    ]]></raw>
-  </slide> 
-  <slide>
-    <raw><![CDATA[
-Background: https://files.worldwildlife.org/wwfcmsprod/images/Mountain_Gorilla_Silverback_WW22557/hero_full/cg47pknak_Mountain_Gorilla_Silverback_WW22557.jpg
-Title: Gorilla
-Text: And some text.
-<<< Text left justified <<<
->>> And here's a paragraph of text justified on right >>>
-||| Text centered |||
-      ]]></raw>
-  </slide>
-  </presentation>`;
-
+  const AVAILABLE_THEMES = ['tufte-base', 'editorial', 'oxford', 'bringhurst', 'calgary', 'swiss-modern', 'david-carson', 'gradient', 'modern-dark','japan-minimal', 'bauhaus'];
   const MINIMAL_NEW_XML = `<presentation title="New Presentation" showSlideCount="true" theme="${DEFAULT_THEME}">
   <slide>
     <raw><![CDATA[
@@ -1475,7 +1437,7 @@ Title: New slide
   const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header",
                                 "Title", "BigText", "Text", "SmallText", "TinyText", "Notes",
                                 "Image", "Columns", "Table", "FullScreenWebsite", "SpeakerNote",
-                                "PrintNote", "Break", "Logo"];
+                                "PrintNote", "Break", "Logo", "Blockquote"];
   const ALL_DIRECTIVES = [...METADATA_DIRECTIVES, ...CONTENT_DIRECTIVES];
   const INLINE_MODE_DIRECTIVE_RE = /\[\[([A-Za-z][A-Za-z0-9.]*)(?::?\s*([^\]]+))?\]\]/g;
   const ALIGNMENT_MARKERS = ['<<<', '|||', '>>>'];
@@ -1829,7 +1791,34 @@ const ImageStore = {
       state.wakeLock = null;
     }
   }
-  
+
+function fitPrintNotesToBox() {
+  if (!document.body.classList.contains('print-with-notes')) return;
+
+  const notesEls = document.querySelectorAll('.print-notes-content');
+  if (!notesEls.length) return;
+
+  notesEls.forEach((el) => {
+  const pageW = el.getBoundingClientRect().width || window.innerWidth;
+  const notesHeightPx = pageW * 0.18; 
+    
+    el.style.setProperty('height', notesHeightPx + 'px', 'important');
+    el.style.setProperty('overflow', 'hidden', 'important');
+    
+    // Start large and shrink
+    let fontSizePx = 36; 
+    el.style.setProperty('font-size', fontSizePx + 'px', 'important');
+
+    const minFontPx = 8;
+    
+    // Shrink until it fits
+    while (el.scrollHeight > el.clientHeight && fontSizePx > minFontPx) {
+      fontSizePx -= 1;
+      el.style.setProperty('font-size', fontSizePx + 'px', 'important');
+    }
+  });
+}
+
 /* ═══════════════════════════════════════════════════════════════
                           EVENT HANDLERS
      ═══════════════════════════════════════════════════════════════ */
@@ -1842,6 +1831,9 @@ const ImageStore = {
         f.dataset.src = f.src;        // remember
         f.src = 'about:blank';        // blank it so nothing gets rasterized
       });
+      if (document.body.classList.contains('print-with-notes')) {
+                    fitPrintNotesToBox();
+              }
     });
 
     window.addEventListener('afterprint', () => {
@@ -2212,12 +2204,10 @@ $("download-txt-btn").onclick = async () => {
           slideEl.appendChild(printNotesDiv);
         }
       });
-      
-      // Trigger print
-      window.print();
-      
+
       // Clean up after print
       setTimeout(() => {
+        window.print();
         document.body.classList.remove('print-with-notes');
         document.querySelectorAll('.print-notes-content').forEach(el => el.remove());
       }, 1000);
@@ -2421,7 +2411,7 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
     const file = it.getAsFile();
     if (!file) continue;
     const id = await ImageStore.storeImage(file, 'clipboard');
-    insertLines.push(`Image: ${id}, Pasted image`);
+    insertLines.push(`Image: ${id}`);
   }
 
   const insertion = (before.endsWith('\n') || before.length === 0 ? '' : '\n') +
@@ -2434,6 +2424,67 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
   validateAndUpdateTextarea();
   updateSaveButtonGlow();
 });
+
+// let me drag and drop images too
+    const editor = $("raw-text-editor");
+
+    // 1. Prevent browser from opening the file
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      editor.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+    });
+
+    // 2. Visual feedback (optional: you can style .dragging in CSS if you want)
+    editor.addEventListener('dragover', (e) => {
+      editor.classList.add('dragging'); 
+      e.dataTransfer.dropEffect = 'copy'; // Explicitly show copy cursor
+    });
+
+    editor.addEventListener('dragleave', () => {
+      editor.classList.remove('dragging');
+    });
+
+    // 3. Handle the drop
+    editor.addEventListener('drop', async (e) => {
+      editor.classList.remove('dragging');
+      const files = e.dataTransfer.files;
+      
+      if (!files || !files.length) return;
+
+      // Filter for images only
+      const images = Array.from(files).filter(file => file.type.startsWith('image/'));
+      if (images.length === 0) return;
+
+      // Insert at current cursor position (or end if not focused)
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const before = editor.value.slice(0, start);
+      const after = editor.value.slice(end);
+
+      const insertLines = [];
+      for (const file of images) {
+        // Reuse your existing ImageStore logic
+        const id = await ImageStore.storeImage(file, file.name);
+        // Use the filename as the initial caption
+        insertLines.push(`Image: ${id}, ${file.name}`);
+      }
+
+      const insertion = (before.endsWith('\n') || before.length === 0 ? '' : '\n') +
+                        insertLines.join('\n') + '\n';
+      
+      editor.value = before + insertion + after;
+      
+      // Update cursor position to be after the new text
+      const newCaret = (before + insertion).length;
+      editor.selectionStart = editor.selectionEnd = newCaret;
+
+      // Trigger app updates
+      state.hasChanges = true;
+      validateAndUpdateTextarea();
+      updateSaveButtonGlow();
+    });
 
     // allow shortcuts
     $("raw-text-editor").addEventListener('keydown', (e) => {
@@ -2482,6 +2533,7 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
         'b': 'BigText',
         'C': 'Columns:\n  ',
         'I': 'Image',
+        'q': 'Blockquote()',
         'T': 'Table:\n  ',
         'W': 'FullScreenWebsite',
         'n': 'Notes',
@@ -2611,23 +2663,6 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
     return xml;
   }
   
-  async function convertImageToDataURL(url) {
-    return new Promise((resolve, reject) => {
-      fetch(url)
-        .then(response => {
-          if (!response.ok) throw new Error(`Network response was not ok for ${url}`);
-          return response.blob();
-        })
-        .then(blob => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        })
-        .catch(err => reject(`Failed to fetch blob for ${url}: ${err}`));
-    });
-  }
- 
   /* ==================================================================
                         PRESENTER MODE
   ================================================================= */
@@ -3841,15 +3876,6 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     const snippets = measurement.snippets;
     slideEl.classList.add('has-overflow');
     slideEl.dataset.overflowSnippets = JSON.stringify(snippets);
-
-    const notice = document.createElement('div');
-    notice.className = 'overflow-indicator';
-    const preview = snippets.length
-      ? escapeHtml(snippets[0].slice(0, OVERFLOW_SNIPPET_LIMIT))
-        + (snippets[0].length > OVERFLOW_SNIPPET_LIMIT ? '&hellip;' : '')
-      : 'Reduce text size or add a break.';
-    notice.innerHTML = `<strong>Overflowing content</strong><span>${preview}</span>`;
-    slideEl.appendChild(notice);
   }
 
   function scheduleOverflowChecks() {
@@ -3948,7 +3974,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
         message = 'Starting a fresh deck.';
         break;
       case 'default':
-        message = "Click [!] for help.";
+        message = "Click [?] for help.";
         persist = true;
         break;
       case 'load':
@@ -4068,13 +4094,13 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
     // 1. Create DOM if needed (for new/load/init actions)
     if (action === 'INIT' || action === 'LOAD' || action === 'NEW') {
-      const xmlString = data.xmlString || DEFAULT_XML;
+      const xmlString = data.xmlString || MINIMAL_NEW_XML;
       const parser = new DOMParser();
       const tempDoc = parser.parseFromString(xmlString, "text/xml");
 
       if (tempDoc.getElementsByTagName("parsererror").length > 0) {
         alert("Error parsing presentation XML. Loading default.");
-        state.xmlDoc = parser.parseFromString(DEFAULT_XML, "text/xml");
+        state.xmlDoc = parser.parseFromString(MINIMAL_NEW_XML, "text/xml");
       } else {
         state.xmlDoc = tempDoc;
       }
@@ -4220,21 +4246,6 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
       if (metadataChanged) {
         state.hasChanges = true;
-      }
-    }
-    
-    // 5. Handle hide/show
-    if (action === 'TOGGLE_HIDE') {
-      const { index, hidden } = data;
-      const slideNode = state.xmlDoc.querySelectorAll("presentation > slide")[index];
-      if (slideNode) {
-        if (hidden) {
-          slideNode.setAttribute("hidden", "true");
-        } else {
-          slideNode.removeAttribute("hidden");
-        }
-        state.hasChanges = true;
-        console.log(`[updateGroundTruth] Set slide ${index} hidden=${hidden}`);
       }
     }
     
@@ -4523,7 +4534,6 @@ async function getThumbnailHTML(rawText, theme) {
   const slideElementHTML = slideElement.outerHTML;
   
   // Get the theme CSS content
-  let themeCSS = '';
   const themeLink = document.getElementById(`${theme}-stylesheet`);
   const themeHref = themeLink ? themeLink.href : '';
   if (themeLink && themeLink.sheet) {
@@ -4573,22 +4583,6 @@ async function getThumbnailHTML(rawText, theme) {
                           XML HANDLING
      ═══════════════════════════════════════════════════════════════ */
   
-  function initializePresentation(xmlString) {
-    const parser = new DOMParser();
-    const tempDoc = parser.parseFromString(xmlString, "text/xml");
-    
-    if (tempDoc.getElementsByTagName("parsererror").length > 0) {
-      alert("Error parsing presentation XML. Loading default.");
-      state.xmlDoc = parser.parseFromString(DEFAULT_XML, "text/xml");
-    } else {
-      state.xmlDoc = tempDoc;
-    }
-    
-    const theme = state.xmlDoc.documentElement.getAttribute("theme") || DEFAULT_THEME;
-    $("theme-selector").value = theme;
-    applyTheme(theme);
-  }  
-
   function createSlideElement(rawText) {
     const { attributes, innerHTML } = parseRawText(rawText);
   const slideDiv = document.createElement("div");
@@ -4710,26 +4704,181 @@ async function getThumbnailHTML(rawText, theme) {
   /* ═══════════════════════════════════════════════════════════════
                       TEXT PARSING & HTML GENERATION
      ═══════════════════════════════════════════════════════════════ */
-  
-  function plainTextToHtml(text) {
+function maskMathSegmentsForMarkdown(text) {
+  if (!text) return { masked: text, segments: [] };
+
+  const segments = [];
+  let result = '';
+  let i = 0;
+  const len = text.length;
+
+  const makeToken = (idx) => `__MS_MATH_TOKEN_${idx}__`;
+
+  while (i < len) {
+    const ch = text[i];
+    const next = i + 1 < len ? text[i + 1] : '';
+
+    // $$ ... $$
+    if (ch === '$' && next === '$') {
+      const start = i;
+      let j = i + 2;
+      let found = false;
+      while (j < len - 1) {
+        if (text[j] === '$' && text[j + 1] === '$') {
+          found = true;
+          break;
+        }
+        j++;
+      }
+      if (found) {
+        const seg = text.slice(start, j + 2);
+        const idx = segments.length;
+        segments.push(seg);
+        result += makeToken(idx);
+        i = j + 2;
+        continue;
+      }
+    }
+
+    // \[ ... \]
+    if (ch === '\\' && next === '[') {
+      const start = i;
+      let j = i + 2;
+      let found = false;
+      while (j < len - 1) {
+        if (text[j] === '\\' && text[j + 1] === ']') {
+          found = true;
+          break;
+        }
+        j++;
+      }
+      if (found) {
+        const seg = text.slice(start, j + 2);
+        const idx = segments.length;
+        segments.push(seg);
+        result += makeToken(idx);
+        i = j + 2;
+        continue;
+      }
+    }
+
+    // \( ... \)
+    if (ch === '\\' && next === '(') {
+      const start = i;
+      let j = i + 2;
+      let found = false;
+      while (j < len - 1) {
+        if (text[j] === '\\' && text[j + 1] === ')') {
+          found = true;
+          break;
+        }
+        j++;
+      }
+      if (found) {
+        const seg = text.slice(start, j + 2);
+        const idx = segments.length;
+        segments.push(seg);
+        result += makeToken(idx);
+        i = j + 2;
+        continue;
+      }
+    }
+
+    // $ ... $
+    if (ch === '$' && next !== '$') {
+      // Respect escaped \$ – leave it alone
+      if (i > 0 && text[i - 1] === '\\') {
+        result += ch;
+        i++;
+        continue;
+      }
+      const start = i;
+      let j = i + 1;
+      let found = false;
+      while (j < len) {
+        if (text[j] === '$' && text[j - 1] !== '\\') {
+          found = true;
+          break;
+        }
+        j++;
+      }
+      if (found) {
+        const seg = text.slice(start, j + 1);
+        const idx = segments.length;
+        segments.push(seg);
+        result += makeToken(idx);
+        i = j + 1;
+        continue;
+      }
+    }
+
+    // Default: copy character through
+    result += ch;
+    i++;
+  }
+
+  return { masked: result, segments };
+}
+
+function unmaskMathSegmentsForMarkdown(text, segments) {
+  if (!segments || !segments.length) return text;
+  let out = text;
+  segments.forEach((seg, idx) => {
+    const token = `__MS_MATH_TOKEN_${idx}__`;
+    // Keep escaping behaviour consistent with the rest of the pipeline
+    const escapedSeg = escapeHtml(seg);
+    out = out.split(token).join(escapedSeg);
+  });
+  return out;
+}
+
+function plainTextToHtml(text) {
     if (!text || !text.trim()) return "";
-    let safeText = escapeHtml(text);
     
-    // Process markdown-style formatting
+    // 1. Mask Math
+    const { masked, segments } = maskMathSegmentsForMarkdown(text);
+    
+    // 2. Escape HTML
+    let safeText = escapeHtml(masked);
+    
+    // 3. Process Markdown (bold/italic)
     safeText = safeText.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    safeText = safeText.replace(/\*\*(.*?)\*\* /g, '<strong>$1</strong> ');
     safeText = safeText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     safeText = safeText.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // 4. [NEW] Process Lists (before paragraph splitting)
+    const listStyle = 'margin:0; padding-left:1.2em; text-align:left;';
     
-    return safeText
+    // Unordered Lists (* or •)
+    safeText = safeText.replace(/(?:^|\n)((?:\s*[•*]\s+.*(?:\n|$))+)/g, (match, block) => {
+        const items = block.trim().split('\n').map(l => `<li>${l.replace(/^\s*[•*]\s+/, '')}</li>`).join('');
+        return `\n<ul style="${listStyle}">${items}</ul>\n`;
+    });
+
+    // Ordered Lists (1., 2. etc)
+    safeText = safeText.replace(/(?:^|\n)((?:\s*\d+\.\s+.*(?:\n|$))+)/g, (match, block) => {
+        const items = block.trim().split('\n').map(l => `<li>${l.replace(/^\s*\d+\.\s+/, '')}</li>`).join('');
+        return `\n<ol style="${listStyle}">${items}</ol>\n`;
+    });
+    
+    // 5. Handle Paragraphs and Breaks
+    let html = safeText
       .replace(/\r\n/g, '\n')
       .split(/\n{2,}/)
       .map(p => {
-        // Don't wrap our alignment divs in paragraph tags
-        if (p.trim().startsWith('__ALIGN_')) return p; 
+        const t = p.trim();
+        // Don't wrap alignment tags OR list tags in <p>
+        if (t.startsWith('__ALIGN_') || t.startsWith('<ul') || t.startsWith('<ol')) return p; 
         return `<p>${p.replace(/\n/g, '<br />')}</p>`;
       })
       .join('\n');
-  }
+
+     // 6. Unmask Math
+     html = unmaskMathSegmentsForMarkdown(html, segments);
+     
+     return html;
+}
 
   function formatWithJustify(text) {
     if (!text || !text.trim()) return "";
@@ -4965,190 +5114,118 @@ async function getThumbnailHTML(rawText, theme) {
     return null;
   }
 
-  function parseRawText(rawText) {
+function parseRawText(rawText) {
     const attributes = {};
     let innerHTML = '';
     const lines = (rawText || '').split('\n');
-    let currentDirective = { name: 'Text', isMetadata: false, textScale: DEFAULT_TEXT_SCALE };
+    
+    let currentDirective = { name: 'Text', isMetadata: false, textScale: DEFAULT_TEXT_SCALE, args: null };
     let buffer = [];
+
+    // Directives allowed to exist INSIDE a Column without breaking it
+    const NESTABLE_DIRECTIVES = ['Image', 'BigText', 'SmallText', 'TinyText', 'Text', 'Break'];
 
     function processBuffer() {
       if (buffer.length === 0) return;
       const content = buffer.join('\n').trim();
       if (!content) return;
 
-      // Handle metadata directives
       const directiveName = currentDirective.name || 'Text';
+      const directiveArgs = currentDirective.args; 
+
       if (currentDirective.isMetadata || METADATA_DIRECTIVES.includes(directiveName)) {
         attributes[directiveName.toLowerCase()] = content;
         buffer = [];
         return;
       }
 
-      // Handle content directives
       switch (directiveName) {
         case "Hidden":
           if (content.toLowerCase() === 'true') attributes.hidden = true;
           break;
-          
         case "Background":
         case "FullScreenImage":
           attributes.background = content;
           if (directiveName === "FullScreenImage") attributes.isFullScreenImage = true;
           break;
-
-        case "Break": {
+        case "Break":
           const lines = Math.max(0, parseFloat(content) || 1);
           innerHTML += `<div aria-hidden="true" style="display:block;height:calc(${lines} * 1lh);"></div>`;
           break;
-        }
-
         case "FullScreenWebsite":
           attributes.fullscreenWebsite = content.trim();
           break;
-          
         case "Header": 
           attributes.header = content; 
           break;
-          
         case "Title":
           attributes.title = content.split('\n')[0].trim();
           innerHTML += `<h1>${escapeHtml(content).replace(/\n/g, '<br />')}</h1>`;
           break;
-
         case "BigText":
           innerHTML += wrapHtmlWithMode('BigText', formatWithJustify(content));
           break;
-
         case "Text":
           innerHTML += wrapHtmlWithMode(
             makeModeState('Text', currentDirective.textScale),
             formatWithJustify(content)
           );
           break;
-
         case "SmallText":
           innerHTML += wrapHtmlWithMode('SmallText', formatWithJustify(content));
           break;
-
         case "TinyText":
           innerHTML += wrapHtmlWithMode('TinyText', formatWithJustify(content));
           break;
-
         case "Notes":
           attributes.notes = content;
           break;
- 
         case "SpeakerNote":
           attributes.speakerNote = content;
           break;
-
         case "PrintNote":
           attributes.printNotes = content;
           break;
-          
-case "Image": {
-  const [url, ...captionParts] = content.split(/,(.*)/s);
-  const caption = (captionParts[0] || '').trim();
-  const resolvedUrl = resolveImagePath(url.trim(), window.presentationBaseUrl);
-  innerHTML += `<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(caption)}"><div class="caption">${plainTextToHtml(caption)}</div></div>`;
-  break;
-}
+        case "Blockquote":
+          innerHTML += `
+            <div class="blockquote">
+              <div class="quote-text">${plainTextToHtml(content)}</div>
+              ${directiveArgs ? `<div class="quote-source">${plainTextToHtml(directiveArgs)}</div>` : ''}
+            </div>`;
+          break;
+        case "Image":
+          const [url, ...captionParts] = content.split(/,(.*)/s);
+          const caption = (captionParts[0] || '').trim();
+          const resolvedUrl = resolveImagePath(url.trim(), window.presentationBaseUrl);
+          innerHTML += `<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(caption)}"><div class="caption">${plainTextToHtml(caption)}</div></div>`;
+          break;
           
         case "Columns": {
           const rawLines = content.split(/\r?\n/);
           const columnSegments = [];
-          let buffer = [];
+          let colBuffer = [];
 
           const flushColumn = (makeDouble = false) => {
-            const raw = buffer.join('\n');
-            const trimmed = raw.trim();
-            if (!trimmed) {
-              if (makeDouble && columnSegments.length > 0) {
-                columnSegments[columnSegments.length - 1].double = true;
-              }
-              buffer = [];
-              return;
-            }
+            const raw = colBuffer.join('\n');
+            // Only skip empty if it's not a forced separator
+            if (!raw.trim() && !makeDouble && colBuffer.length === 0) return;
             columnSegments.push({ raw, double: makeDouble });
-            buffer = [];
+            colBuffer = [];
           };
 
           for (const rawLine of rawLines) {
-            if (/^\s*----\s*$/.test(rawLine)) {
-              flushColumn(true);
-              continue;
-            }
-            if (/^\s*---\s*$/.test(rawLine)) {
-              flushColumn(false);
-              continue;
-            }
-            buffer.push(rawLine);
+            if (/^\s*----\s*$/.test(rawLine)) { flushColumn(true); continue; }
+            if (/^\s*---\s*$/.test(rawLine)) { flushColumn(false); continue; }
+            colBuffer.push(rawLine);
           }
-
           flushColumn(false);
 
-          // Allow extensions with optional ?query, data: URLs, and local pasted ids
-const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+|local-img-[^\s,]+)\s*(?:,\s*(.*))?$/i;
-
-
-          const htmlContainsVisibleText = (html) => {
-            if (!html) return false;
-            return html.replace(/<[^>]*>/g, '').trim().length > 0;
-          };
-
-          const processInlineModesForImageLine = (line, startingMode) => {
-            INLINE_MODE_DIRECTIVE_RE.lastIndex = 0;
-            let match;
-            let lastIndex = 0;
-            let seenNonDirectiveSegment = false;
-            let mode = resolveModeState(startingMode);
-            const beforeFragments = [];
-            const afterFragments = [];
-            const textSegments = [];
-
-            while ((match = INLINE_MODE_DIRECTIVE_RE.exec(line)) !== null) {
-              if (match.index > lastIndex) {
-                const between = line.slice(lastIndex, match.index);
-                textSegments.push(between);
-                if (between.trim()) {
-                  seenNonDirectiveSegment = true;
-                }
-              }
-
-              const directiveInfo = interpretInlineDirective(match[1] || '', (match[2] || '').trim());
-
-              if (directiveInfo) {
-                if (directiveInfo.action === 'break') {
-                  const frag = `<div aria-hidden="true" style="display:block;height:calc(${directiveInfo.lines} * 1lh);"></div>`;
-                  (seenNonDirectiveSegment ? afterFragments : beforeFragments).push(frag);
-                } else if (directiveInfo.action === 'mode') {
-                  mode = resolveModeState(directiveInfo.mode);
-                }
-              }
-
-              lastIndex = INLINE_MODE_DIRECTIVE_RE.lastIndex;
-            }
-
-            if (lastIndex < line.length) {
-              const remainder = line.slice(lastIndex);
-              textSegments.push(remainder);
-              if (remainder.trim()) {
-                seenNonDirectiveSegment = true;
-              }
-            }
-
-            return {
-              sanitizedLine: textSegments.join(''),
-              mode: resolveModeState(mode),
-              beforeHtml: beforeFragments.join(''),
-              afterHtml: afterFragments.join('')
-            };
-          };
+          // Regexes for Columns parsing
+          const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|data:image\/[a-zA-Z+.\-]+;base64,[^,]+|local-img-[^\s,]+)\s*(?:,\s*(.*))?$/i;
+          const bqLineRe  = /^\s*Blockquote(?:\(([^)]+)\))?:\s*(.*)/i; 
 
           const colsHtml = columnSegments.map(segment => {
             const lines = segment.raw.trim().split(/\r?\n/);
-
             const blocks = [];
             let pendingText = '';
             let currentMode = makeModeState('Text');
@@ -5156,158 +5233,134 @@ const imgLineRe = /^\s*(?:Image:\s*)?(.+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?|da
             let hasTextBlock = false;
 
             const flushText = () => {
-              if (!pendingText) {
-                pendingText = '';
-                return;
-              }
+              if (!pendingText) { pendingText = ''; return; }
               const rendered = renderRichTextWithModes(pendingText, currentMode);
               if (rendered.html.trim()) {
                 blocks.push(rendered.html);
-                if (htmlContainsVisibleText(rendered.html)) {
-                  hasTextBlock = true;
-                }
+                if (rendered.html.replace(/<[^>]*>/g, '').trim().length > 0) hasTextBlock = true;
               }
               currentMode = rendered.mode;
               pendingText = '';
             };
 
             for (const rawLine of lines) {
-              const inlineInfo = processInlineModesForImageLine(rawLine, currentMode);
-              const sanitized = inlineInfo.sanitizedLine.trim();
-              const match = sanitized ? sanitized.match(imgLineRe) : null;
-              const rawMatch = !match ? rawLine.trim().match(imgLineRe) : null;
-
-              if (match || rawMatch) {
+              const sanitized = rawLine.trim();
+              
+              // 1. Check for Blockquote
+              const bqMatch = rawLine.match(bqLineRe);
+              if (bqMatch) {
                 flushText();
+                const source = bqMatch[1];
+                const text   = bqMatch[2];
+                blocks.push(`
+                  <div class="blockquote">
+                    <div class="quote-text">${plainTextToHtml(text)}</div>
+                    ${source ? `<div class="quote-source">${plainTextToHtml(source)}</div>` : ''}
+                  </div>`);
+                hasTextBlock = true;
+                continue;
+              }
 
-                if (inlineInfo.beforeHtml) {
-                  blocks.push(inlineInfo.beforeHtml);
-                  if (htmlContainsVisibleText(inlineInfo.beforeHtml)) {
-                    hasTextBlock = true;
-                  }
-                }
+              // 2. Check for Text Mode directives (BigText:, Text:, etc)
+              if (sanitized) {
+                 const dirMatch = sanitized.match(/^([A-Za-z][A-Za-z0-9.]*)\s*:\s*(.*)$/);
+                 if (dirMatch) {
+                    const dirName = dirMatch[1];
+                    const lower = dirName.toLowerCase();
+                    const isTextMode = lower === 'bigtext' || lower === 'smalltext' || lower === 'tinytext' || lower === 'text' || /^text\d/.test(lower);
+                    
+                    if (isTextMode) {
+                       flushText();
+                       const modeState = interpretModeKeyword(dirName, dirMatch[2]);
+                       currentMode = resolveModeState(modeState || 'Text');
+                       pendingText = dirMatch[2] || '';
+                       continue;
+                    }
+                 }
+              }
 
+              // 3. Check for Image
+              const imgMatch = sanitized.match(imgLineRe);
+              if (imgMatch) {
+                flushText();
                 imageCount++;
-                const imageGroups = match || rawMatch;
-                const imageUrl = imageGroups[1].trim();
-                const colCaption = (imageGroups[2] || '').trim();
+                const imageUrl = imgMatch[1].trim();
+                const colCaption = (imgMatch[2] || '').trim();
                 const resolvedUrl = resolveImagePath(imageUrl, window.presentationBaseUrl);
-
-                let captionHtml = '';
-                let captionMode = inlineInfo.mode;
-                if (colCaption) {
-                  const captionRender = renderRichTextWithModes(colCaption, inlineInfo.mode);
-                  captionHtml = captionRender.html || plainTextToHtml(colCaption);
-                  if (htmlContainsVisibleText(captionHtml)) {
-                    hasTextBlock = true;
-                  }
-                  captionMode = captionRender.mode;
-                }
-
-                blocks.push(
-                  `<div class="img-container">
-                    <img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(colCaption)}">
-                    <div class="caption">${captionHtml}</div>
-                  </div>`
-                );
-
-                if (inlineInfo.afterHtml) {
-                  blocks.push(inlineInfo.afterHtml);
-                  if (htmlContainsVisibleText(inlineInfo.afterHtml)) {
-                    hasTextBlock = true;
-                  }
-                }
-
-                currentMode = captionMode;
+                blocks.push(`<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(colCaption)}"><div class="caption">${plainTextToHtml(colCaption)}</div></div>`);
                 continue;
               }
 
               pendingText += pendingText ? `\n${rawLine}` : rawLine;
             }
-
             flushText();
 
             const onlyImages = imageCount > 0 && !hasTextBlock;
             const cls  = onlyImages ? 'column images-only' : 'column';
             const classes = segment.double ? `${cls} column--double` : cls;
-            const data = onlyImages ? ` data-imgcount="${imageCount}"` : '';
-            return `<div class="${classes}"${data}>${blocks.join('')}</div>`;
+            return `<div class="${classes}"${onlyImages ? ` data-imgcount="${imageCount}"` : ''}>${blocks.join('')}</div>`;
           }).join('');
 
           innerHTML += `<div class="columns">${colsHtml}</div>`;
           break;
         }
-
-        case "Table": {
+        case "Table":
           const rows = content.split(/^\s*---\s*$/m);
           let tableHtml = '<table>';
-
           if (rows.length > 0) {
-            const headerCells = rows.shift().split('&').map(cell => {
-              const rendered = renderRichTextWithModes(cell.trim());
-              return `<th>${rendered.html || plainTextToHtml(cell.trim())}</th>`;
-            }).join('');
+            const headerCells = rows.shift().split('&').map(cell => `<th>${plainTextToHtml(cell.trim())}</th>`).join('');
             tableHtml += `<thead><tr>${headerCells}</tr></thead>`;
           }
-
           const bodyRows = rows.map(row => {
-            const cells = row.split('&').map(cell => {
-              const trimmed = cell.trim();
-              const rendered = renderRichTextWithModes(trimmed);
-              const cellHtml = rendered.html || plainTextToHtml(trimmed);
-              return `<td>${cellHtml}</td>`;
-            }).join('');
+            const cells = row.split('&').map(cell => `<td>${plainTextToHtml(cell.trim())}</td>`).join('');
             return `<tr>${cells}</tr>`;
           }).join('');
-
           tableHtml += `<tbody>${bodyRows}</tbody></table>`;
           innerHTML += tableHtml;
           break;
-        }
       }
       buffer = [];
     }
 
-    // Process lines
+    // --- MAIN PARSING LOOP ---
     for (const line of lines) {
-      const match = line.match(/^([A-Za-z][A-Za-z0-9.]*):\s*(.*)/);
+      // Check for Directive: or Directive(Args):
+      const match = line.match(/^([A-Za-z][A-Za-z0-9.]*)(?:\(([^)]+)\))?:\s*(.*)/);
+      
       if (match) {
-        const directiveInfo = resolveDirectiveToken(match[1]);
-        if (currentDirective && currentDirective.name === 'Columns') {
-          const hasContentInCurrentColumn = () => {
-            for (let i = buffer.length - 1; i >= 0; i--) {
-              const trimmed = buffer[i].trim();
-              if (!trimmed) continue;
-              if (trimmed === '---' || trimmed === '----') {
-                return false;
-              }
-              return true;
-            }
-            return false;
-          };
+        const rawName = match[1];
+        const token = resolveDirectiveToken(rawName);
+       
+if (currentDirective && currentDirective.name === 'Columns') {
+           if (token && NESTABLE_DIRECTIVES.includes(token.name)) {
+             
+             // 1. Are we at the start of the first column? 
+             // (Buffer contains only whitespace/empty lines so far)
+             const isStartOfColumn = buffer.every(line => line.trim() === '');
 
-          const hasNonEmptyContent = hasContentInCurrentColumn();
-          const isMetadataDirective = !!(directiveInfo && directiveInfo.isMetadata);
+             // 2. Are we immediately after a separator?
+             const lastLine = buffer.length > 0 ? buffer[buffer.length - 1].trim() : '';
+             const isAfterSeparator = (lastLine === '---' || lastLine === '----');
 
-          if (!hasNonEmptyContent && !isMetadataDirective) {
-            buffer.push(line);
-            continue;
-          }
-
-          processBuffer();
-          buffer = [];
-          currentDirective = { name: 'Text', isMetadata: false, textScale: DEFAULT_TEXT_SCALE };
+             // If we are at the start (modifying first col) OR right after a separator, allow nesting.
+             if (isStartOfColumn || isAfterSeparator) {
+                buffer.push(line);
+                continue;
+             }
+           }
+           // Otherwise, fall through to close the column
         }
 
-        if (directiveInfo) {
-          processBuffer();
-          const nextDirective = { ...directiveInfo };
+        if (token) {
+          processBuffer(); // Close previous directive
+          const nextDirective = { ...token };
+          nextDirective.args = match[2] ? match[2].trim() : null;
           if (nextDirective.name === 'Text' && typeof nextDirective.textScale !== 'number') {
             nextDirective.textScale = DEFAULT_TEXT_SCALE;
           }
           currentDirective = nextDirective;
           buffer = [];
-          buffer.push(match[2] || '');
+          buffer.push(match[3] || '');
           continue;
         }
       }
@@ -5511,9 +5564,20 @@ async function applyTheme(themeId) {
             init(savedSession, { slideIndex: 0, reason: 'restored-last' });
             return; // Stop here to prevent loading the default.
         }
-        // If no saved session, proceed to load the default.
-        init(undefined, { fileName: 'New Presentation', slideIndex: 0, reason: 'default' });
-        return;
+           // Try to load SchumpeterDemo.txt, fallback to minimal slide if missing
+      fetch('SchumpeterDemo.txt')
+        .then(r => {
+          if (!r.ok) throw new Error('No demo found');
+          return r.text();
+        })
+        .then(txt => {
+          const xml = convertTxtToXML(txt, 'SchumpeterDemo.txt');
+          init(xml, { fileName: 'SchumpeterDemo', slideIndex: 0, reason: 'default' });
+        })
+        .catch(() => {
+          init(MINIMAL_NEW_XML, { fileName: 'New Presentation', slideIndex: 0, reason: 'new' });
+        });
+      return;
     }
 
     let textFileUrl;

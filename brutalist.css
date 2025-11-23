@@ -1,0 +1,72 @@
+/* brutalist.css — raw, structural, high contrast */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  --main-text-color: #000000;
+  --bg-color: #fff;
+  --accent-color: #000000;
+  --accent-light-color: #444;
+  --h1-border-color: #000;
+  --slide-content-bg-if-image: rgba(255, 255, 255, 0.95);
+
+  --serif-font: "Space Grotesk", Helvetica, sans-serif; /* Intentionally sans masquerading as primary */
+  --sans-font: "Space Grotesk", Helvetica, sans-serif;
+  --mono-font: "JetBrains Mono", monospace;
+}
+
+body {
+  font-family: var(--sans-font);
+  background: var(--bg-color);
+  color: var(--main-text-color);
+  border: 1rem solid var(--main-text-color); /* Heavy framing */
+}
+
+.slide-header {
+  font-family: var(--mono-font);
+  background: var(--main-text-color);
+  color: var(--bg-color);
+  padding: 0.2rem 0.5rem;
+  display: inline-block;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.slide-content h1 {
+  font-family: var(--sans-font);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 4rem; /* Oversized */
+  line-height: 0.9;
+  border-bottom: 4px solid var(--main-text-color);
+  margin-bottom: 2rem;
+}
+
+.slide-content .notes {
+  border: 2px solid var(--main-text-color);
+  padding: 1rem;
+  font-family: var(--mono-font);
+  font-size: 0.8rem;
+  box-shadow: 5px 5px 0px var(--main-text-color); /* Hard shadow */
+}
+
+.slide-content table {
+  border: 2px solid var(--main-text-color);
+}
+.slide-content th {
+  font-family: var(--mono-font);
+  background: var(--main-text-color);
+  color: var(--bg-color);
+  text-transform: uppercase;
+}
+.slide-content td {
+  border: 1px solid var(--main-text-color);
+  font-family: var(--mono-font);
+}
+
+.slide-content .caption {
+  font-family: var(--mono-font);
+  background: #000;
+  color: #fff;
+  display: inline-block;
+  padding: 0.2rem;
+}

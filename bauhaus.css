@@ -1,0 +1,64 @@
+/* bauhaus.css — geometric, primary colors */
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;700&family=Lora:ital@1&display=swap');
+
+:root {
+  --main-text-color: #1a1a1a;
+  --bg-color: #f4f1ea; /* Warm paper */
+  --accent-color: #d02020; /* Bauhaus Red */
+  --accent-light-color: #1e3d96; /* Bauhaus Blue for accents */
+  --h1-border-color: #1a1a1a;
+  --slide-content-bg-if-image: rgba(244, 241, 234, 0.9);
+
+  --serif-font: "Jost", Futura, sans-serif; /* Geometric Sans */
+  --sans-font: "Jost", Futura, sans-serif;
+  --mono-font: monospace;
+}
+
+body {
+  font-family: var(--serif-font);
+  background: var(--bg-color);
+  color: var(--main-text-color);
+}
+
+.slide-header {
+  font-family: var(--serif-font);
+  font-weight: 700;
+  color: var(--accent-light-color);
+  background: #f0c905; /* Bauhaus Yellow */
+  display: inline-block;
+  padding: 0 0.5rem;
+}
+
+.slide-content h1 {
+  font-family: var(--sans-font);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--main-text-color);
+  border-left: 1rem solid var(--accent-color);
+  padding-left: 1rem;
+  border-bottom: none;
+}
+
+.slide-content .notes {
+  color: var(--accent-light-color);
+  font-family: "Lora", serif; /* Unexpected serif for contrast */
+  font-style: italic;
+  border-top: 4px solid var(--accent-color);
+}
+
+.slide-content table {
+  border: 4px solid var(--main-text-color);
+}
+.slide-content th {
+  background: var(--accent-light-color);
+  color: #fff;
+  font-weight: 700;
+}
+.slide-content td {
+  border: 1px solid var(--main-text-color);
+}
+
+.slide-content .caption {
+  font-weight: 700;
+  color: var(--accent-color);
+}
