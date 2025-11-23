@@ -1791,7 +1791,7 @@ const ImageStore = {
                           HELPER FOR PRINTING
      ═══════════════════════════════════════════════════════════════ */
 
-function fitPrintNotesToBox() {
+  function fitPrintNotesToBox() {
   if (!document.body.classList.contains('print-with-notes')) return;
 
   const notesEls = document.querySelectorAll('.print-notes-content');
@@ -4711,7 +4711,7 @@ async function getThumbnailHTML(rawText, theme) {
   /* ═══════════════════════════════════════════════════════════════
                       TEXT PARSING & HTML GENERATION
      ═══════════════════════════════════════════════════════════════ */
-function maskMathSegmentsForMarkdown(text) {
+  function maskMathSegmentsForMarkdown(text) {
   if (!text) return { masked: text, segments: [] };
 
   const segments = [];
@@ -4827,7 +4827,7 @@ function maskMathSegmentsForMarkdown(text) {
   return { masked: result, segments };
 }
 
-function unmaskMathSegmentsForMarkdown(text, segments) {
+  function unmaskMathSegmentsForMarkdown(text, segments) {
   if (!segments || !segments.length) return text;
   let out = text;
   segments.forEach((seg, idx) => {
@@ -5121,7 +5121,7 @@ function unmaskMathSegmentsForMarkdown(text, segments) {
     return null;
   }
 
-function parseRawText(rawText) {
+  function parseRawText(rawText) {
     const attributes = {};
     let innerHTML = '';
     const lines = (rawText || '').split('\n');
@@ -5654,8 +5654,8 @@ window.resolveImagePath = function(imageSrc, baseUrl) {
   /* ═══════════════════════════════════════════════════════════════
                           16:9 ASPECT RATIO SETUP
      ═══════════════════════════════════════════════════════════════ */
-  
-function wrapSlideshowFor16x9() {
+
+  function wrapSlideshowFor16x9() {
   const slideshow = $("slideshow");
   if (!slideshow.parentElement.classList.contains('presentation-scaler')) {
     const viewport = document.createElement('div');
