@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-Modern Slideshow Application
+ModernSlides - Kevin Bryan - Nov 22 2025 update
 ============================
 Details at https://github.com/kevincure/ModernSlides/
 
@@ -13,7 +13,8 @@ text-based markup language.
 <meta charset="UTF-8" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Modern Slideshows</title>
+<title>ModernSlides</title>
+
 
 <!--------------------------------------- RENDER MATH CORRECTLY --------------------------------------------------------->
 <!-- MathJax -->
@@ -30,13 +31,12 @@ text-based markup language.
 <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
 
 
-
-
 <!---------------------------------------STYLESHEETS SHARED ACROSS FILES ------------------------------------------------>
 <style id="core-styles"> 
 /* ----------------------------- */
 /* --- Core Style Variables --- */
 /* ----------------------------- */
+/* The given "theme" updates some of these styles, and is user controllable */
 
 :root {
   --slide-base-font-size: 3cqw;
@@ -1050,9 +1050,9 @@ body:not(.is-edit-mode) .overflow-indicator {
 /* ----------------------------- */
 /* --- PRINT STYLES --- */
 /* ----------------------------- */
+
 /* Hide injected print notes on screen */
 .print-notes-content { display: none; }
-
 
 body.print-with-notes .print-notes-content {
   display: block !important;
@@ -1067,6 +1067,7 @@ body.print-with-notes .print-notes-content {
   z-index: 2147483647 !important; /* Show on top of everything */
   overflow: hidden !important; /* Essential for scrollHeight measurement */
 }
+
 /* Hide the website placeholder on screen */
 .website-print-placeholder { display: none; }
 
@@ -1209,13 +1210,12 @@ body.print-with-notes .print-notes-content {
     align-items: flex-start !important;
   }
 
-  /* STEP 1: Shrink the slide's 16:9 container to make room at the bottom.
-     The slide content inside will automatically rescale perfectly thanks to `cqw`. */
+  /* Shrink the slide's 16:9 container to make room at the bottom. */
   body.print-with-notes .slide-content {
     height: calc(min(177.78vh, 100vw) * 0.5625) !important;
   }
 
-  /* STEP 2: Make the notes area visible and position it in the new empty space. */
+  /* ]Make the notes area visible and position it in the new empty space. */
   body.print-with-notes .print-notes-content {
     display: block !important;
     position: absolute !important;
@@ -1227,14 +1227,11 @@ body.print-with-notes .print-notes-content {
     font-size: calc(var(--base-font-size) * 0.8);
     line-height: 1.4 !important;
     z-index: 2147483647 !important;
-    color: #cc0000 !important; /* The requested red color */
+    color: #cc0000 !important; 
   }
 }
 </style>
 </head>
-
-
-
 
 
 
@@ -1323,10 +1320,9 @@ body.print-with-notes .print-notes-content {
 
       Text: For standard body text. (x:)
         
-
       Add a number to Text (e.g., Text2:, Text.6:) to scale relative to the slide (0.2–5 works).
       
-      <<< Text on Left <<<, >>> Text on Right >>>, and ||| Text is centered ||| align any paragraph, even when using Text# or inline modes.
+      <<< Text on Left <<<, >>> Text on Right >>>, and ||| Text is centered ||| align any line
       
       A blank line between text...
 
@@ -1374,17 +1370,19 @@ body.print-with-notes .print-notes-content {
       # --- NOTES ---
       # - Download Raw Deck and Load Deck give you your slides but you
       #      will still need any images referred to in the same folder
-      # - If you print from your browser, it will give slides with PrintNotes. 
+      # - If you print from your browser, it will give slides without PrintNotes. 
       # - If you print from the print icon in Edit mode, it will show the PrintNotes.
+      # - You can add a bullet point by pressing Ctrl+B.
+      # - Sequential lines with * or bullet points will form unordered lists
+      # - Sequential lines with 1., 2., 3. will form ordered lists
       # - If no directive is given, text defaults to `Text:`.
       # - In `Columns` and `Table`, use `---` on its own line
       #       to separate sections/rows.
       # - You cannot nest some directives (e.g., a Table inside a Column).
-      # - As you edit, your two most recent sessions are stored locally. The app automatically reopens the last one and the clock icon restores the prior deck.
+      # - As you edit, your two most recent sessions are stored locally. The app automatically reopens the last one and the clock icon restores the prior deck in case you face a crash or accidentally overwrite your slides you haven't yet downloaded.
       # - Undo and Redo are next to the style selector in the toolbar.
       # - When a thumbnail is highlighted you can use the + / - buttons on it to add or delete slides.
-      # - 9 different styles are given, but you can create your own also
-      # - you can add a bullet point by pressing Ctrl+B.
+      # - 11 different styles are given, but you can create your own also
       # - If you want images that are not web-linked, you can paste images into the textbox, and when you download, it will include those images. Keep all in the same folder wherever you store your offline slide text and images.
       </pre>
     </div>
@@ -1400,6 +1398,7 @@ body.print-with-notes .print-notes-content {
   </div>
 </div>
 
+<!-- New Deck Modal -->
 <div id="new-deck-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="new-deck-modal-title">
   <div class="modal-box">
     <h3 id="new-deck-modal-title">Name your new slideshow</h3>
@@ -1416,7 +1415,7 @@ body.print-with-notes .print-notes-content {
 
 
 
-<!---------------------------------------------------- SCRIPT TAGS ------------------------------------------>
+<!---------------------------------------------------- JAVASCRIPT ------------------------------------------>
 <script>
 const ModernSlideshow = (function() {
   'use strict';
@@ -1426,13 +1425,7 @@ const ModernSlideshow = (function() {
      ═══════════════════════════════════════════════════════════════ */
   const DEFAULT_THEME = 'tufte-base';
   const AVAILABLE_THEMES = ['tufte-base', 'editorial', 'oxford', 'bringhurst', 'calgary', 'swiss-modern', 'david-carson', 'gradient', 'modern-dark','japan-minimal', 'bauhaus'];
-  const MINIMAL_NEW_XML = `<presentation title="New Presentation" showSlideCount="true" theme="${DEFAULT_THEME}">
-  <slide>
-    <raw><![CDATA[
-Title: New slide
-    ]]></raw>
-  </slide>
-</presentation>`;
+  const MINIMAL_NEW_XML = `<presentation title="New Presentation" showSlideCount="true" theme="${DEFAULT_THEME}"><slide><raw><![CDATA[Title: New slide]]></raw></slide></presentation>`;
   const METADATA_DIRECTIVES = ["Theme", "ShowSlideCount", "LogoUrl"];
   const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header",
                                 "Title", "BigText", "Text", "SmallText", "TinyText", "Notes",
@@ -1642,6 +1635,7 @@ Title: New slide
 /* ────────────────────────────────
    IMAGE STORAGE (IndexedDB)
    ──────────────────────────────── */
+
 const ImageStore = {
   db: null,
   // id → blob: URL (kept alive as long as the page is open)
@@ -1767,8 +1761,8 @@ const ImageStore = {
 
 
 /* ═══════════════════════════════════════════════════════════════
-      WAKE LOCK TO KEEP SCREEN FROM FALLING ASLEEP IN PRESENTATIONS
-     ═══════════════════════════════════════════════════════════════ */
+                          KEEP COMPUTER FROM FALLING ASLEEP
+     ═══════════════════════════════════════════════════════════════ *//
   
   async function requestWakeLock() {
     if ('wakeLock' in navigator) {
@@ -1791,6 +1785,11 @@ const ImageStore = {
       state.wakeLock = null;
     }
   }
+
+
+/* ═══════════════════════════════════════════════════════════════
+                          HELPER FOR PRINTING
+     ═══════════════════════════════════════════════════════════════ */
 
 function fitPrintNotesToBox() {
   if (!document.body.classList.contains('print-with-notes')) return;
@@ -1832,8 +1831,8 @@ function fitPrintNotesToBox() {
         f.src = 'about:blank';        // blank it so nothing gets rasterized
       });
       if (document.body.classList.contains('print-with-notes')) {
-                    fitPrintNotesToBox();
-              }
+        fitPrintNotesToBox();
+      }
     });
 
     window.addEventListener('afterprint', () => {
@@ -1925,8 +1924,9 @@ function fitPrintNotesToBox() {
       }
     });
 
+
     // -------------------- EDITOR BUTTONS --------------------
-    // Save button
+    // Save button (triggered in many places including when you open presentations with the bullhorn)
     $("save-btn").onclick = () => {
       updateGroundTruth('SAVE');
       if (state.hasChanges) {
@@ -1948,15 +1948,18 @@ function fitPrintNotesToBox() {
       }
     };
 
+
     // Add slide button
     $("add-btn").onclick = async () => {
       await insertSlideAfter(state.currentAbsoluteSlideIndex);
     };
 
+
     // Delete slides
     $("del-btn").onclick = async () => {
       await removeSlideAt(state.currentAbsoluteSlideIndex);
     };
+
 
     // Duplicate slide
     $("dup-btn").onclick = async () => {
@@ -1988,6 +1991,7 @@ function fitPrintNotesToBox() {
         showSlide(nextIndex, true);
       }
     });
+
 
     // toggle show/hide slide button    
     $("toggle-hide-btn").onclick = () => {
@@ -2043,7 +2047,6 @@ function fitPrintNotesToBox() {
       rawNode.textContent = '';
       rawNode.appendChild(state.xmlDoc.createCDATASection(newRawText));
 
-      // **ADD THIS: Sync the XML attribute**
       if (!isCurrentlyHidden) {
         slideNode.setAttribute("hidden", "true");
       } else {
@@ -2069,6 +2072,7 @@ function fitPrintNotesToBox() {
       }
     };
 
+
     // Toggle 'show slide number' button
     $("toggle-count-btn").onclick = () => {
       const cb = $("show-count");
@@ -2078,7 +2082,8 @@ function fitPrintNotesToBox() {
       updateHUD();
     };
 
-    // Download as txt button incl images
+
+    // Download slide txt incl any local images
 $("download-txt-btn").onclick = async () => {
   updateGroundTruth('DOWNLOAD');
 
@@ -2213,6 +2218,8 @@ $("download-txt-btn").onclick = async () => {
       }, 1000);
     };
 
+
+    // handle opening new deck
     const newDeckModal = $("new-deck-modal");
     const newDeckInput = $("new-deck-name");
     const cancelNewDeckBtn = $("cancel-new-deck");
@@ -2285,10 +2292,12 @@ $("download-txt-btn").onclick = async () => {
       }
     };
 
+
     // New presentation button
     $("new-presentation-btn").onclick = () => {
       openNewDeckModal();
     };
+
 
     // Load presentation button
     $("load-btn").onclick = () => {
@@ -2312,6 +2321,8 @@ $("download-txt-btn").onclick = async () => {
       input.click();
     };
 
+
+    // Restore previous slideshow
     $("restore-btn").onclick = () => {
       const btn = $("restore-btn");
       if (!btn || btn.disabled) return;
@@ -2334,11 +2345,13 @@ $("download-txt-btn").onclick = async () => {
       }
     };
 
-    // Help button
+
+    // Open/close help
     $("help-btn").onclick = () => $("help").classList.add("active");
     $("close-help").onclick = () => $("help").classList.remove("active");
 
-// Image Manager
+
+// Local image Manager
 $("manage-images-btn").onclick = async () => {
   const modal = $("image-manager");
   const listDiv = $("image-list");
@@ -2486,7 +2499,8 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
       updateSaveButtonGlow();
     });
 
-    // allow shortcuts
+
+    // allow shortcuts in text
     $("raw-text-editor").addEventListener('keydown', (e) => {
       const textarea = e.target;
 
@@ -2568,6 +2582,7 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
       }
     });
 
+
     // Change slideshow style
     $("theme-selector").onchange = async () => {
       const selector = $("theme-selector");
@@ -2578,6 +2593,7 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
       const label = selector.options[selector.selectedIndex]?.textContent?.trim() || themeValue;
       setEditorStatus(`Theme changed to ${label}.`);
     };
+
 
     // Toggle fullscreen
     function toggleFullscreen() {
@@ -2590,6 +2606,8 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
       }
     }
 
+
+    // undo last task
     const undoBtn = $("undo-btn");
     if (undoBtn) {
       undoBtn.addEventListener('click', () => {
@@ -2597,6 +2615,8 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
       });
     }
 
+
+    // redo last task
     const redoBtn = $("redo-btn");
     if (redoBtn) {
       redoBtn.addEventListener('click', () => {
@@ -2841,7 +2861,7 @@ const slideTemplate = (slideHTML) => `
   };  
 
 /* ═══════════════════════════════════════════════════════════════
-                          DRAG AND DROP IN EDIT MODE
+                          DRAG AND DROP THUMBNAILS IN EDIT MODE
      ═══════════════════════════════════════════════════════════════ */
   
   function makeThumbnailsDraggable() {
@@ -3146,7 +3166,6 @@ const slideTemplate = (slideHTML) => `
 
       makeThumbnailsDraggable();
 
-      // 4) 
       // Wait for the browser's next painting cycle. This gives the browser
       // time to render the new thumbnails and calculate the new scroll height.
       requestAnimationFrame(() => {
@@ -3843,7 +3862,6 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       const range = document.createRange();
       range.selectNodeContents(node);
       const rects = Array.from(range.getClientRects());
-      range.detach?.();
       const isOverflowing = rects.some(rect =>
         Math.ceil(rect.bottom - containerRect.bottom) > OVERFLOW_TOLERANCE_PX ||
         Math.ceil(rect.right - containerRect.right) > OVERFLOW_TOLERANCE_PX
@@ -4536,17 +4554,6 @@ async function getThumbnailHTML(rawText, theme) {
   // Get the theme CSS content
   const themeLink = document.getElementById(`${theme}-stylesheet`);
   const themeHref = themeLink ? themeLink.href : '';
-  if (themeLink && themeLink.sheet) {
-    try {
-      const cssRules = themeLink.sheet.cssRules || themeLink.sheet.rules;
-      for (let i = 0; i < cssRules.length; i++) {
-        themeCSS += cssRules[i].cssText + '\n';
-      }
-    } catch (err) {
-      // If we can't read CSS, include the link tag
-      console.warn('Could not read theme CSS rules, using link tag');
-    }
-  }
   
   // Always use the same wrapper structure for consistency
   return `<!DOCTYPE html>
@@ -4585,20 +4592,20 @@ async function getThumbnailHTML(rawText, theme) {
   
   function createSlideElement(rawText) {
     const { attributes, innerHTML } = parseRawText(rawText);
-  const slideDiv = document.createElement("div");
-  slideDiv.className = "slide";
+    const slideDiv = document.createElement("div");
+    slideDiv.className = "slide";
 
-  if (attributes.hidden) slideDiv.classList.add("hidden-in-presentation");
+    if (attributes.hidden) slideDiv.classList.add("hidden-in-presentation");
 
-  let backgroundUrl = null;
-  if (attributes.background) {
-    const resolvedUrl = resolveImagePath(attributes.background, window.presentationBaseUrl);
-    backgroundUrl = resolvedUrl;
-    const cssUrl = `url("${resolvedUrl.replace(/"/g, '\\"')}")`;
-    slideDiv.style.backgroundImage = cssUrl;
-    slideDiv.classList.add("has-background-image");
-    if (attributes.isFullScreenImage) slideDiv.classList.add("is-fullscreen-image-slide");
-  }
+    let backgroundUrl = null;
+    if (attributes.background) {
+      const resolvedUrl = resolveImagePath(attributes.background, window.presentationBaseUrl);
+      backgroundUrl = resolvedUrl;
+      const cssUrl = `url("${resolvedUrl.replace(/"/g, '\\"')}")`;
+      slideDiv.style.backgroundImage = cssUrl;
+      slideDiv.classList.add("has-background-image");
+      if (attributes.isFullScreenImage) slideDiv.classList.add("is-fullscreen-image-slide");
+    }
     
     if (attributes.header) {
       const headerDiv = document.createElement("div");
@@ -4832,7 +4839,7 @@ function unmaskMathSegmentsForMarkdown(text, segments) {
   return out;
 }
 
-function plainTextToHtml(text) {
+  function plainTextToHtml(text) {
     if (!text || !text.trim()) return "";
     
     // 1. Mask Math
@@ -4847,7 +4854,7 @@ function plainTextToHtml(text) {
     safeText = safeText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     safeText = safeText.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-    // 4. [NEW] Process Lists (before paragraph splitting)
+    // 4. Process Lists (before paragraph splitting)
     const listStyle = 'margin:0; padding-left:1.2em; text-align:left;';
     
     // Unordered Lists (* or •)
@@ -4878,7 +4885,7 @@ function plainTextToHtml(text) {
      html = unmaskMathSegmentsForMarkdown(html, segments);
      
      return html;
-}
+  }
 
   function formatWithJustify(text) {
     if (!text || !text.trim()) return "";
@@ -5331,7 +5338,7 @@ function parseRawText(rawText) {
         const rawName = match[1];
         const token = resolveDirectiveToken(rawName);
        
-if (currentDirective && currentDirective.name === 'Columns') {
+        if (currentDirective && currentDirective.name === 'Columns') {
            if (token && NESTABLE_DIRECTIVES.includes(token.name)) {
              
              // 1. Are we at the start of the first column? 
