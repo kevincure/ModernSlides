@@ -93,25 +93,24 @@
   --mono-font: "SF Mono", "Monaco", "Courier New", monospace;
 
   /* Typography defaults that themes can override */
-  --header-text-scale: 0.33;
+  --header-text-scale: 0.8;
   --header-align: left;
   --header-weight: 500;
   --header-style: normal;
 
-  --body-text-scale: 1;
   --p-text-scale: 1;
-  --p-align: left;
+  --p-align: inherit;
   --p-weight: 400;
   --p-style: normal;
 
-  --h1-text-scale: 2;
-  --h1-align: left;
+  --h1-text-scale: 2.33;
+  --h1-align: center;
   --h1-weight: 400;
   --h1-style: normal;
 
   --large-text-scale: 1.6;
-  --large-align: left;
-  --large-weight: 400;
+  --large-align: center;
+  --large-weight: 300;
   --large-style: italic;
 
   --small-text-scale: 0.67;
@@ -124,7 +123,7 @@
   --tiny-weight: 400;
   --tiny-style: normal;
 
-  --notes-text-scale: 0.6;
+  --notes-text-scale: 0.7;
   --notes-align: left;
   --notes-weight: 400;
   --notes-style: normal;
@@ -136,11 +135,11 @@
 
   --quote-source-text-scale: 1;
   --quote-source-align: right;
-  --quote-source-weight: 500;
+  --quote-source-weight: 400;
   --quote-source-style: normal;
 
-  --caption-text-scale: 0.2;
-  --caption-align: left;
+  --caption-text-scale: 0.33;
+  --caption-align: center;
   --caption-weight: 400;
   --caption-style: italic;
 }
@@ -179,7 +178,7 @@ body {
 .slide-header {
   font-family: var(--sans-font);
   padding: calc(var(--slide-base-font-size) * 0.2);
-  font-size: calc(var(--slide-base-font-size) * var(--header-text-scale, 0.33)); /* font-size relative to "base" */
+  font-size: calc(var(--slide-base-font-size) * var(--header-text-scale, 0.8)); /* font-size relative to "base" */
   font-weight: var(--header-weight, 500);                     /* Medium weight for clarity */
   text-transform: uppercase;            /* All caps for editorial style */
   color: var(--accent-light-color);    /* Subtle, not competing with content */
@@ -218,9 +217,9 @@ body {
    ======================================================================== */
 
 .slide-content h1 {
-  font-size: calc(var(--slide-base-font-size) * var(--h1-text-scale, 2)); /* smallish title size bump */
+  font-size: calc(var(--slide-base-font-size) * var(--h1-text-scale, 2.33)); /* smallish title size bump */
   line-height: 1.1;  /* tighter line spacing */
-  text-align: var(--h1-align, left);
+  text-align: var(--h1-align, center);
   padding-bottom: calc(var(--slide-base-font-size) * 0.25); /* space before border */
   margin-bottom: calc(var(--slide-base-font-size) * 0.5); /* space after headline */
   width: 100%;
@@ -257,9 +256,10 @@ body {
 .slide-content p {
   font-family: var(--serif-font);       /* Serifs are easier to read for body text */
   line-height: 1.7;                     /* Generous spacing for comfort */
+  font-size: calc(var(--slide-base-font-size) * var(--text-scale, 1) * var(--p-text-scale, 1));
   margin-bottom: calc(var(--slide-base-font-size) * 0.3);
   max-width: 100%;                       /* Prevent overly long lines */
-  text-align: var(--p-align, left);                     /* Left alignment for readability */
+  text-align: var(--p-align, inherit);                     /* Left alignment for readability */
   font-style: var(--p-style, normal);
   font-weight: var(--p-weight, 400);
 }
@@ -347,7 +347,7 @@ body {
 
 .slide-content .notes {
   font-family: var(--sans-font);        /* Sans-serif for clarity at small size */
-  font-size: calc(var(--slide-base-font-size) * var(--notes-text-scale, 0.6));     /* Small, unobtrusive */
+  font-size: calc(var(--slide-base-font-size) * var(--notes-text-scale, 0.7));     /* Small, unobtrusive */
   color: var(--accent-color);           /* Accent color to differentiate */
   top: calc(var(--slide-base-font-size) * 1.2);
   right: calc(var(--slide-base-font-size) * 0.6);
@@ -399,7 +399,7 @@ body {
 .slide-content .blockquote .quote-source {
   font-family: var(--sans-font);
   font-size: calc(var(--slide-base-font-size) * var(--quote-source-text-scale, 1));
-  font-weight: var(--quote-source-weight, 500);
+  font-weight: var(--quote-source-weight, 400);
   color: var(--accent-color);
   text-align: var(--quote-source-align, right);
   margin-top: 1cqw;
@@ -476,10 +476,10 @@ body {
 
 .slide-content .caption {
   font-family: var(--sans-font);
-  font-size: calc(var(--slide-base-font-size) * var(--caption-text-scale, 0.2));  /* Relative to base font size */
+  font-size: calc(var(--slide-base-font-size) * var(--caption-text-scale, 0.33));  /* Relative to base font size */
   font-style: var(--caption-style, italic);
   color: var(--accent-light-color);
-  text-align: var(--caption-align, left);
+  text-align: var(--caption-align, center);
   margin-top: calc(var(--slide-base-font-size) * 0.25);
   max-width: 90%;
   font-weight: var(--caption-weight, 400);

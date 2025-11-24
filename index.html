@@ -111,10 +111,7 @@ body {
   left: 0;
   width: 100%;
   padding: calc(var(--base-font-size) * 0.2);
-  font-size: calc(var(--base-font-size) * var(--header-text-scale, 0.8));
-  text-align: var(--header-align, left);
-  font-style: var(--header-style, normal);
-  font-weight: var(--header-weight, 500);
+  font-size: calc(var(--base-font-size) * 0.8);
 }
 
 .slide-content {
@@ -147,7 +144,7 @@ body {
   flex: 1;
   min-height: 0;
   line-height: 1.6;
-  --text-scale: var(--body-text-scale, 1);
+  --text-scale: 1;
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
 }
 
@@ -170,57 +167,42 @@ body {
 /* ----------------------------- */
 
 .slide-content h1 {
-  font-size: calc(var(--base-font-size) * var(--h1-text-scale, 2.33));
+  font-size: calc(var(--base-font-size) * 2.33);
   line-height: 1.2;
-  text-align: var(--h1-align, center);
+  text-align: center;
   padding-bottom: calc(var(--base-font-size) * 0.25);
   margin-bottom: calc(var(--base-font-size) * 0.25);
   width: 100%;
-  font-style: var(--h1-style, normal);
-  font-weight: var(--h1-weight, 700);
 }
 
 .slide-content p {
-  --text-scale: var(--p-text-scale, var(--text-scale, 1));
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
   line-height: 1.6;
   margin-bottom: calc(var(--base-font-size) * 0.3);
-  text-align: var(--p-align, inherit);
-  font-style: var(--p-style, inherit);
-  font-weight: var(--p-weight, inherit);
+  text-align: inherit;
 }
 
 .slide-content .text-center { text-align: center; }
 
 .slide-content .large {
-  --text-scale: var(--large-text-scale, 1.6);
+  --text-scale: 1.6;
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
-  text-align: var(--large-align, center);
-  font-style: var(--large-style, normal);
-  font-weight: var(--large-weight, inherit);
+  text-align: center;
 }
 
 .slide-content .large p {
   text-align: inherit;
-  font-style: inherit;
-  font-weight: inherit;
   margin: calc(var(--base-font-size) * 0.5) auto;
 }
 
 .slide-content .small {
-  --text-scale: var(--small-text-scale, 0.67);
+  --text-scale: 0.67;
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
-  text-align: var(--small-align, inherit);
-  font-style: var(--small-style, inherit);
-  font-weight: var(--small-weight, inherit);
 }
 
 .slide-content .tiny {
-  --text-scale: var(--tiny-text-scale, 0.33);
+  --text-scale: 0.33;
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
-  text-align: var(--tiny-align, inherit);
-  font-style: var(--tiny-style, inherit);
-  font-weight: var(--tiny-weight, inherit);
 }
 
 .slide-content .notes {
@@ -229,18 +211,12 @@ body {
   top: calc(var(--base-font-size) * 1.2);
   right: calc(var(--base-font-size) * 0.6);
   width: calc(var(--base-font-size) * 6);
-  font-size: calc(var(--base-font-size) * var(--notes-text-scale, 0.7));
+  font-size: calc(var(--base-font-size) * 0.7);
   line-height: 1.5;
-  text-align: var(--notes-align, inherit);
-  font-style: var(--notes-style, inherit);
-  font-weight: var(--notes-weight, inherit);
 }
 
 .slide-content .notes p {
   font-size: 1em;
-  text-align: inherit;
-  font-style: inherit;
-  font-weight: inherit;
   margin-bottom: 0.5em;
 }
 
@@ -254,12 +230,10 @@ body {
 
 /* Quote: Defaults to BigText size (scale 1.6) and Italic */
 .slide-content .blockquote .quote-text {
-  font-size: calc(var(--base-font-size) * var(--quote-text-scale, 1.6));
-  font-style: var(--quote-text-style, italic);
+  font-size: calc(var(--base-font-size) * 1.6);
+  font-style: italic;
   line-height: 1.2;
-  text-align: var(--quote-text-align, left);
   margin-bottom: calc(var(--base-font-size) * 0.4);
-  font-weight: var(--quote-text-weight, inherit);
 }
 
 .slide-content .blockquote .quote-text p {
@@ -270,12 +244,11 @@ body {
 
 /* Source: Defaults to Regular size, Normal style, Right Aligned */
 .slide-content .blockquote .quote-source {
-  font-size: calc(var(--base-font-size) * var(--quote-source-text-scale, 1));
-  font-style: var(--quote-source-style, normal);
-  text-align: var(--quote-source-align, right);
+  font-size: var(--base-font-size);
+  font-style: normal;
+  text-align: right;
   opacity: 0.85;
   margin-top: 0;
-  font-weight: var(--quote-source-weight, inherit);
 }
 
 .slide-content .blockquote .quote-source p {
@@ -358,13 +331,10 @@ body {
 }
 
 .slide-content .caption {
-  font-size: calc(var(--base-font-size) * var(--caption-text-scale, 0.33));
+  font-size: calc(var(--base-font-size) * 0.33);
   max-width: 90%;
   flex-shrink: 0;
   flex-grow: 0;
-  text-align: var(--caption-align, left);
-  font-style: var(--caption-style, italic);
-  font-weight: var(--caption-weight, inherit);
 }
 
 body.is-edit-mode .slide.has-overflow {
