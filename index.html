@@ -1424,7 +1424,7 @@ const ModernSlideshow = (function() {
                               CONSTANTS
      ═══════════════════════════════════════════════════════════════ */
   const DEFAULT_THEME = 'tufte-base';
-  const AVAILABLE_THEMES = ['tufte-base', 'editorial', 'oxford', 'bringhurst', 'calgary', 'swiss-modern', 'david-carson', 'gradient', 'modern-dark','japan-minimal', 'bauhaus'];
+  const AVAILABLE_THEMES = ['tufte-base', 'editorial', 'oxford', 'bringhurst', 'calgary', 'swiss-modern', 'david-carson', 'gradient', 'modern-dark','japan-minimal', 'bauhaus', 'style-example'];
   const MINIMAL_NEW_XML = `<presentation title="New Presentation" showSlideCount="true" theme="${DEFAULT_THEME}"><slide><raw><![CDATA[Title: New slide]]></raw></slide></presentation>`;
   const METADATA_DIRECTIVES = ["Theme", "ShowSlideCount", "LogoUrl"];
   const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header",
@@ -2810,7 +2810,6 @@ const slideTemplate = (slideHTML) => `
   <html>
   <head>
     <base href="${document.baseURI}">
-    <link rel="stylesheet" href="${themeHref}">
 <style>
   ${document.getElementById('core-styles').textContent}
   body { margin: 0; overflow: hidden; }
@@ -2826,6 +2825,7 @@ const slideTemplate = (slideHTML) => `
   #slideshow { position: absolute; inset: 0; }
   .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
 </style>
+    <link rel="stylesheet" href="${themeHref}">
   </head>
   <body class="${themeId}">
     <div class="slide-wrapper">
@@ -4567,7 +4567,6 @@ async function getThumbnailHTML(rawText, theme) {
 <head>
   <meta charset="UTF-8">
   <base href="${window.location.href}">
-  <link rel="stylesheet" href="${themeHref}">
   <style>
     ${document.getElementById('core-styles').textContent}
     body { margin: 0; overflow: hidden; }
@@ -4583,6 +4582,7 @@ async function getThumbnailHTML(rawText, theme) {
     #slideshow { position: absolute; inset: 0; }
     .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
   </style>
+    <link rel="stylesheet" href="${themeHref}">
 </head>
 <body class="${theme}">
   <div class="slide-wrapper">
