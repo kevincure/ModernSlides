@@ -1441,6 +1441,7 @@ const ModernSlideshow = (function() {
   const PREVIOUS_SESSION_KEY = 'modernSlides_previousSession';
   const LAST_SESSION_META_KEY = 'modernSlides_lastSessionMeta';
   const PREVIOUS_SESSION_META_KEY = 'modernSlides_previousSessionMeta';
+  const LAST_SLIDE_INDEX_KEY = 'modernSlides_lastSlideIndex';
   const DEFAULT_NEW_SLIDE_CONTENT = "Title: New Slide\n\nText: Edit this content.";
 
   function clampTextScale(value) {
@@ -4335,7 +4336,12 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     
     state.slideEls.forEach((s, i) => s.classList.toggle("active", i === targetAbsIndex));
     state.currentAbsoluteSlideIndex = targetAbsIndex;
-    
+
+    // Save current slide index to localStorage (skip during initialization)
+    if (!skipEditorSave && state.slideEls.length > 0) {
+      localStorage.setItem(LAST_SLIDE_INDEX_KEY, state.currentAbsoluteSlideIndex.toString());
+    }
+
     if (!fromPresentationNav || state.editMode) {
       const visibleIdx = state.visibleSlideIndices.indexOf(state.currentAbsoluteSlideIndex);
       state.currentVisibleSlideIndex = visibleIdx !== -1
@@ -5567,8 +5573,10 @@ async function applyTheme(themeId) {
     // Check for a saved session in local storage first, but only if no URL is specified.
     if (!inputUrl) {
         const savedSession = localStorage.getItem(LAST_SESSION_KEY);
+        const savedSlideIndex = localStorage.getItem(LAST_SLIDE_INDEX_KEY);
+        const slideIndex = savedSlideIndex ? parseInt(savedSlideIndex, 10) : 0;
         if (savedSession) {
-            init(savedSession, { slideIndex: 0, reason: 'restored-last' });
+            init(savedSession, { slideIndex: slideIndex, reason: 'restored-last' });
             return; // Stop here to prevent loading the default.
         }
            // Try to load SchumpeterDemo.txt, fallback to minimal slide if missing
