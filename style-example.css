@@ -1,0 +1,582 @@
+/* ========================================================================
+   STYLE-EXAMPLE.CSS — A comprehensive template for customizing ModernSlides
+   ========================================================================
+
+   This template is inspired by Cereal magazine's sophisticated editorial style:
+   clean layouts, generous white space, refined typography, and a curated
+   color palette that emphasizes readability and elegance.
+
+   HOW TO USE THIS FILE:
+   =====================
+   1. Copy this file to create your own custom style
+   2. Modify the values in the :root section to match your brand
+   3. Adjust typography, colors, and layout as needed
+   4. Test your changes by applying this stylesheet to your presentation
+
+   IMPORTANT: ALWAYS USE CQW UNITS
+   ================================
+   This slideshow uses container query width (cqw) units for responsive scaling.
+   Instead of px, rem, or em, use cqw for all sizes to ensure your slides
+   scale perfectly across different screen sizes.
+
+   Quick reference:
+   - 1cqw = 1% of the slide container width
+   - For most text sizes, use values between 0.5cqw and 6cqw
+   - For spacing (padding, margins), 0.5cqw to 4cqw works well
+
+   The system automatically scales everything based on --slide-base-font-size
+   (default 3cqw), so your relative sizing will always be proportional.
+
+   ======================================================================== */
+
+
+/* ========================================================================
+   SECTION 1: GOOGLE FONTS
+   ========================================================================
+
+   Google Fonts are free, easy to use, and render beautifully across devices.
+   Browse fonts at: https://fonts.google.com/
+
+   CHOOSING FONTS:
+   - Pair a distinctive serif with a clean sans-serif for contrast
+   - Ensure both fonts have the weights you need (300, 400, 600, 700)
+   - Consider readability at large sizes (presentations are viewed from far away)
+
+   FONT PAIRING SUGGESTIONS:
+   - Editorial/Magazine: Cormorant Garamond + Inter
+   - Modern/Tech: DM Sans + IBM Plex Mono
+   - Classic/Academic: Crimson Text + Source Sans Pro
+   - Bold/Creative: Playfair Display + Work Sans
+   - Minimal/Clean: Literata + Public Sans
+
+   ======================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+
+/* ========================================================================
+   SECTION 2: COLOR PALETTE
+   ========================================================================
+
+   Define your entire color scheme here. This Cereal-inspired palette uses:
+   - Soft, warm neutrals for background and text
+   - A sophisticated accent color for highlights
+   - Subtle variations to create hierarchy
+
+   CUSTOMIZING COLORS:
+   ==================
+   1. --bg-color: The main slide background (keep it light for readability)
+   2. --main-text-color: Primary text color (dark, high contrast with background)
+   3. --accent-color: For headlines, emphasis, and visual interest
+   4. --accent-light-color: Secondary accent for subtler elements
+   5. --h1-border-color: Borders, dividers, and table lines
+   6. --slide-content-bg-if-image: Semi-transparent overlay when using background images
+
+   COLOR SELECTION TIPS:
+   ====================
+   - Use a color palette generator like coolors.co or paletton.com
+   - Ensure sufficient contrast (WCAG AA: 4.5:1 for body text, 3:1 for large text)
+   - Test your colors with actual slide content before committing
+   - Consider color psychology: blues (trust), greens (growth), reds (energy)
+   - Use opacity in --slide-content-bg-if-image to let images show through
+
+   CEREAL MAGAZINE INSPIRATION:
+   This palette evokes warmth, sophistication, and editorial quality with
+   off-white backgrounds, charcoal text, and a muted terracotta accent.
+
+   ======================================================================== */
+
+:root {
+  /* Primary Colors */
+  --main-text-color: #2a2a2a;           /* Deep charcoal — change for brand color */
+  --bg-color: #fffef9;                  /* Warm off-white — try #ffffff for pure white */
+
+  /* Accent Colors */
+  --accent-color: #b45f3e;              /* Muted terracotta — your primary brand color */
+  --accent-light-color: #8a8378;        /* Warm grey — for subtle elements */
+
+  /* Structural Colors */
+  --h1-border-color: #e8e4dd;           /* Soft beige for borders — lighten for minimal look */
+  --slide-content-bg-if-image: rgba(255, 254, 249, 0.88);  /* Background overlay opacity when images present */
+
+  /* Font Variables (reference the fonts imported above) */
+  --serif-font: "Cormorant Garamond", "Garamond", "Georgia", serif;
+  --sans-font: "Inter", "Helvetica Neue", "Arial", sans-serif;
+  --mono-font: "SF Mono", "Monaco", "Courier New", monospace;
+}
+
+
+/* ========================================================================
+   SECTION 3: BODY AND GENERAL SETTINGS
+   ========================================================================
+
+   These settings apply to the overall presentation environment.
+
+   ======================================================================== */
+
+body {
+  font-family: var(--serif-font);       /* Default to serif for body text */
+  background: var(--bg-color);
+  color: var(--main-text-color);
+}
+
+
+/* ========================================================================
+   SECTION 4: SLIDE HEADER (Top Metadata)
+   ========================================================================
+
+   The .slide-header appears at the top of each slide showing metadata
+   like section names, dates, or author information.
+
+   CUSTOMIZATION OPTIONS:
+   - font-family: Choose serif vs. sans-serif
+   - font-size: Adjust size (try 0.6cqw to 1.2cqw)
+   - text-transform: uppercase, lowercase, capitalize, or none
+   - letter-spacing: Increase for editorial feel (0.1em to 0.3em)
+   - font-weight: 300 (light), 400 (regular), 500 (medium), 600 (semibold)
+
+   ======================================================================== */
+
+.slide-header {
+  font-family: var(--sans-font);
+  font-size: 0.7cqw;                    /* Small, unobtrusive size */
+  font-weight: 500;                     /* Medium weight for clarity */
+  letter-spacing: 0.15em;               /* Spaced for sophistication */
+  text-transform: uppercase;            /* All caps for editorial style */
+  color: var(--accent-light-color);    /* Subtle, not competing with content */
+}
+
+
+/* ========================================================================
+   SECTION 5: MAIN HEADLINE (H1)
+   ========================================================================
+
+   The slide's main headline — your most important typographic element.
+   This is what audiences see first and remember most.
+
+   SIZING GUIDANCE:
+   - Conservative: 3.5cqw to 4.5cqw
+   - Standard: 4.5cqw to 6cqw
+   - Bold/Dramatic: 6cqw to 8cqw
+
+   ALIGNMENT OPTIONS:
+   - text-align: left (modern, editorial)
+   - text-align: center (classic, formal)
+   - text-align: right (unconventional, artistic)
+
+   BORDER STYLING:
+   - border-bottom: Create a horizontal divider under headlines
+   - border-left: Modern sidebar accent (requires padding-left adjustment)
+   - border: none for minimal, clean look
+
+   FONT WEIGHT:
+   - 300: Light, elegant, requires larger size
+   - 400: Regular, balanced
+   - 600: Semibold, strong presence
+   - 700: Bold, maximum impact
+
+   ======================================================================== */
+
+.slide-content h1 {
+  font-family: var(--serif-font);       /* Serif for editorial elegance */
+  font-weight: 400;                     /* Regular weight, refined not bold */
+  font-size: 4.5cqw;                    /* Large but not overwhelming */
+  line-height: 1.1;                     /* Tight for dramatic effect */
+  color: var(--main-text-color);        /* Keep headlines readable */
+  text-align: left;                     /* Left-aligned for editorial feel */
+  padding-bottom: 0.8cqw;               /* Space before border */
+  margin-bottom: 1.5cqw;                /* Space after headline */
+  border-bottom: 1px solid var(--h1-border-color);  /* Subtle divider */
+}
+
+
+/* ========================================================================
+   SECTION 6: SUBHEADLINE (H2)
+   ========================================================================
+
+   Secondary headlines for section breaks or emphasis within a slide.
+   Should be clearly smaller than H1 but larger than body text.
+
+   TYPICAL SIZES: 2.5cqw to 4cqw
+
+   ======================================================================== */
+
+.slide-content h2 {
+  font-family: var(--sans-font);        /* Sans-serif contrasts with serif H1 */
+  font-size: 3cqw;                      /* Noticeably smaller than H1 */
+  font-weight: 600;                     /* Stronger weight for clarity */
+  color: var(--main-text-color);
+  margin-bottom: 1cqw;
+  line-height: 1.2;
+}
+
+
+/* ========================================================================
+   SECTION 7: BODY TEXT (Paragraphs)
+   ========================================================================
+
+   The main content text. Prioritize readability above all else.
+
+   FONT SIZE:
+   Body text inherits from the system default (calc(var(--base-font-size) * 1)),
+   which is typically around 3cqw. You generally don't need to override this.
+
+   LINE HEIGHT (leading):
+   - 1.4: Tight, for headlines or short text
+   - 1.6: Standard, good readability
+   - 1.8: Generous, editorial magazine feel
+   - 2.0: Very open, artistic or minimal designs
+
+   MAX-WIDTH:
+   Control line length for readability. Optimal: 60-75 characters per line.
+   Use max-width with percentage or cqw (e.g., 70%, 60cqw).
+
+   ======================================================================== */
+
+.slide-content p {
+  font-family: var(--serif-font);       /* Serifs are easier to read for body text */
+  line-height: 1.7;                     /* Generous spacing for comfort */
+  margin-bottom: 1cqw;                  /* Space between paragraphs */
+  max-width: 85%;                       /* Prevent overly long lines */
+  text-align: left;                     /* Left alignment for readability */
+}
+
+
+/* ========================================================================
+   SECTION 8: TEXT SIZE DIRECTIVES
+   ========================================================================
+
+   ModernSlides provides special classes to scale text:
+   - .large: For emphasis, quotes, or key statements
+   - .small: For supplementary information
+   - .tiny: For footnotes or fine print
+
+   The system uses --text-scale multipliers:
+   - Default text: 1.0 (no class needed)
+   - .large: 1.6x
+   - .small: 0.67x
+   - .tiny: 0.33x
+
+   You can adjust these multipliers or add styling specific to each size.
+
+   ======================================================================== */
+
+/* LARGE TEXT — for pull quotes, emphasis, key takeaways */
+.slide-content .large {
+  font-weight: 300;                     /* Lighter weight at large sizes */
+  line-height: 1.3;                     /* Tighter for impact */
+  text-align: center;                   /* Center for emphasis */
+  color: var(--accent-color);           /* Use accent color for visibility */
+}
+
+.slide-content .large p {
+  font-style: italic;                   /* Italic for editorial quote style */
+  margin: 1.5cqw auto;                  /* Extra spacing for isolation */
+}
+
+/* SMALL TEXT — for captions, metadata, less important info */
+.slide-content .small {
+  color: var(--accent-light-color);     /* Muted color to de-emphasize */
+  line-height: 1.5;
+}
+
+/* TINY TEXT — for footnotes, legal text, credits */
+.slide-content .tiny {
+  font-family: var(--sans-font);        /* Sans-serif more legible at small sizes */
+  color: var(--accent-light-color);
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+
+/* ========================================================================
+   SECTION 9: NOTES (Side Annotations)
+   ========================================================================
+
+   The .notes class creates a side annotation area (top right by default).
+   Perfect for speaker notes, citations, or supplementary information.
+
+   POSITIONING:
+   The core system positions notes at top-right. You can override:
+   - position: absolute
+   - top/bottom/left/right values in cqw
+
+   CREATIVE OPTIONS:
+   - writing-mode: vertical-rl for vertical text (Japanese style)
+   - border-left or border-top for visual separation
+   - Different font-family for contrast
+
+   ======================================================================== */
+
+.slide-content .notes {
+  font-family: var(--sans-font);        /* Sans-serif for clarity at small size */
+  font-size: 0.7cqw;                    /* Small, unobtrusive */
+  color: var(--accent-color);           /* Accent color to differentiate */
+  line-height: 1.6;
+  font-weight: 400;
+  border-left: 2px solid var(--h1-border-color);  /* Visual separator */
+  padding-left: 0.8cqw;                 /* Space from border */
+}
+
+.slide-content .notes p {
+  margin-bottom: 0.5cqw;                /* Tighter spacing for notes */
+}
+
+
+/* ========================================================================
+   SECTION 10: BLOCKQUOTES
+   ========================================================================
+
+   The .blockquote system has two parts:
+   - .quote-text: The actual quote (defaults to large, italic)
+   - .quote-source: Attribution line (smaller, right-aligned by default)
+
+   CUSTOMIZATION IDEAS:
+   - Add quotation marks with ::before and ::after pseudo-elements
+   - Change quote-text font to a distinctive display font
+   - Adjust quote-source alignment (left, center, right)
+   - Add borders or background colors
+
+   ======================================================================== */
+
+.slide-content .blockquote {
+  margin: 2cqw 0;                       /* Isolate from surrounding content */
+  padding: 1.5cqw 3cqw;                 /* Internal spacing */
+  border-left: 3px solid var(--accent-color);  /* Accent border */
+}
+
+.slide-content .blockquote .quote-text {
+  font-family: var(--serif-font);
+  font-style: italic;
+  font-weight: 300;                     /* Light for elegance */
+  color: var(--main-text-color);
+  line-height: 1.3;
+}
+
+.slide-content .blockquote .quote-source {
+  font-family: var(--sans-font);
+  font-size: 0.8em;                     /* Relative to quote-text size */
+  font-weight: 500;
+  color: var(--accent-color);
+  text-align: right;
+  margin-top: 1cqw;
+}
+
+.slide-content .blockquote .quote-source::before {
+  content: "— ";                        /* Em dash before attribution */
+}
+
+
+/* ========================================================================
+   SECTION 11: TABLES
+   ========================================================================
+
+   Tables display data in rows and columns. Style them to match your theme.
+
+   BORDER STYLES:
+   - All borders: border: 1px solid var(--h1-border-color)
+   - Minimal: border-top and border-bottom only on table
+   - Grid: borders on all th and td elements
+   - Borderless: border: none everywhere, use background colors
+
+   BACKGROUND PATTERNS:
+   - Striped rows: Use tbody tr:nth-child(even) selector
+   - Header highlighting: Background color on th elements
+   - Hover effects: Add :hover states for interactive feel
+
+   ======================================================================== */
+
+.slide-content table {
+  font-size: 0.8em;                     /* Relative to base font size */
+  border-top: 2px solid var(--accent-color);     /* Top emphasis */
+  border-bottom: 2px solid var(--accent-color);  /* Bottom emphasis */
+  border-collapse: collapse;
+  margin: 2cqw auto;                    /* Center with generous spacing */
+  width: auto;                          /* Fit content, not full width */
+}
+
+.slide-content th {
+  font-family: var(--sans-font);        /* Sans-serif for clarity */
+  font-weight: 600;
+  text-transform: uppercase;            /* Editorial style */
+  letter-spacing: 0.05em;
+  color: var(--accent-color);
+  padding: 0.8cqw 1.2cqw;
+  text-align: left;
+  border: none;                         /* Clean, minimal */
+  background: transparent;
+}
+
+.slide-content td {
+  font-family: var(--serif-font);
+  padding: 0.8cqw 1.2cqw;
+  border: none;                         /* Minimal style */
+  border-top: 1px solid var(--h1-border-color);  /* Subtle row separators */
+}
+
+/* Alternating row colors for readability */
+.slide-content tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--bg-color) 95%, var(--main-text-color) 5%);
+}
+
+
+/* ========================================================================
+   SECTION 12: IMAGE CAPTIONS
+   ========================================================================
+
+   The .caption class styles text below images.
+   Should be small, subtle, and clearly different from body text.
+
+   STYLING OPTIONS:
+   - font-style: italic for traditional editorial look
+   - text-align: center (classic) or left (modern)
+   - color: Muted/grey for de-emphasis
+   - font-family: Sans-serif often works better at small sizes
+
+   ======================================================================== */
+
+.slide-content .caption {
+  font-family: var(--sans-font);
+  font-size: 0.6em;                     /* Relative to base font size */
+  font-style: italic;
+  color: var(--accent-light-color);
+  text-align: center;
+  margin-top: 0.8cqw;
+  line-height: 1.4;
+}
+
+
+/* ========================================================================
+   SECTION 13: COLUMNS
+   ========================================================================
+
+   The .columns system creates multi-column layouts.
+   These styles refine the appearance of columnar content.
+
+   COLUMN GAPS:
+   Adjust the gap property in .columns to control spacing between columns.
+   The core system sets this, but you can override:
+   .slide-content .columns { gap: 2cqw; }
+
+   ======================================================================== */
+
+.slide-content .columns .column h2 {
+  font-size: 2.2cqw;                    /* Smaller in columns */
+  margin-bottom: 0.8cqw;
+}
+
+.slide-content .columns .column p {
+  font-size: 0.9em;                     /* Slightly smaller for column fit */
+  line-height: 1.6;
+}
+
+
+/* ========================================================================
+   SECTION 14: BACKGROUND IMAGE OVERLAY
+   ========================================================================
+
+   When slides have background images, this controls the overlay opacity.
+   The system creates a semi-transparent overlay so text remains readable.
+
+   ADJUST OPACITY:
+   - Higher opacity (0.9-0.95): Strong overlay, very readable text
+   - Medium opacity (0.8-0.85): Balanced, image visible but text clear
+   - Lower opacity (0.7-0.75): More image showing through, artistic
+
+   This works through the ::before pseudo-element (controlled by core CSS).
+   The --slide-content-bg-if-image variable sets the overlay color/opacity.
+
+   ======================================================================== */
+
+/* Already defined in :root section above, but you can fine-tune: */
+/* --slide-content-bg-if-image: rgba(255, 254, 249, 0.88); */
+
+
+/* ========================================================================
+   SECTION 15: CUSTOM ENHANCEMENTS (Optional)
+   ========================================================================
+
+   Add your own creative touches here. These are optional but can make
+   your presentations uniquely yours.
+
+   IDEAS TO EXPLORE:
+   =================
+
+   1. CUSTOM BULLET STYLES:
+      .slide-content ul { list-style: none; }
+      .slide-content li::before { content: "→ "; color: var(--accent-color); }
+
+   2. DROP CAPS (first letter emphasis):
+      .slide-content p:first-of-type::first-letter {
+        font-size: 3em;
+        float: left;
+        line-height: 0.8;
+        margin-right: 0.1em;
+        color: var(--accent-color);
+      }
+
+   3. TEXT SHADOWS FOR DEPTH:
+      .slide-content h1 {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+   4. GRADIENT ACCENTS:
+      .slide-content h1 {
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-light-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+   5. NUMBERED SLIDES:
+      .slide-header::after {
+        content: " · " counter(slide);
+        counter-increment: slide;
+      }
+
+   6. ROUNDED CORNERS ON TABLES:
+      .slide-content table {
+        border-radius: 1cqw;
+        overflow: hidden;
+      }
+
+   ======================================================================== */
+
+/* Add your custom enhancements below this line */
+
+
+
+
+/* ========================================================================
+   FINAL TIPS FOR CUSTOMIZATION
+   ========================================================================
+
+   1. START SIMPLE: Change colors and fonts first, then adjust sizes
+
+   2. TEST FREQUENTLY: View your slides at different sizes to ensure
+      scaling works properly with your custom values
+
+   3. USE BROWSER DEVTOOLS: Inspect elements and test changes in real-time
+      before committing to this stylesheet
+
+   4. MAINTAIN CONTRAST: Always ensure sufficient contrast between text
+      and backgrounds (check with tools like contrast-ratio.com)
+
+   5. LIMIT FONTS: Stick to 2-3 font families maximum for cohesion
+
+   6. CONSISTENT SPACING: Use multipliers of your base spacing unit
+      (e.g., 0.5cqw, 1cqw, 1.5cqw, 2cqw) for visual rhythm
+
+   7. SAVE VERSIONS: Keep copies of working stylesheets before making
+      major changes
+
+   8. STUDY EXAMPLES: Look at the included themes (minimal.css,
+      editorial.css, etc.) for inspiration and patterns
+
+   9. COLOR THEORY: Use complementary colors sparingly, analogous colors
+      for harmony, and always have a clear hierarchy (primary, secondary,
+      accent colors)
+
+   10. RESPECT THE GRID: The container query system maintains proportions —
+       trust it and use relative units (cqw, em, %) rather than fixed px
+
+   ======================================================================== */
