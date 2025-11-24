@@ -84,4 +84,4 @@ Examples and common directives are shown below (use the exact directive names):
       # - A thin badge appears when content overflows the 16×9 frame.  Hover to see the first 20 characters that spill off the slide.
       # - As you edit, your most-recently-edited slides are stored in LocalStorage via your browser.  Use the restore button to reopen the last deck from a prior session.
       # - The status note in the lower-right reminds you about help on the default deck and reports when decks are restored.
-      # - 9 different styles are given, but you can create your own.
+      # - 11 different styles are given, but you can create your own. style-example.css shows you some options for how to do it.
