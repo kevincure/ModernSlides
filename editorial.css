@@ -2,6 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap');
 
 :root {
+  --slide-base-font-size: 3cqw; 
   --main-text-color: #2f3e30; /* Dark Forest Green */
   --bg-color: #f3f0e9; /* Bone/Almond */
   --accent-color: #8c4b37; /* Terracotta */
@@ -22,20 +23,20 @@ body {
 
 .slide-header {
   font-family: var(--sans-font);
-  letter-spacing: 0.2rem;
-  font-size: 0.7rem;
+  letter-spacing: calc(var(--slide-base-font-size) * 0.08);
+  font-size: calc(var(--slide-base-font-size) * 0.25);
   text-transform: uppercase;
   color: var(--accent-light-color);
   border-bottom: 1px solid var(--h1-border-color);
   display: block;
-  margin-bottom: 2rem;
+  margin-bottom: calc(var(--slide-base-font-size) * .5);
 }
 
 .slide-content h1 {
   font-family: var(--serif-font);
   font-weight: 400;
   font-style: italic;
-  font-size: 4rem;
+  font-size: calc(var(--slide-base-font-size) * 1.67);
   text-align: center;
   color: var(--main-text-color);
   border: none;
@@ -55,7 +56,7 @@ body {
 .slide-content th {
   font-family: var(--sans-font);
   font-weight: 400;
-  letter-spacing: 0.1em;
+  letter-spacing: calc(var(--slide-base-font-size) * 0.08);
   text-transform: uppercase;
   color: var(--accent-color);
 }
@@ -63,5 +64,5 @@ body {
 .slide-content .caption {
   font-family: var(--sans-font);
   color: var(--accent-light-color);
-  font-size: 0.8rem;
+  font-size: calc(var(--slide-base-font-size) * 1);
 }

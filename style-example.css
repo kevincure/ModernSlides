@@ -52,13 +52,12 @@
 
 
 /* ========================================================================
-   SECTION 2: COLOR PALETTE
+   SECTION 2: COLORS AND FONTS
    ========================================================================
 
-   Define your entire color scheme here. This palette here uses:
-   - Soft, warm neutrals for background and text
-   - A sophisticated accent color for highlights
-   - Subtle variations to create hierarchy
+   Colors and font details, set for backgrounds, borders, and normal text,
+   BigText, SmallText, TinyText, Captions, Headers, Notes, Quotes
+   For many people, this is all you'll edit.
 
    CUSTOMIZING COLORS:
    ==================
@@ -73,24 +72,31 @@
 
 :root {
   /* Base font size */
-  --slide-base-font-size: 3cqw;         /* Good for most fonts, all other font sizes will scale based on this */
+  --slide-base-font-size: 3cqw;         /* 3cqw is good for most fonts, all other font sizes will scale based on this */
+					/* Down to 2 shrinks all fonts by 33%, up to 4 grows them all by 25% */
 
   /* Primary Colors */
-  --main-text-color: #2a2a2a;           /* Deep charcoal */
-  --bg-color: #fffef9;                  /* Warm off-white — try #ffffff for pure white */
+  --main-text-color: #2a2a2a;           /* Main text color */
+  --bg-color: #fffef9;                  /* Background color */
 
   /* Accent Colors */
-  --accent-color: #b45f3e;              /* Muted terracotta — your primary brand color */
-  --accent-light-color: #8a8378;        /* Warm grey — for subtle elements */
+  --accent-color: #b45f3e;              /* Accents */
+  --accent-light-color: #8a8378;        /* Subtle accents */
 
   /* Structural Colors */
-  --h1-border-color: #e8e4dd;           /* Soft beige for borders — lighten for minimal look */
-  --slide-content-bg-if-image: rgba(255, 254, 249, 0.88);  /* Background overlay opacity when images present */
+  --h1-border-color: #e8e4dd;           /* Title border */
+  --slide-content-bg-if-image: rgba(255, 254, 249, 0.88);  /* How transparent should Background: be */
 
-  /* Font Variables (reference the fonts imported above) */
+  /* behind-font-colors */
+  --header-background-color: none; /* none if no color block behind a given font */
+  --title-background-color: #ffcccc;
+  --bigtext-background-color: #ccffcc;
+  --notes-background-color: #ffffcc;
+  --quote-background-color: #ff0000;
+
+  /* Font Variables (all but the first are just emergency backups) */
   --serif-font: "Cormorant Garamond", "Garamond", "Georgia", serif;
   --sans-font: "Inter", "Helvetica Neue", "Arial", sans-serif;
-  --mono-font: "SF Mono", "Monaco", "Courier New", monospace;
 
   /* Typography defaults that themes can override */
   /* Text scale is multiplicative relative to Text:, which is set as slide-base-font-size above. */
@@ -100,7 +106,6 @@
   --header-style: normal;
 
   --p-text-scale: 1;
-  --p-align: inherit;
   --p-weight: 400;
   --p-style: normal;
 
@@ -140,9 +145,8 @@
   --quote-source-style: normal;
 
   --caption-text-scale: 1;
-  --caption-align: left;
   --caption-weight: 400;
-  --caption-style: normal;
+  --caption-style: italic;
 }
 
 
@@ -155,14 +159,14 @@
    ======================================================================== */
 
 body {
-  font-family: var(--serif-font);       /* Default to serif for body text */
+  font-family: var(--serif-font);       /* Default Text: to serif for body text */
   background: var(--bg-color);
   color: var(--main-text-color);
 }
 
 
 /* ========================================================================
-   SECTION 4: SLIDE HEADER (Top Metadata)
+   SECTION 4: HEADER (Top Metadata)
    ========================================================================
 
    The .slide-header appears at the top of each slide showing metadata
@@ -184,9 +188,10 @@ body {
   font-size: calc(var(--slide-base-font-size) * var(--header-text-scale, 0.8)); /* font-size relative to "base" */
   font-weight: var(--header-weight, 500);                     /* Medium weight for clarity */
   text-transform: uppercase;            /* All caps for editorial style */
-  color: var(--accent-light-color);    /* Subtle, not competing with content */
+  color: var(--accent-light-color);    /* This is font color */
   text-align: var(--header-align, left);
   font-style: var(--header-style, normal);
+  background: var(--header-background-color); /* add color here using var(--some color above, none) if you like */
 }
 
 
@@ -231,6 +236,7 @@ body {
   font-style: var(--h1-style, normal);
   color: var(--main-text-color);        /* Keep headlines readable */
   border-bottom: 1px solid var(--h1-border-color);  /* Subtle divider */
+  background: var(--title-background-color); /* color block */
 }
 
 
@@ -265,11 +271,6 @@ body {
 }
 
 .slide-content p {
-  font-family: inherit;
-  line-height: inherit;
-  font-weight: inherit;
-  font-style: inherit;
-  text-align: inherit;
   font-size: calc(var(--slide-base-font-size) * var(--text-scale, 1) * var(--p-text-scale, 1));
   margin-bottom: calc(var(--slide-base-font-size) * 0.3);
   max-width: 100%;
@@ -303,6 +304,7 @@ body {
   text-align: var(--large-align, center); /* Default alignment; user-editable */
   font-style: var(--large-style, normal); /* Default style; user-editable */
   color: var(--accent-color);           /* Use accent color for visibility */
+  background: var(--large-background-color); /* block background */
 }
 
 /* SMALL TEXT — for captions, metadata, less important info */
@@ -314,6 +316,8 @@ body {
   text-align: var(--small-align, left);
   font-style: var(--small-style, normal);
   font-weight: var(--small-weight, 400);
+  border-left: 1.5cqw solid var(--accent-color); /* add a marker to the left of small text */
+  padding-left: 1cqw;  /* with some spacing between the market and the text */
 }
 
 /* TINY TEXT — for footnotes, legal text, credits */
@@ -361,6 +365,7 @@ body {
   font-weight: var(--notes-weight, 400);
   border-left: 2px solid var(--h1-border-color);  /* Visual separator */
   padding-left: calc(var(--slide-base-font-size) * .25)  /* Space from border */
+  background: var(--notes-background-color);
 }
 
 .slide-content .notes p {
@@ -385,8 +390,9 @@ body {
 
 .slide-content .blockquote {
   margin: calc(var(--slide-base-font-size) * 0.67) 0;  /* Isolate from surrounding content */
-  padding: calc(var(--slide-base-font-size) * 0.5) calc(var(--slide-base-font-size) * 0.5)  /* Internal spacing */
+  padding: calc(var(--slide-base-font-size) * 0.5) calc(var(--slide-base-font-size) * 0.5);  /* Internal spacing */
   border-left: 3px solid var(--accent-color);  /* Accent border */
+  background: var(--quote-background-color);
 }
 
 .slide-content .blockquote .quote-text {
@@ -479,7 +485,7 @@ body {
 
 .slide-content .caption {
   font-family: var(--sans-font);
-  font-size: calc(var(--slide-base-font-size) * var(--caption-text-scale, 0.33));  /* Relative to base font size */
+  font-size: calc(var(--slide-base-font-size) * var(--caption-text-scale, .33));  /* Relative to base font size */
   font-style: var(--caption-style, italic);
   color: var(--accent-light-color);
   text-align: var(--caption-align, center);
@@ -504,55 +510,3 @@ body {
 .slide-content .columns {
   gap: calc(var(--slide-base-font-size) * 0.2);
 }
-
-
-/* ========================================================================
-   SECTION 13: CUSTOM ENHANCEMENTS (Optional)
-   ========================================================================
-
-   Add your own creative touches here. These are optional but can make
-   your presentations uniquely yours.
-
-   IDEAS TO EXPLORE:
-   =================
-
-   1. CUSTOM BULLET STYLES:
-      .slide-content ul { list-style: none; }
-      .slide-content li::before { content: "→ "; color: var(--accent-color); }
-
-   2. DROP CAPS (first letter emphasis):
-      .slide-content p:first-of-type::first-letter {
-        font-size: calc(var(--slide-base-font-size) * 1.2)
-        float: left;
-        line-height: 0.8;
-        margin-right: 0.1em;
-        color: var(--accent-color);
-      }
-
-   3. TEXT SHADOWS FOR DEPTH:
-      .slide-content h1 {
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      }
-
-   4. GRADIENT ACCENTS:
-      .slide-content h1 {
-        background: linear-gradient(135deg, var(--accent-color), var(--accent-light-color));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-   5. NUMBERED SLIDES:
-      .slide-header::after {
-        content: " · " counter(slide);
-        counter-increment: slide;
-      }
-
-   6. ROUNDED CORNERS ON TABLES:
-      .slide-content table {
-        border-radius: 1cqw;
-        overflow: hidden;
-      }
-
-   ======================================================================== */
-
-/* Add your custom enhancements below this line */

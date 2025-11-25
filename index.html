@@ -180,14 +180,32 @@ body {
   line-height: 1.6;
   margin-bottom: calc(var(--base-font-size) * 0.3);
   text-align: inherit;
+  font-family: inherit;
+  line-height: inherit;
+  font-weight: inherit;
+  font-style: inherit;
 }
 
 .slide-content .text-center { text-align: center; }
+
+/* Alignment helpers used by <<<, |||, >>> markers */
+.slide-content .ms-align-left,
+.slide-content .ms-align-center,
+.slide-content .ms-align-right {
+  display: block;
+  width: 100%;
+}
+
+/* Use !important so markers override directive defaults like .large/.small/.tiny */
+.slide-content .ms-align-left  { text-align: left  !important; }
+.slide-content .ms-align-center{ text-align: center!important; }
+.slide-content .ms-align-right { text-align: right !important; }
 
 .slide-content .large {
   --text-scale: 1.6;
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
   text-align: center;
+  width: 100%;
 }
 
 .slide-content .large p {
@@ -198,11 +216,13 @@ body {
 .slide-content .small {
   --text-scale: 0.67;
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
+  width: 100%;
 }
 
 .slide-content .tiny {
   --text-scale: 0.33;
   font-size: calc(var(--base-font-size) * var(--text-scale, 1));
+  width: 100%;
 }
 
 .slide-content .notes {
@@ -216,8 +236,8 @@ body {
 }
 
 .slide-content .notes p {
-  font-size: 1em;
-  margin-bottom: 0.5em;
+  font-size: calc(var(--base-font-size) * .5);
+  margin-bottom: calc(var(--base-font-size) * .25);
 }
 
 /* --- BLOCKQUOTE COMPONENT --- */
@@ -331,10 +351,18 @@ body {
 }
 
 .slide-content .caption {
-  font-size: calc(var(--base-font-size) * 0.33);
+  font-size: calc(var(--base-font-size) * 0.8);
   max-width: 90%;
   flex-shrink: 0;
   flex-grow: 0;
+}
+
+.slide-content .caption p {
+  font-size: inherit;
+  text-align: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+  margin: 0;
 }
 
 body.is-edit-mode .slide.has-overflow {
@@ -4855,10 +4883,23 @@ async function getThumbnailHTML(rawText, theme) {
     let safeText = escapeHtml(masked);
     
     // 3. Process Markdown (bold/italic)
-    safeText = safeText.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
-    safeText = safeText.replace(/\*\*(.*?)\*\* /g, '<strong>$1</strong> ');
-    safeText = safeText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    safeText = safeText.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Make inline bold/italic override any theme-level font-weight/style
+    safeText = safeText.replace(
+      /\*\*\*(.*?)\*\*\*/g,
+      '<strong style="font-weight:bold;"><em style="font-style:italic;">$1</em></strong>'
+    );
+    safeText = safeText.replace(
+      /\*\*(.*?)\*\* /g,
+      '<strong style="font-weight:bold;">$1</strong> '
+    );
+    safeText = safeText.replace(
+      /\*\*(.*?)\*\*/g,
+      '<strong style="font-weight:bold;">$1</strong>'
+    );
+    safeText = safeText.replace(
+      /\*(.*?)\*/g,
+      '<em style="font-style:italic;">$1</em>'
+    );
 
     // 4. Process Lists (before paragraph splitting)
     const listStyle = 'margin:0; padding-left:1.2em; text-align:left;';
@@ -4893,41 +4934,90 @@ async function getThumbnailHTML(rawText, theme) {
      return html;
   }
 
-  function formatWithJustify(text) {
-    if (!text || !text.trim()) return "";
+ function formatWithJustify(text) {
+  if (!text || !text.trim()) return "";
 
-    const INLINE_ALIGN = {
-      "<<<": "text-align:left;",
-      ">>>": "text-align:right;",
-      "|||": "text-align:center;",
-    };
+  // Map markers to CSS classes instead of inline styles
+  const ALIGN_CLASS = {
+    "<<<": "ms-align-left",
+    ">>>": "ms-align-right",
+    "|||": "ms-align-center",
+  };
 
-    const inlineMarkers = [];
+  const inlineMarkers = [];
 
-    const addAlignedPlaceholder = (token, rawBody, { block }) => {
-      const key = `__ALIGN_${inlineMarkers.length}__`;
-      const inner = formatWithJustify(rawBody);
-      const tag = block ? 'div' : 'span';
-      const extra = block ? '' : 'display:block;';
-      inlineMarkers.push({
-        key,
-        html: `<${tag} style="width:100%; ${extra}${INLINE_ALIGN[token]}">${inner}</${tag}>`
-      });
-      return key;
-    };
+  const addAlignedPlaceholder = (token, rawBody, { block }) => {
+    const key = `__ALIGN_${inlineMarkers.length}__`;
+    const inner = formatWithJustify(rawBody);
+    const tag = block ? 'div' : 'span';
+    const cls = ALIGN_CLASS[token] || '';
+    inlineMarkers.push({
+      key,
+      html: `<${tag} class="${cls}">${inner}</${tag}>`
+    });
+    return key;
+  };
 
-    const INLINE_PAIR_RE = /(<<<|>>>|\|\|\|)([\s\S]*?)\1/g;
+  const INLINE_PAIR_RE = /(<<<|>>>|\|\|\|)([\s\S]*?)\1/g;
 
-    const withInlinePlaceholders = text.replace(INLINE_PAIR_RE, (match, tok, body, offset) => {
-      const leadingBreak = text.lastIndexOf('\n', offset - 1);
-      const beforeToken = leadingBreak === -1 ? text.slice(0, offset) : text.slice(leadingBreak + 1, offset);
+  // First pass: turn *inline* pairs into placeholders, leave true block fences alone
+  const withInlinePlaceholders = text.replace(INLINE_PAIR_RE, (match, tok, body, offset) => {
+    const leadingBreak = text.lastIndexOf('\n', offset - 1);
+    const beforeToken = leadingBreak === -1 ? text.slice(0, offset) : text.slice(leadingBreak + 1, offset);
+    const blockOpening = /^\s*$/.test(beforeToken);
+
+    const closingIndex = offset + tok.length + body.length;
+    const closingLineBreak = text.lastIndexOf('\n', closingIndex - 1);
+    const beforeClosing = closingLineBreak === -1
+      ? text.slice(0, closingIndex)
+      : text.slice(closingLineBreak + 1, closingIndex);
+    const blockClosing = /^\s*$/.test(beforeClosing);
+
+    if (blockOpening && blockClosing) {
+      // Let the outer fence logic handle this as a block
+      return match;
+    }
+
+    // Inline justified span
+    return addAlignedPlaceholder(tok, body, { block: false });
+  });
+
+  const FENCES = new Set(["<<<", ">>>", "|||"]);
+
+  const lines = withInlinePlaceholders.split(/\r?\n/);
+  const out = [];
+  let mode = null;
+  let buf = [];
+
+  const replaceInlineKeys = (html) => {
+    let s = html;
+    for (const { key, html: frag } of inlineMarkers) {
+      s = s.split(key).join(frag);
+    }
+    return s;
+  };
+
+  const flushNormal = () => {
+    if (buf.length === 0) return;
+    const html = plainTextToHtml(buf.join("\n"));
+    out.push(replaceInlineKeys(html));
+    buf = [];
+  };
+
+  const flushBlock = (token) => {
+    const bodyRaw = buf.join("\n");
+
+    // Inline pairs *inside* this block also become placeholders
+    const bodyWithPlaceholders = bodyRaw.replace(INLINE_PAIR_RE, (match, tok, body, offset) => {
+      const leadingBreak = bodyRaw.lastIndexOf('\n', offset - 1);
+      const beforeToken = leadingBreak === -1 ? bodyRaw.slice(0, offset) : bodyRaw.slice(leadingBreak + 1, offset);
       const blockOpening = /^\s*$/.test(beforeToken);
 
       const closingIndex = offset + tok.length + body.length;
-      const closingLineBreak = text.lastIndexOf('\n', closingIndex - 1);
+      const closingLineBreak = bodyRaw.lastIndexOf('\n', closingIndex - 1);
       const beforeClosing = closingLineBreak === -1
-        ? text.slice(0, closingIndex)
-        : text.slice(closingLineBreak + 1, closingIndex);
+        ? bodyRaw.slice(0, closingIndex)
+        : bodyRaw.slice(closingLineBreak + 1, closingIndex);
       const blockClosing = /^\s*$/.test(beforeClosing);
 
       if (blockOpening && blockClosing) {
@@ -4937,80 +5027,39 @@ async function getThumbnailHTML(rawText, theme) {
       return addAlignedPlaceholder(tok, body, { block: false });
     });
 
-    const FENCES = new Set(["<<<", ">>>", "|||"]);
-    const BLOCK_ALIGN_STYLE = INLINE_ALIGN;
+    const bodyHtml = replaceInlineKeys(plainTextToHtml(bodyWithPlaceholders));
+    const cls = ALIGN_CLASS[token] || '';
+    out.push(`<div class="${cls}">${bodyHtml}</div>`);
+    buf = [];
+  };
 
-    const lines = withInlinePlaceholders.split(/\r?\n/);
-    const out = [];
-    let mode = null;
-    let buf = [];
-
-    const replaceInlineKeys = (html) => {
-      let s = html;
-      for (const { key, html: frag } of inlineMarkers) {
-        s = s.split(key).join(frag);
+  for (const raw of lines) {
+    const trimmed = raw.trim();
+    if (FENCES.has(trimmed)) {
+      if (mode === null) {
+        flushNormal();
+        mode = trimmed;
+        buf = [];
+      } else if (trimmed === mode) {
+        flushBlock(mode);
+        mode = null;
+      } else {
+        buf.push(raw);
       }
-      return s;
-    };
-
-    const flushNormal = () => {
-      if (buf.length === 0) return;
-      const html = plainTextToHtml(buf.join("\n"));
-      out.push(replaceInlineKeys(html));
-      buf = [];
-    };
-
-    const flushBlock = (token) => {
-      const bodyRaw = buf.join("\n");
-      const bodyWithPlaceholders = bodyRaw.replace(INLINE_PAIR_RE, (match, tok, body, offset) => {
-        const leadingBreak = bodyRaw.lastIndexOf('\n', offset - 1);
-        const beforeToken = leadingBreak === -1 ? bodyRaw.slice(0, offset) : bodyRaw.slice(leadingBreak + 1, offset);
-        const blockOpening = /^\s*$/.test(beforeToken);
-
-        const closingIndex = offset + tok.length + body.length;
-        const closingLineBreak = bodyRaw.lastIndexOf('\n', closingIndex - 1);
-        const beforeClosing = closingLineBreak === -1
-          ? bodyRaw.slice(0, closingIndex)
-          : bodyRaw.slice(closingLineBreak + 1, closingIndex);
-        const blockClosing = /^\s*$/.test(beforeClosing);
-
-        if (blockOpening && blockClosing) {
-          return match;
-        }
-
-        return addAlignedPlaceholder(tok, body, { block: false });
-      });
-      const bodyHtml = replaceInlineKeys(plainTextToHtml(bodyWithPlaceholders));
-      out.push(`<div style="width:100%; ${BLOCK_ALIGN_STYLE[token]}">${bodyHtml}</div>`);
-      buf = [];
-    };
-
-    for (const raw of lines) {
-      const trimmed = raw.trim();
-      if (FENCES.has(trimmed)) {
-        if (mode === null) {
-          flushNormal();
-          mode = trimmed;
-          buf = [];
-        } else if (trimmed === mode) {
-          flushBlock(mode);
-          mode = null;
-        } else {
-          buf.push(raw);
-        }
-        continue;
-      }
-      buf.push(raw);
+      continue;
     }
-
-    if (mode === null) {
-      flushNormal();
-    } else {
-      flushBlock(mode);
-    }
-
-    return out.join("\n");
+    buf.push(raw);
   }
+
+  if (mode === null) {
+    flushNormal();
+  } else {
+    flushBlock(mode);
+  }
+
+  return out.join("\n");
+}
+
 
   function wrapHtmlWithMode(mode, html) {
     if (!html || !html.trim()) return '';
