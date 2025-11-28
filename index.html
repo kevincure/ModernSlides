@@ -2434,10 +2434,27 @@ $("manage-images-btn").onclick = async () => {
 $("close-image-manager").onclick = () => $("image-manager").classList.remove("active");
 
     // Text editor - this is the main source of changes.
+    let debouncedSaveTimer = null;
+    const DEBOUNCE_SAVE_MS = 3000;
+
     $("raw-text-editor").addEventListener('input', () => {
       state.hasChanges = true;
       validateAndUpdateTextarea(); // Live preview update
       updateSaveButtonGlow();
+
+      // Clear existing debounce timer
+      if (debouncedSaveTimer) {
+        clearTimeout(debouncedSaveTimer);
+      }
+
+      // Set up debounced save to localStorage after 3 seconds of no typing
+      debouncedSaveTimer = setTimeout(() => {
+        const textarea = $("raw-text-editor");
+        if (textarea && state.editMode) {
+          saveCurrentSlideText(textarea.value, 'DEBOUNCED_INPUT');
+          console.log('[debounce] Auto-saved slide after 3s of inactivity');
+        }
+      }, DEBOUNCE_SAVE_MS);
     });
 
 // Paste images into the editor → store in IndexedDB → insert Image: local-img-... line
@@ -2818,28 +2835,55 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
     if (!state.presenterWindow || state.presenterWindow.closed) return;
 
     const currentIndex = state.currentAbsoluteSlideIndex;
-    let nextIndex;
+    let nextIndex = null;
     const currentVisiblePosition = state.visibleSlideIndices.indexOf(currentIndex);
 
     // Check if the current slide is visible and not the last one.
     if (currentVisiblePosition !== -1 && currentVisiblePosition < state.visibleSlideIndices.length - 1) {
         // If so, the next slide is the next one in the visible list.
         nextIndex = state.visibleSlideIndices[currentVisiblePosition + 1];
-    } else {
-        // Otherwise (if on the last visible slide or a hidden slide), just show the current slide again in the "Next" preview.
-        nextIndex = currentIndex;
     }
+    // Otherwise nextIndex stays null, meaning we're on the last slide
 
     // Get theme
     const themeId = AVAILABLE_THEMES.find(name => document.body.classList.contains(name)) || DEFAULT_THEME;
 
-    // Get current and next slide elements
+    // Get current slide element
     const currentSlideEl = state.slideEls[currentIndex];
-    const nextSlideEl = state.slideEls[nextIndex];
 
     // Generate standalone HTML using unified function
     const currentSlideHTML = await generateSlideFrameHTML(currentSlideEl, themeId);
-    const nextSlideHTML = await generateSlideFrameHTML(nextSlideEl, themeId);
+
+    // Generate next slide HTML (blank if on last slide)
+    let nextSlideHTML;
+    if (nextIndex !== null) {
+      const nextSlideEl = state.slideEls[nextIndex];
+      nextSlideHTML = await generateSlideFrameHTML(nextSlideEl, themeId);
+    } else {
+      // Create blank slide for "end of presentation" indicator
+      nextSlideHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #1a1a1a;
+      color: #888;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div>End of presentation</div>
+</body>
+</html>`;
+    }
 
     // Update iframes
     state.presenterWindow.document.getElementById('current-slide').srcdoc = currentSlideHTML;
@@ -4602,6 +4646,25 @@ async function generateSlideFrameHTML(slideContent, theme, options = {}) {
 <head>
   <meta charset="UTF-8">
   <base href="${window.location.href}">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\\\(", "\\\\)"]],
+        displayMath: [["$$", "$$"], ["\\\\[", "\\\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" },
+      startup: {
+        ready: () => {
+          MathJax.startup.defaultReady();
+          MathJax.startup.promise.then(() => {
+            MathJax.typesetPromise();
+          });
+        }
+      }
+    };
+  </script>
+  <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
   <style>
     ${document.getElementById('core-styles').textContent}
     body { margin: 0; overflow: hidden; }
