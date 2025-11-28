@@ -1,7 +1,22 @@
-/* tufte-base.css */
+/* ========================================================================
+   TUFTE-BASE.CSS — Classic Academic Typography
+   ========================================================================
+
+   Inspired by Edward Tufte's design principles: clarity, precision,
+   and efficient use of space. Perfect for academic presentations,
+   research talks, and data-driven content.
+
+   ======================================================================== */
+
+/* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:opsz,wght@8..30,400;8..30,600&display=swap');
 
+/* ========================================================================
+   COLORS AND FONTS
+   ======================================================================== */
+
 :root {
+  /* Colors */
   --main-text-color: #111;
   --bg-color: #fffff8;
   --accent-color: #111;
@@ -9,49 +24,71 @@
   --h1-border-color: #ddd;
   --slide-content-bg-if-image: rgba(255, 255, 248, 0.85);
 
+  /* Fonts */
   --serif-font: "Source Serif 4", "et-book", Georgia, serif;
   --sans-font: "Lato", "Gill Sans", sans-serif;
   --mono-font: Consolas, Monaco, monospace;
 }
 
-body { 
-  font-family: var(--serif-font); 
-  background: var(--bg-color); 
-  color: var(--main-text-color); 
+/* ========================================================================
+   BODY
+   ======================================================================== */
+
+body {
+  font-family: var(--serif-font);
+  background: var(--bg-color);
+  color: var(--main-text-color);
 }
 
-.slide-header { 
+/* ========================================================================
+   HEADER
+   ======================================================================== */
+
+.slide-header {
   font-family: var(--sans-font);
-  color: var(--accent-light-color); 
+  color: var(--accent-light-color);
 }
+
+/* ========================================================================
+   TITLE (H1)
+   ======================================================================== */
 
 .slide-content h1 {
   font-family: var(--serif-font);
   font-weight: 600;
-  border-bottom: 1px solid var(--h1-border-color);
+  border-bottom: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
 }
+
+/* ========================================================================
+   NOTES
+   ======================================================================== */
 
 .slide-content .notes {
   font-family: var(--sans-font);
   color: var(--accent-light-color);
 }
 
-.slide-content table {
-  border-top: 2px solid var(--accent-color);
-  border-bottom: 2px solid var(--accent-color);
-}
+/* ========================================================================
+   TABLES
+   ======================================================================== */
 
-.slide-content th { 
-  font-family: var(--sans-font); 
-  font-weight: 700; 
-  border-bottom: 1px solid var(--accent-color); 
+.slide-content table {
+  border-top: calc(var(--slide-base-font-size) * 0.06) solid var(--accent-color);
+  border-bottom: calc(var(--slide-base-font-size) * 0.06) solid var(--accent-color);
 }
 
 .slide-content th {
+  font-family: var(--sans-font);
+  font-weight: 700;
+  border-bottom: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--accent-color);
   background-color: color-mix(in srgb, var(--bg-color) 95%, var(--main-text-color) 5%);
 }
 
-.slide-content .caption { 
-  font-style: italic; 
+/* ========================================================================
+   CAPTIONS
+   ======================================================================== */
+
+.slide-content .caption {
+  font-style: italic;
   color: var(--accent-light-color);
 }
