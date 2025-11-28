@@ -1857,6 +1857,11 @@ const ImageStore = {
     initSelectionToolbar();
     // ensure print is small pdf w/ embedded websites
     window.addEventListener('beforeprint', () => {
+      // Flush any pending debounced updates before printing
+      if (typeof debouncedValidateAndUpdate !== 'undefined' && debouncedValidateAndUpdate.flush) {
+        debouncedValidateAndUpdate.flush();
+      }
+
       document.querySelectorAll('.slide iframe').forEach((f) => {
         f.dataset.src = f.src;        // remember
         f.src = 'about:blank';        // blank it so nothing gets rasterized
@@ -2431,8 +2436,13 @@ $("close-image-manager").onclick = () => $("image-manager").classList.remove("ac
     // Text editor - this is the main source of changes.
     $("raw-text-editor").addEventListener('input', () => {
       state.hasChanges = true;
-      validateAndUpdateTextarea(); // Live preview update
+      debouncedValidateAndUpdate(); // Debounced live preview update (3s delay)
       updateSaveButtonGlow();
+    });
+
+    // Flush pending updates when leaving the textarea
+    $("raw-text-editor").addEventListener('blur', () => {
+      debouncedValidateAndUpdate.flush();
     });
 
 // Paste images into the editor → store in IndexedDB → insert Image: local-img-... line
@@ -3677,6 +3687,23 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     validateAndUpdateTextarea();
   }
 
+  // Debounce helper function
+  function debounce(func, delay) {
+    let timeoutId;
+    const debounced = function(...args) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+    debounced.flush = function() {
+      clearTimeout(timeoutId);
+      func.apply(this);
+    };
+    debounced.cancel = function() {
+      clearTimeout(timeoutId);
+    };
+    return debounced;
+  }
+
   async function validateAndUpdateTextarea() {
     const textarea = $("raw-text-editor");
     if (!textarea) return;
@@ -3703,6 +3730,9 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
     scheduleOverflowChecks();
   }
+
+  // Create debounced version with 3-second delay for typing
+  const debouncedValidateAndUpdate = debounce(validateAndUpdateTextarea, 3000);
 
   function captureCurrentSnapshot() {
     if (!state.xmlDoc) return null;
@@ -4129,6 +4159,11 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 
   function updateGroundTruth(action, data = {}) {
     console.log(`[updateGroundTruth] Action: ${action}`, data);
+
+    // Flush any pending debounced updates before processing action
+    if (typeof debouncedValidateAndUpdate !== 'undefined' && debouncedValidateAndUpdate.flush) {
+      debouncedValidateAndUpdate.flush();
+    }
 
     const editorEl = $("raw-text-editor");
     const editorValue = editorEl ? editorEl.value : null;
