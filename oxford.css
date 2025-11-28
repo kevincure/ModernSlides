@@ -1,7 +1,21 @@
-/* oxford.css — aligned to tufte-base contract */
+/* ========================================================================
+   OXFORD.CSS — Traditional Academic Oxford Style
+   ========================================================================
+
+   Scholarly typography with Oxford Blue accents and formal elegance.
+   Perfect for academic and institutional presentations.
+
+   ======================================================================== */
+
+/* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;700&display=swap');
 
+/* ========================================================================
+   COLORS AND FONTS
+   ======================================================================== */
+
 :root {
+  /* Colors */
   --main-text-color: #1a1a1a;
   --bg-color: #fcfcfa;
   --accent-color: #002147; /* Oxford Blue */
@@ -9,10 +23,15 @@
   --h1-border-color: #d4d4d4;
   --slide-content-bg-if-image: rgba(252, 252, 250, 0.94);
 
+  /* Fonts */
   --serif-font: "EB Garamond", "Times New Roman", serif;
   --sans-font: "Montserrat", "Arial", sans-serif;
   --mono-font: "Monaco", "Consolas", monospace;
 }
+
+/* ========================================================================
+   BODY
+   ======================================================================== */
 
 body {
   font-family: var(--serif-font);
@@ -20,33 +39,50 @@ body {
   color: var(--main-text-color);
 }
 
+/* ========================================================================
+   HEADER
+   ======================================================================== */
+
 .slide-header {
   font-family: var(--serif-font);
   font-style: italic;
   color: var(--accent-light-color);
 }
 
+/* ========================================================================
+   TITLE (H1) — double underline
+   ======================================================================== */
+
 .slide-content h1 {
   font-family: var(--serif-font);
   font-weight: 600;
   text-align: center;
   color: var(--accent-color);
-  border-bottom: 2px double var(--accent-color);
-  padding-bottom: 1.2rem;
+  border-bottom: calc(var(--slide-base-font-size) * 0.06) double var(--accent-color);
+  padding-bottom: calc(var(--slide-base-font-size) * 0.33);
 }
+
+/* ========================================================================
+   NOTES
+   ======================================================================== */
 
 .slide-content .notes {
   font-family: var(--serif-font);
   font-style: italic;
   color: var(--accent-light-color);
-  border-top: 1px solid var(--h1-border-color);
-  padding-top: 1rem;
+  border-top: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
+  padding-top: calc(var(--slide-base-font-size) * 0.28);
 }
 
+/* ========================================================================
+   TABLES
+   ======================================================================== */
+
 .slide-content table {
-  border-top: 2px solid var(--accent-color);
-  border-bottom: 2px solid var(--accent-color);
+  border-top: calc(var(--slide-base-font-size) * 0.06) solid var(--accent-color);
+  border-bottom: calc(var(--slide-base-font-size) * 0.06) solid var(--accent-color);
 }
+
 .slide-content th {
   font-family: var(--sans-font);
   font-weight: 700;
@@ -56,17 +92,24 @@ body {
   color: #fff;
 }
 
+/* ========================================================================
+   CAPTIONS
+   ======================================================================== */
+
 .slide-content .caption {
   font-style: italic;
   color: var(--accent-light-color);
   text-align: center;
 }
 
-/* keep Oxford’s scholarly quote look without redefining base text */
+/* ========================================================================
+   BLOCKQUOTES — scholarly quote styling
+   ======================================================================== */
+
 .slide-content blockquote {
-  margin: 2rem 3rem;
+  margin: calc(var(--slide-base-font-size) * 0.56) calc(var(--slide-base-font-size) * 0.83);
   font-style: italic;
   color: var(--accent-color);
-  border-left: 3px solid var(--accent-color);
-  padding-left: 2rem;
+  border-left: calc(var(--slide-base-font-size) * 0.08) solid var(--accent-color);
+  padding-left: calc(var(--slide-base-font-size) * 0.56);
 }

@@ -1,19 +1,40 @@
-/* david-carson.css — aligned to tufte-base contract, retain deconstructed vibe */
+/* ========================================================================
+   DAVID-CARSON.CSS — Deconstructed Experimental Typography
+   ========================================================================
+
+   Inspired by David Carson's experimental design approach.
+   Features bold typography, unconventional layouts, and dynamic angles.
+
+   ======================================================================== */
+
+/* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:wght@400;700&display=swap');
 
+/* ========================================================================
+   COLORS AND FONTS
+   ======================================================================== */
+
 :root {
+  /* Colors */
   --main-text-color: #000;
   --bg-color: #f5f5f0;
   --accent-color: #ff0066;
   --accent-light-color: #666;
   --h1-border-color: transparent;
   --slide-content-bg-if-image: rgba(245, 245, 240, 0.85);
+
+  /* Custom base font size */
   --slide-base-font-size: 2.5cqw;
 
+  /* Fonts */
   --serif-font: 'Courier Prime', 'Courier New', monospace;
   --sans-font: 'Bebas Neue', Impact, sans-serif;
   --mono-font: 'Courier Prime', monospace;
 }
+
+/* ========================================================================
+   BODY
+   ======================================================================== */
 
 body {
   font-family: var(--serif-font);
@@ -21,11 +42,19 @@ body {
   color: var(--main-text-color);
 }
 
+/* ========================================================================
+   HEADER
+   ======================================================================== */
+
 .slide-header {
   font-family: var(--sans-font);
   color: var(--accent-light-color);
   text-transform: uppercase;
 }
+
+/* ========================================================================
+   TITLE (H1) — rotated with shadow
+   ======================================================================== */
 
 .slide-content h1 {
   font-family: var(--sans-font);
@@ -33,10 +62,14 @@ body {
   color: var(--accent-color);
   border: none;
   letter-spacing: -0.05em;
-  text-shadow: 3px 3px 0 #000;
+  text-shadow: calc(var(--slide-base-font-size) * 0.08) calc(var(--slide-base-font-size) * 0.08) 0 #000;
   transform: rotate(-2deg);
-  margin-left: -2rem;
+  margin-left: calc(var(--slide-base-font-size) * -0.56);
 }
+
+/* ========================================================================
+   NOTES
+   ======================================================================== */
 
 .slide-content .notes {
   font-family: var(--sans-font);
@@ -44,11 +77,16 @@ body {
   text-transform: uppercase;
 }
 
+/* ========================================================================
+   TABLES — deconstructed with skewed headers
+   ======================================================================== */
+
 .slide-content table {
   border: none;
   border-collapse: separate;
-  border-spacing: 4px;
+  border-spacing: calc(var(--slide-base-font-size) * 0.11);
 }
+
 .slide-content th {
   background: var(--accent-color);
   color: #fff;
@@ -56,14 +94,21 @@ body {
   text-transform: uppercase;
   transform: skewX(-10deg);
 }
+
 .slide-content td {
   background: #fff;
-  border: 2px solid #000;
+  border: calc(var(--slide-base-font-size) * 0.06) solid #000;
   font-weight: 700;
 }
+
 .slide-content tbody tr:nth-child(even) td {
-  background: #000; color: #fff;
+  background: #000;
+  color: #fff;
 }
+
+/* ========================================================================
+   CAPTIONS
+   ======================================================================== */
 
 .slide-content .caption {
   font-style: normal;
