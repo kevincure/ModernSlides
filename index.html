@@ -1394,6 +1394,8 @@ body.print-with-notes .print-notes-content {
         Cell 2.1 & Cell 2.2 & $math$ is fine
 
       *some text* is italic, **some text** is bold, ***some text*** is bold italic.
+      
+      To include a link, put ! before http (e.g., !http://www.alldayta.com)
 
       # --- NOTES ---
       # - Download Raw Deck and Load Deck give you your slides but you
@@ -4882,7 +4884,20 @@ async function getThumbnailHTML(rawText, theme) {
     // 2. Escape HTML
     let safeText = escapeHtml(masked);
     
-    // 3. Process Markdown (bold/italic)
+    // 3. Process Markdown (bold/italic) and html links
+    // Create links
+    safeText = safeText.replace(/!https?:\/\/\S+/g, (match) => {
+      let raw = match.slice(1); // remove leading "!"
+        // Capture trailing punctuation without deleting it
+      const m = raw.match(/^(.*?)([)\].,!?;:]+)$/);
+       let url = raw;
+      let trailing = "";
+      if (m) {
+        url = m[1];        // URL without punctuation
+        trailing = m[2];   // punctuation preserved
+      }
+      return `<a href="${url}" target="_blank" rel="noopener">${url}</a>${trailing}`;
+    });
     // Make inline bold/italic override any theme-level font-weight/style
     safeText = safeText.replace(
       /\*\*\*(.*?)\*\*\*/g,

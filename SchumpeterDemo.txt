@@ -11,7 +11,7 @@ BigText: "Creative Destruction" is the essential fact about capitalism. And the 
 Break: 1.5
 TinyText: Nov 22 2025 • ModernSlides Demo
 
-PrintNote: This deck demonstrates ModernSlides (github.com/kevincure/ModernSlides). They run locally in your browser. If you have the ModernSlides index.html and proxy.php on your website (yourwebsite.com/Slides/index.html?xml=NameOfYourSlides.txt), you can literally run your slideshow in a browser. You can drag and drop or Ctrl-V images right into here, and they'll download with a zip - just upload the images to the same spot on your website.  Play around here: f is full screen, e toggles between edit and presentation model, and if you hit the print button here in edit mode, you'll get these comments as well. By changing the theme below from Bauhaus to one of the other themes, you can modify the full design of the slideshow all in one click.
+PrintNote: This deck demonstrates ModernSlides (!http://www.github.com/kevincure/ModernSlides). They run locally in your browser. If you have the ModernSlides index.html and proxy.php on your website (yourwebsite.com/Slides/index.html?xml=NameOfYourSlides.txt), you can literally run your slideshow in a browser. You can drag and drop or Ctrl-V images right into here, and they'll download with a zip - just upload the images to the same spot on your website.  Play around here: f is full screen, e toggles between edit and presentation model, and if you hit the print button here in edit mode, you'll get these comments as well. By changing the theme below from Bauhaus to one of the other themes, you can modify the full design of the slideshow all in one click.
 
 # Slide(2):
 
