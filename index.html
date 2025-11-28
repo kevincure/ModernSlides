@@ -188,6 +188,19 @@ body {
 
 .slide-content .text-center { text-align: center; }
 
+/* Links created by !http... syntax */
+.slide-content a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+@media print {
+  .slide-content a {
+    color: inherit !important;
+    text-decoration: underline !important;
+  }
+}
+
 /* Alignment helpers used by <<<, |||, >>> markers */
 .slide-content .ms-align-left,
 .slide-content .ms-align-center,
@@ -4881,7 +4894,13 @@ async function getThumbnailHTML(rawText, theme) {
     
     // 2. Escape HTML
     let safeText = escapeHtml(masked);
-    
+
+    // 2.5. Process !http... links (before markdown so links can be bold/italic)
+    safeText = safeText.replace(
+      /!(https?:\/\/[^\s<>"]+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;">$1</a>'
+    );
+
     // 3. Process Markdown (bold/italic)
     // Make inline bold/italic override any theme-level font-weight/style
     safeText = safeText.replace(
