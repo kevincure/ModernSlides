@@ -1,8 +1,21 @@
-/* editorial.css — soft, magazine-like elegance */
+/* ========================================================================
+   EDITORIAL.CSS — Magazine-Style Elegance
+   ========================================================================
+
+   Soft, editorial design inspired by modern magazine layouts.
+   Features Playfair Display headlines and refined color palette.
+
+   ======================================================================== */
+
+/* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap');
 
+/* ========================================================================
+   COLORS AND FONTS
+   ======================================================================== */
+
 :root {
-  --slide-base-font-size: 3cqw; 
+  /* Colors */
   --main-text-color: #2f3e30; /* Dark Forest Green */
   --bg-color: #f3f0e9; /* Bone/Almond */
   --accent-color: #8c4b37; /* Terracotta */
@@ -10,10 +23,15 @@
   --h1-border-color: #dcd6c5;
   --slide-content-bg-if-image: rgba(243, 240, 233, 0.9);
 
+  /* Fonts */
   --serif-font: "Playfair Display", serif;
   --sans-font: "Lato", sans-serif;
   --mono-font: monospace;
 }
+
+/* ========================================================================
+   BODY
+   ======================================================================== */
 
 body {
   font-family: var(--serif-font);
@@ -21,16 +39,24 @@ body {
   color: var(--main-text-color);
 }
 
+/* ========================================================================
+   HEADER
+   ======================================================================== */
+
 .slide-header {
   font-family: var(--sans-font);
   letter-spacing: calc(var(--slide-base-font-size) * 0.08);
   font-size: calc(var(--slide-base-font-size) * 0.25);
   text-transform: uppercase;
   color: var(--accent-light-color);
-  border-bottom: 1px solid var(--h1-border-color);
+  border-bottom: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
   display: block;
-  margin-bottom: calc(var(--slide-base-font-size) * .5);
+  margin-bottom: calc(var(--slide-base-font-size) * 0.5);
 }
+
+/* ========================================================================
+   TITLE (H1)
+   ======================================================================== */
 
 .slide-content h1 {
   font-family: var(--serif-font);
@@ -42,6 +68,10 @@ body {
   border: none;
 }
 
+/* ========================================================================
+   NOTES
+   ======================================================================== */
+
 .slide-content .notes {
   font-family: var(--sans-font);
   color: var(--accent-color);
@@ -49,10 +79,15 @@ body {
   text-align: center;
 }
 
+/* ========================================================================
+   TABLES
+   ======================================================================== */
+
 .slide-content table {
-  border-top: 1px solid var(--accent-color);
-  border-bottom: 1px solid var(--accent-color);
+  border-top: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--accent-color);
+  border-bottom: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--accent-color);
 }
+
 .slide-content th {
   font-family: var(--sans-font);
   font-weight: 400;
@@ -60,6 +95,10 @@ body {
   text-transform: uppercase;
   color: var(--accent-color);
 }
+
+/* ========================================================================
+   CAPTIONS
+   ======================================================================== */
 
 .slide-content .caption {
   font-family: var(--sans-font);

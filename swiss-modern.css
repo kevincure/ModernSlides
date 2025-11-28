@@ -1,7 +1,21 @@
-/* swiss-modern.css — aligned to tufte-base contract */
+/* ========================================================================
+   SWISS-MODERN.CSS — International Typographic Style
+   ========================================================================
+
+   Clean, minimalist design based on Swiss typography principles.
+   Features grid-based layouts and sans-serif typography.
+
+   ======================================================================== */
+
+/* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
+/* ========================================================================
+   COLORS AND FONTS
+   ======================================================================== */
+
 :root {
+  /* Colors */
   --main-text-color: #111;
   --bg-color: #fff;
   --accent-color: #d90429;
@@ -9,10 +23,15 @@
   --h1-border-color: #edf2f4;
   --slide-content-bg-if-image: rgba(255, 255, 255, 0.9);
 
+  /* Fonts */
   --serif-font: "Inter", "Helvetica Neue", sans-serif;
   --sans-font: "Inter", "Helvetica Neue", sans-serif;
   --mono-font: "Courier New", monospace;
 }
+
+/* ========================================================================
+   BODY
+   ======================================================================== */
 
 body {
   font-family: var(--sans-font);
@@ -20,11 +39,19 @@ body {
   color: var(--main-text-color);
 }
 
+/* ========================================================================
+   HEADER
+   ======================================================================== */
+
 .slide-header {
   font-family: var(--sans-font);
   color: var(--accent-light-color);
   text-transform: uppercase;
 }
+
+/* ========================================================================
+   TITLE (H1)
+   ======================================================================== */
 
 .slide-content h1 {
   font-family: var(--sans-font);
@@ -35,6 +62,10 @@ body {
   text-align: left;
 }
 
+/* ========================================================================
+   NOTES
+   ======================================================================== */
+
 .slide-content .notes {
   background: var(--accent-color);
   color: var(--bg-color);
@@ -43,16 +74,25 @@ body {
   text-align: center;
 }
 
+/* ========================================================================
+   TABLES
+   ======================================================================== */
+
 .slide-content table {
-  border-top: 2px solid #000;
-  border-bottom: 2px solid #000;
+  border-top: calc(var(--slide-base-font-size) * 0.06) solid #000;
+  border-bottom: calc(var(--slide-base-font-size) * 0.06) solid #000;
 }
+
 .slide-content th {
   font-weight: 700;
   text-transform: uppercase;
   background: transparent;
-  border-bottom: 1px solid var(--h1-border-color);
+  border-bottom: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
 }
+
+/* ========================================================================
+   CAPTIONS
+   ======================================================================== */
 
 .slide-content .caption {
   font-style: normal;

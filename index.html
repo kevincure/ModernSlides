@@ -63,12 +63,29 @@ body {
 }
 
 /* The entire scaling system is driven by the --base-font-size variable */
-.presentation-scaler,
+/* .slide-wrapper is the unified container for all rendering contexts */
 .slide-wrapper {
   container-type: inline-size;
   container-name: slideshow;
   /* This is the single master switch for all slide scaling */
   --base-font-size: var(--slide-base-font-size);
+}
+
+/* .presentation-scaler wraps .slide-wrapper in the main presentation view */
+.presentation-scaler {
+  position: relative;
+  width: min(100vw, 177.78vh);
+  height: auto;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  box-shadow: 0 0 50px rgba(0,0,0,0.5);
+}
+
+/* Ensure .slide-wrapper fills .presentation-scaler */
+.presentation-scaler > .slide-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 .deckbar-spacer {
@@ -320,7 +337,7 @@ body {
 }
 
 .slide-content th, .slide-content td {
-  border: 1px solid var(--h1-border-color);
+  border: max(1px, calc(var(--base-font-size) * 0.03)) solid var(--h1-border-color);
   padding: calc(var(--base-font-size) * 0.3);
   text-align: left;
 }
@@ -382,7 +399,7 @@ body.is-edit-mode .slide.has-overflow {
   font-size: calc(var(--base-font-size) * 0.4);
   text-align: center;
   max-width: 80%;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  box-shadow: 0 calc(var(--base-font-size) * 0.25) calc(var(--base-font-size) * 0.6) rgba(0,0,0,0.25);
   pointer-events: none;
   display: flex;
   flex-direction: column;
@@ -918,21 +935,9 @@ body:not(.is-edit-mode) .overflow-indicator {
   align-items: center;
   justify-content: center;
   background: #000;
-  container-type: inline-size;
-  container-name: slideshow;
-  --base-font-size: var(--slide-base-font-size);
 }
 
-.presentation-scaler {
-  position: relative;
-  width: min(100vw, 177.78vh);
-  height: auto;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  box-shadow: 0 0 50px rgba(0,0,0,0.5);
-  container-type: inline-size;
-  container-name: slideshow;
-}
+/* .presentation-scaler CSS is defined earlier in the file (line 75) */
 
 /* make the slideshow fill the stage without absolute overlay issues */
 #slideshow {
@@ -1176,7 +1181,7 @@ body.print-with-notes .print-notes-content {
   }
 
   /* Flatten on-screen layout containers */
-  .presentation-viewport, .presentation-scaler, #slideshow {
+  .presentation-viewport, .presentation-scaler, .slide-wrapper, #slideshow {
     position: static !important; display: block !important;
     width: auto !important; height: auto !important;
     background: transparent !important; box-shadow: none !important;
@@ -2434,10 +2439,27 @@ $("manage-images-btn").onclick = async () => {
 $("close-image-manager").onclick = () => $("image-manager").classList.remove("active");
 
     // Text editor - this is the main source of changes.
+    let debouncedSaveTimer = null;
+    const DEBOUNCE_SAVE_MS = 3000;
+
     $("raw-text-editor").addEventListener('input', () => {
       state.hasChanges = true;
       debouncedValidateAndUpdate(); // Debounced live preview update (3s delay)
       updateSaveButtonGlow();
+
+      // Clear existing debounce timer
+      if (debouncedSaveTimer) {
+        clearTimeout(debouncedSaveTimer);
+      }
+
+      // Set up debounced save to localStorage after 3 seconds of no typing
+      debouncedSaveTimer = setTimeout(() => {
+        const textarea = $("raw-text-editor");
+        if (textarea && state.editMode) {
+          saveCurrentSlideText(textarea.value, 'DEBOUNCED_INPUT');
+          console.log('[debounce] Auto-saved slide after 3s of inactivity');
+        }
+      }, DEBOUNCE_SAVE_MS);
     });
 
     // Flush pending updates when leaving the textarea
@@ -2819,66 +2841,64 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
     updatePresenterView();
   }
 
-  function updatePresenterView() {
+  async function updatePresenterView() {
     if (!state.presenterWindow || state.presenterWindow.closed) return;
-    
+
     const currentIndex = state.currentAbsoluteSlideIndex;
-    let nextIndex;
+    let nextIndex = null;
     const currentVisiblePosition = state.visibleSlideIndices.indexOf(currentIndex);
 
     // Check if the current slide is visible and not the last one.
     if (currentVisiblePosition !== -1 && currentVisiblePosition < state.visibleSlideIndices.length - 1) {
         // If so, the next slide is the next one in the visible list.
         nextIndex = state.visibleSlideIndices[currentVisiblePosition + 1];
-    } else {
-        // Otherwise (if on the last visible slide or a hidden slide), just show the current slide again in the "Next" preview.
-        nextIndex = currentIndex;
     }
-    
-    // Get current and next slide HTML
-    const currentSlideHTML = state.slideEls[currentIndex].outerHTML;
-    const nextSlideHTML = state.slideEls[nextIndex].outerHTML;
-    
-    // Get theme CSS
+    // Otherwise nextIndex stays null, meaning we're on the last slide
+
+    // Get theme
     const themeId = AVAILABLE_THEMES.find(name => document.body.classList.contains(name)) || DEFAULT_THEME;
-    const themeLink = document.getElementById(`${themeId}-stylesheet`);
-    const themeHref = themeLink ? themeLink.href : '';
-    
-    // Create standalone HTML for iframes
-const slideTemplate = (slideHTML) => `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <base href="${document.baseURI}">
-<style>
-  ${document.getElementById('core-styles').textContent}
-  body { margin: 0; overflow: hidden; }
-  .slide-wrapper {
-    position: relative;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 9;
-    container-type: inline-size;
-    container-name: slideshow;
-    font-size: var(--slide-base-font-size);
-  }
-  #slideshow { position: absolute; inset: 0; }
-  .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
-</style>
-    <link rel="stylesheet" href="${themeHref}">
-  </head>
-  <body class="${themeId}">
-    <div class="slide-wrapper">
-      <div id="slideshow">${slideHTML}</div>
-    </div>
-  </body>
-  </html>
-`;
-    
+
+    // Get current slide element
+    const currentSlideEl = state.slideEls[currentIndex];
+
+    // Generate standalone HTML using unified function
+    const currentSlideHTML = await generateSlideFrameHTML(currentSlideEl, themeId);
+
+    // Generate next slide HTML (blank if on last slide)
+    let nextSlideHTML;
+    if (nextIndex !== null) {
+      const nextSlideEl = state.slideEls[nextIndex];
+      nextSlideHTML = await generateSlideFrameHTML(nextSlideEl, themeId);
+    } else {
+      // Create blank slide for "end of presentation" indicator
+      nextSlideHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #1a1a1a;
+      color: #888;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div>End of presentation</div>
+</body>
+</html>`;
+    }
+
     // Update iframes
-    state.presenterWindow.document.getElementById('current-slide').srcdoc = slideTemplate(currentSlideHTML);
-    state.presenterWindow.document.getElementById('next-slide').srcdoc = slideTemplate(nextSlideHTML);
-    
+    state.presenterWindow.document.getElementById('current-slide').srcdoc = currentSlideHTML;
+    state.presenterWindow.document.getElementById('next-slide').srcdoc = nextSlideHTML;
+
     // Update notes
     const rawText = getRawTextForSlide(currentIndex);
     const { attributes } = parseRawText(rawText);
@@ -4605,28 +4625,57 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     }
   }  
 
-async function getThumbnailHTML(rawText, theme) {
-  const slideElement = createSlideElement(rawText);
+/**
+ * Unified slide frame HTML generator for all rendering contexts
+ * (presentation view, presenter view, thumbnails)
+ *
+ * @param {string|HTMLElement} slideContent - Either raw text to parse or pre-rendered slide HTML element
+ * @param {string} theme - Theme name to apply
+ * @param {Object} options - Rendering options
+ * @param {boolean} options.forThumbnail - If true, removes iframes and shows placeholders (default: false)
+ * @param {boolean} options.removeHiddenClass - If true, removes hidden-in-presentation class (default: false)
+ * @returns {Promise<string>} Complete standalone HTML document
+ */
+async function generateSlideFrameHTML(slideContent, theme, options = {}) {
+  const {
+    forThumbnail = false,
+    removeHiddenClass = false
+  } = options;
 
-  // Remove the hidden-in-presentation class for thumbnails
-  slideElement.classList.remove('hidden-in-presentation');
+  // Handle both raw text input and pre-rendered HTML elements
+  let slideElement;
+  if (typeof slideContent === 'string') {
+    // Raw text - create new slide element
+    slideElement = createSlideElement(slideContent);
+  } else {
+    // Pre-rendered HTML element - clone it
+    slideElement = slideContent.cloneNode(true);
+  }
 
-  slideElement.querySelectorAll('iframe').forEach((iframe) => {
-    const wrapper = iframe.parentElement;
-    const placeholder = wrapper?.querySelector('.website-print-placeholder');
-    if (placeholder) {
-      placeholder.style.display = 'flex';
-    }
-    iframe.remove();
-  });
+  // Remove hidden-in-presentation class if requested (for thumbnails)
+  if (removeHiddenClass) {
+    slideElement.classList.remove('hidden-in-presentation');
+  }
+
+  // For thumbnails: remove iframes and show placeholders
+  if (forThumbnail) {
+    slideElement.querySelectorAll('iframe').forEach((iframe) => {
+      const wrapper = iframe.parentElement;
+      const placeholder = wrapper?.querySelector('.website-print-placeholder');
+      if (placeholder) {
+        placeholder.style.display = 'flex';
+      }
+      iframe.remove();
+    });
+  }
 
   const slideElementHTML = slideElement.outerHTML;
-  
-  // Get the theme CSS content
+
+  // Get the theme CSS
   const themeLink = document.getElementById(`${theme}-stylesheet`);
   const themeHref = themeLink ? themeLink.href : '';
-  
-  // Always use the same wrapper structure for consistency
+
+  // Generate complete standalone HTML document
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -4647,7 +4696,7 @@ async function getThumbnailHTML(rawText, theme) {
     #slideshow { position: absolute; inset: 0; }
     .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
   </style>
-    <link rel="stylesheet" href="${themeHref}">
+  <link rel="stylesheet" href="${themeHref}">
 </head>
 <body class="${theme}">
   <div class="slide-wrapper">
@@ -4655,6 +4704,17 @@ async function getThumbnailHTML(rawText, theme) {
   </div>
 </body>
 </html>`;
+}
+
+/**
+ * @deprecated Use generateSlideFrameHTML() instead
+ * Kept for backward compatibility during transition
+ */
+async function getThumbnailHTML(rawText, theme) {
+  return generateSlideFrameHTML(rawText, theme, {
+    forThumbnail: true,
+    removeHiddenClass: true
+  });
 }
   
   /* ═══════════════════════════════════════════════════════════════
@@ -4696,19 +4756,19 @@ async function getThumbnailHTML(rawText, theme) {
         width: 90%;
         height: 90%;
         background: white;
-        box-shadow: 0 0 50px rgba(0,0,0,0.3);
-        border-radius: 8px;
+        box-shadow: 0 0 calc(var(--base-font-size) * 1.5) rgba(0,0,0,0.3);
+        border-radius: calc(var(--base-font-size) * 0.25);
         overflow: hidden;
         z-index: 100;
       `;
-      
+
       const iframe = document.createElement("iframe");
       iframe.src = attributes.fullscreenWebsite;
       iframe.style.cssText = `
         width: 100%;
         height: 100%;
         border: none;
-        border-radius: 8px;
+        border-radius: calc(var(--base-font-size) * 0.25);
       `;
       
 
@@ -5764,16 +5824,20 @@ window.resolveImagePath = function(imageSrc, baseUrl) {
 
   function wrapSlideshowFor16x9() {
     const slideshow = $("slideshow");
-    if (!slideshow.parentElement.classList.contains('presentation-scaler')) {
+    if (!slideshow.parentElement.classList.contains('slide-wrapper')) {
       const viewport = document.createElement('div');
       viewport.className = 'presentation-viewport';
 
       const scaler = document.createElement('div');
       scaler.className = 'presentation-scaler';
 
+      const wrapper = document.createElement('div');
+      wrapper.className = 'slide-wrapper';
+
       slideshow.parentNode.insertBefore(viewport, slideshow);
       viewport.appendChild(scaler);
-      scaler.appendChild(slideshow);
+      scaler.appendChild(wrapper);
+      wrapper.appendChild(slideshow);
 
       // HUD goes on the viewport (letterbox), not over the slide
       viewport.appendChild($("slide-counter"));

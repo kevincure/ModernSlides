@@ -1,7 +1,21 @@
-/* gradient.css — aligned to tufte-base contract */
+/* ========================================================================
+   GRADIENT.CSS — Modern Gradient Design
+   ========================================================================
+
+   Dark theme with vibrant gradients and glowing accents.
+   Perfect for tech presentations and modern digital content.
+
+   ======================================================================== */
+
+/* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
+/* ========================================================================
+   COLORS AND FONTS
+   ======================================================================== */
+
 :root {
+  /* Colors */
   --main-text-color: #ffffff;
   --bg-color: #121212;
   --accent-color: #00f5d4;
@@ -9,17 +23,29 @@
   --h1-border-color: #495057;
   --slide-content-bg-if-image: rgba(18, 18, 18, 0.85);
 
+  /* Fonts */
   --serif-font: "Poppins", sans-serif;
   --sans-font: "Poppins", sans-serif;
   --mono-font: "Courier New", monospace;
 }
+
+/* ========================================================================
+   BODY — with gradient background
+   ======================================================================== */
 
 body {
   font-family: var(--sans-font);
   background: linear-gradient(45deg, #22223b, #4a4e69);
   color: var(--main-text-color);
 }
-#slideshow { background: linear-gradient(45deg, #22223b, #4a4e69); }
+
+#slideshow {
+  background: linear-gradient(45deg, #22223b, #4a4e69);
+}
+
+/* ========================================================================
+   HEADER
+   ======================================================================== */
 
 .slide-header {
   text-transform: uppercase;
@@ -27,14 +53,22 @@ body {
   color: var(--accent-light-color);
 }
 
+/* ========================================================================
+   TITLE (H1) — with glow effect
+   ======================================================================== */
+
 .slide-content h1 {
   font-weight: 700;
   color: var(--main-text-color);
-  text-shadow: 0 0 15px rgba(0, 245, 212, 0.3);
+  text-shadow: 0 0 calc(var(--slide-base-font-size) * 0.42) rgba(0, 245, 212, 0.3);
   text-align: center;
-  border-bottom: 2px solid var(--accent-color);
-  padding-bottom: 1rem;
+  border-bottom: calc(var(--slide-base-font-size) * 0.06) solid var(--accent-color);
+  padding-bottom: calc(var(--slide-base-font-size) * 0.28);
 }
+
+/* ========================================================================
+   NOTES
+   ======================================================================== */
 
 .slide-content .notes {
   background: var(--accent-color);
@@ -43,16 +77,29 @@ body {
   font-weight: 700;
 }
 
+/* ========================================================================
+   TABLES
+   ======================================================================== */
+
 .slide-content table {
   border-collapse: collapse;
-  border-top: 1px solid var(--h1-border-color);
-  border-bottom: 1px solid var(--h1-border-color);
+  border-top: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
+  border-bottom: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
 }
-.slide-content th, .slide-content td {
-  border: 1px solid var(--h1-border-color);
+
+.slide-content th,
+.slide-content td {
+  border: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
   background: rgba(0,0,0,0.2);
 }
-.slide-content th { color: var(--accent-color); }
+
+.slide-content th {
+  color: var(--accent-color);
+}
+
+/* ========================================================================
+   CAPTIONS
+   ======================================================================== */
 
 .slide-content .caption {
   color: var(--accent-light-color);

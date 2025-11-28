@@ -1,7 +1,21 @@
-/* brutalist.css — raw, structural, high contrast */
+/* ========================================================================
+   BRUTALIST.CSS — Raw Structural Design
+   ========================================================================
+
+   High-contrast, structural design with bold borders and monospace accents.
+   Features heavy framing and hard shadows.
+
+   ======================================================================== */
+
+/* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
+/* ========================================================================
+   COLORS AND FONTS
+   ======================================================================== */
+
 :root {
+  /* Colors */
   --main-text-color: #000000;
   --bg-color: #fff;
   --accent-color: #000000;
@@ -9,64 +23,91 @@
   --h1-border-color: #000;
   --slide-content-bg-if-image: rgba(255, 255, 255, 0.95);
 
-  --serif-font: "Space Grotesk", Helvetica, sans-serif; /* Intentionally sans masquerading as primary */
+  /* Fonts */
+  --serif-font: "Space Grotesk", Helvetica, sans-serif;
   --sans-font: "Space Grotesk", Helvetica, sans-serif;
   --mono-font: "JetBrains Mono", monospace;
 }
+
+/* ========================================================================
+   BODY — with heavy border frame
+   ======================================================================== */
 
 body {
   font-family: var(--sans-font);
   background: var(--bg-color);
   color: var(--main-text-color);
-  border: 1rem solid var(--main-text-color); /* Heavy framing */
+  border: calc(var(--slide-base-font-size) * 0.28) solid var(--main-text-color);
 }
+
+/* ========================================================================
+   HEADER
+   ======================================================================== */
 
 .slide-header {
   font-family: var(--mono-font);
   background: var(--main-text-color);
   color: var(--bg-color);
-  padding: 0.2rem 0.5rem;
+  padding: calc(var(--slide-base-font-size) * 0.056) calc(var(--slide-base-font-size) * 0.14);
   display: inline-block;
-  font-size: 0.8rem;
+  font-size: calc(var(--slide-base-font-size) * 0.22);
   text-transform: uppercase;
 }
+
+/* ========================================================================
+   TITLE (H1) — oversized with tight leading
+   ======================================================================== */
 
 .slide-content h1 {
   font-family: var(--sans-font);
   font-weight: 700;
   text-transform: uppercase;
-  font-size: 4rem; /* Oversized */
+  font-size: calc(var(--slide-base-font-size) * 1.11);
   line-height: 0.9;
-  border-bottom: 4px solid var(--main-text-color);
-  margin-bottom: 2rem;
+  border-bottom: calc(var(--slide-base-font-size) * 0.11) solid var(--main-text-color);
+  margin-bottom: calc(var(--slide-base-font-size) * 0.56);
 }
+
+/* ========================================================================
+   NOTES — with hard shadow
+   ======================================================================== */
 
 .slide-content .notes {
-  border: 2px solid var(--main-text-color);
-  padding: 1rem;
+  border: calc(var(--slide-base-font-size) * 0.06) solid var(--main-text-color);
+  padding: calc(var(--slide-base-font-size) * 0.28);
   font-family: var(--mono-font);
-  font-size: 0.8rem;
-  box-shadow: 5px 5px 0px var(--main-text-color); /* Hard shadow */
+  font-size: calc(var(--slide-base-font-size) * 0.22);
+  box-shadow: calc(var(--slide-base-font-size) * 0.14) calc(var(--slide-base-font-size) * 0.14) 0 var(--main-text-color);
 }
 
+/* ========================================================================
+   TABLES
+   ======================================================================== */
+
 .slide-content table {
-  border: 2px solid var(--main-text-color);
+  border: calc(var(--slide-base-font-size) * 0.06) solid var(--main-text-color);
 }
+
 .slide-content th {
   font-family: var(--mono-font);
   background: var(--main-text-color);
   color: var(--bg-color);
   text-transform: uppercase;
 }
+
 .slide-content td {
-  border: 1px solid var(--main-text-color);
+  border: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--main-text-color);
   font-family: var(--mono-font);
 }
+
+/* ========================================================================
+   CAPTIONS
+   ======================================================================== */
 
 .slide-content .caption {
   font-family: var(--mono-font);
   background: #000;
   color: #fff;
   display: inline-block;
-  padding: 0.2rem;
+  padding: calc(var(--slide-base-font-size) * 0.056);
 }

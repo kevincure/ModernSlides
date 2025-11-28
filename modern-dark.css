@@ -1,7 +1,21 @@
-/* modern-dark.css — aligned to tufte-base contract */
+/* ========================================================================
+   MODERN-DARK.CSS — Sleek Dark Theme for Tech Presentations
+   ========================================================================
+
+   A contemporary dark theme optimized for technical content, code
+   presentations, and modern digital environments.
+
+   ======================================================================== */
+
+/* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Lexend:wght@700&display=swap');
 
+/* ========================================================================
+   COLORS AND FONTS
+   ======================================================================== */
+
 :root {
+  /* Colors */
   --main-text-color: #e0e0e0;
   --bg-color: #121212;
   --accent-color: #007bff;
@@ -9,10 +23,15 @@
   --h1-border-color: #333;
   --slide-content-bg-if-image: rgba(18, 18, 18, 0.88);
 
+  /* Fonts */
   --serif-font: "Inter", sans-serif;
   --sans-font: "Lexend", sans-serif;
   --mono-font: "Fira Code", monospace;
 }
+
+/* ========================================================================
+   BODY
+   ======================================================================== */
 
 body {
   font-family: var(--serif-font);
@@ -20,41 +39,64 @@ body {
   color: var(--main-text-color);
 }
 
+/* ========================================================================
+   HEADER
+   ======================================================================== */
+
 .slide-header {
   font-family: var(--serif-font);
   color: var(--accent-light-color);
 }
+
+/* ========================================================================
+   TITLE (H1)
+   ======================================================================== */
 
 .slide-content h1 {
   font-family: var(--sans-font);
   font-weight: 700;
   color: #fff;
   text-align: center;
-  border-bottom: 2px solid var(--accent-color);
-  padding-bottom: 1rem;
+  border-bottom: calc(var(--slide-base-font-size) * 0.06) solid var(--accent-color);
+  padding-bottom: calc(var(--slide-base-font-size) * 0.33);
 }
+
+/* ========================================================================
+   NOTES
+   ======================================================================== */
 
 .slide-content .notes {
   color: var(--accent-light-color);
   text-align: center;
-  border-top: 1px solid var(--h1-border-color);
-  padding-top: 1rem;
+  border-top: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
+  padding-top: calc(var(--slide-base-font-size) * 0.33);
 }
+
+/* ========================================================================
+   TABLES
+   ======================================================================== */
 
 .slide-content table {
   border-collapse: collapse;
-  border-top: 1px solid var(--h1-border-color);
-  border-bottom: 1px solid var(--h1-border-color);
+  border-top: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
+  border-bottom: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
 }
-.slide-content th, .slide-content td {
-  border: 1px solid var(--h1-border-color);
+
+.slide-content th,
+.slide-content td {
+  border: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
 }
+
 .slide-content th {
   background-color: var(--accent-color);
   color: #fff;
   font-family: var(--sans-font);
   font-weight: 700;
 }
+
+/* ========================================================================
+   CAPTIONS
+   ======================================================================== */
 
 .slide-content .caption {
   color: var(--accent-light-color);

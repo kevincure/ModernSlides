@@ -1,7 +1,21 @@
-/* bringhurst.css — aligned to tufte-base contract */
+/* ========================================================================
+   BRINGHURST.CSS — Classic Typography
+   ========================================================================
+
+   Refined typography inspired by Robert Bringhurst's principles.
+   Features subtle elegance and exceptional readability.
+
+   ======================================================================== */
+
+/* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Raleway:wght@300;600&display=swap');
 
+/* ========================================================================
+   COLORS AND FONTS
+   ======================================================================== */
+
 :root {
+  /* Colors */
   --main-text-color: #2c2c2c;
   --bg-color: #fdfcf8;
   --accent-color: #8b4513;  /* Sienna */
@@ -9,16 +23,25 @@
   --h1-border-color: #e8e3d7;
   --slide-content-bg-if-image: rgba(253, 252, 248, 0.92);
 
+  /* Fonts */
   --serif-font: "Crimson Text", Garamond, serif;
   --sans-font: "Raleway", "Gill Sans", sans-serif;
   --mono-font: "Courier Prime", monospace;
 }
+
+/* ========================================================================
+   BODY
+   ======================================================================== */
 
 body {
   font-family: var(--serif-font);
   background: var(--bg-color);
   color: var(--main-text-color);
 }
+
+/* ========================================================================
+   HEADER
+   ======================================================================== */
 
 .slide-header {
   font-family: var(--sans-font);
@@ -28,14 +51,22 @@ body {
   color: var(--accent-light-color);
 }
 
+/* ========================================================================
+   TITLE (H1)
+   ======================================================================== */
+
 .slide-content h1 {
   font-family: var(--serif-font);
   font-weight: 400;
   text-align: center;
   color: var(--accent-color);
-  border-bottom: 1px solid var(--h1-border-color);
+  border-bottom: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--h1-border-color);
   letter-spacing: -0.02em;
 }
+
+/* ========================================================================
+   NOTES
+   ======================================================================== */
 
 .slide-content .notes {
   font-family: var(--sans-font);
@@ -43,18 +74,27 @@ body {
   font-weight: 300;
 }
 
+/* ========================================================================
+   TABLES
+   ======================================================================== */
+
 .slide-content table {
-  border-top: 1px solid var(--accent-color);
-  border-bottom: 1px solid var(--accent-color);
+  border-top: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--accent-color);
+  border-bottom: max(1px, calc(var(--slide-base-font-size) * 0.03)) solid var(--accent-color);
 }
+
 .slide-content th {
   font-family: var(--sans-font);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  border-bottom: 0.5px solid var(--accent-color);
+  border-bottom: max(1px, calc(var(--slide-base-font-size) * 0.015)) solid var(--accent-color);
   background: transparent;
 }
+
+/* ========================================================================
+   CAPTIONS
+   ======================================================================== */
 
 .slide-content .caption {
   font-style: italic;
