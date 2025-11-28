@@ -4646,25 +4646,6 @@ async function generateSlideFrameHTML(slideContent, theme, options = {}) {
 <head>
   <meta charset="UTF-8">
   <base href="${window.location.href}">
-  <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [["$", "$"], ["\\\\(", "\\\\)"]],
-        displayMath: [["$$", "$$"], ["\\\\[", "\\\\]"]],
-        processEscapes: true
-      },
-      svg: { fontCache: "global" },
-      startup: {
-        ready: () => {
-          MathJax.startup.defaultReady();
-          MathJax.startup.promise.then(() => {
-            MathJax.typesetPromise();
-          });
-        }
-      }
-    };
-  </script>
-  <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
   <style>
     ${document.getElementById('core-styles').textContent}
     body { margin: 0; overflow: hidden; }
