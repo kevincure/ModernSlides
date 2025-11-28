@@ -71,6 +71,8 @@ Examples and common directives are shown below (use the exact directive names):
         Cell 2.1 & Cell 2.2 & $math$ is fine
         Inline modes like [[BigText]] or [[Text.75]] work within any table cell.
 
+      To include a link, write !http... with the exclamation point in front.
+
       # --- NOTES ---
       # - Download Raw Deck and Load Deck give you your slides but you will still need any images referred to in the same folder
       # - If you want images that are not web-linked, you can paste images into the textbox, and when you download, it will include those images. Keep all in the same folder wherever you store your offline slide text and images.
