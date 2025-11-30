@@ -932,6 +932,7 @@ body:not(.is-edit-mode) .overflow-indicator {
   width: 100%;
   height: 100%;
   display: flex;
+  --base-font-size: var(--slide-base-font-size);
   align-items: center;
   justify-content: center;
   background: #000;
@@ -3746,6 +3747,11 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       if (wasActive) replacement.classList.add('active');
       slideEl.parentElement.replaceChild(replacement, slideEl);
       state.slideEls[state.currentAbsoluteSlideIndex] = replacement;
+      
+      // Typeset math in the replaced slide
+      if (window.MathJax?.typesetPromise) {
+        MathJax.typesetPromise([replacement]);
+      }
     }
 
     scheduleOverflowChecks();
@@ -4570,6 +4576,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     };
 
     if (window.MathJax?.typesetPromise) {
+      MathJax.typesetClear([$("slideshow")]);
       return MathJax.typesetPromise([$("slideshow")]).then(() => finalize());
     }
 

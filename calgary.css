@@ -16,11 +16,11 @@
 
 :root {
   /* Colors */
-  --main-text-color: #1e1e1e;
-  --bg-color: #f7f7f7;
-  --accent-color: #e74c3c;
-  --accent-light-color: #7f8c8d;
-  --h1-border-color: #d0d0d0;
+  --main-text-color: #242424;
+  --bg-color: #ffffff;
+  --accent-color: #7a309e;
+  --accent-light-color: #b685c9;
+  --h1-border-color: #e1e1e1;
   --slide-content-bg-if-image: rgba(247, 247, 247, 0.90);
 
   /* Fonts */
