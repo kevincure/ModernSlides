@@ -25,7 +25,8 @@ PrintNote: Numbered list, text size selection, italics and bold. The critical th
 
 # Slide(3):
 
-Text: Consider a task with two parts. Sector 1 improves (Schumpeterian innovation). Sector 2 stagnates (Baumol effect).
+Notes: +++Bigimage[Jump to Bigimage]+++
+Text: Consider a task.
 Table:
 Period & Fast & Slow & Total & Impact
 ---
@@ -37,16 +38,16 @@ $t=2$ & 5 hrs & 80 hrs & 85 & $\Delta 5.5\%$
 ---
 $t=\infty$ & $\lim_{x \to 0}=0$ & 80 hrs & 80 & **Stagnation**
 
-PrintNote: And of course we can handle math and tables
+PrintNote: And of course we can handle math and tables. The internal link goes to whichever slide has the Ref with that name on it.
 
 # Slide(4):
 
 Columns:
-Image: https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Portrait_of_Thomas_Midgley_Jr..jpg/500px-Portrait_of_Thomas_Midgley_Jr..jpg, Thomas Midgley Jr.
+Image: https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Portrait_of_Thomas_Midgley_Jr..jpg/500px-Portrait_of_Thomas_Midgley_Jr..jpg, !https://en.wikipedia.org/wiki/Thomas_Midgley_Jr.[Thomas Midgley Jr.]
 ---
 Image: https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/EthylCorporationSign.jpg/960px-EthylCorporationSign.jpg, Leaded Gasoline
 
-PrintNote: And we can handle columns well also
+PrintNote: And we can handle columns well also, as well as links in the format above which open in a new tab.
 
 # Slide(5):
 
@@ -111,6 +112,7 @@ PrintNote: Images can be full screen, or...
 
 # Slide(11):
 
+Ref:Bigimage
 Background:  https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/St_Pancras_Railway_Station_2012-06-23.jpg/960px-St_Pancras_Railway_Station_2012-06-23.jpg
 
 Title: We can build beautiful things again

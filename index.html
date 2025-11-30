@@ -1401,7 +1401,9 @@ body.print-with-notes .print-notes-content {
 
       *some text* is italic, **some text** is bold, ***some text*** is bold italic.
       
-      To include a link, put ! before http (e.g., !http://www.alldayta.com)
+      To include a link, put ! before http (e.g., !http://www.alldayta.com).  !http://www.alldayta.com[All Day TA] lets you control the text included in the link.
+
+      For internal links to slides, use +++InternalRefName[Text on Link]+++ anywhere on a slide, then Ref:InternalRefName on some other slide.  If you want two way links, of course you can just create a Ref: for the original slide as well.
 
       # --- NOTES ---
       # - Download Raw Deck and Load Deck give you your slides but you
@@ -1466,7 +1468,7 @@ const ModernSlideshow = (function() {
   const CONTENT_DIRECTIVES = ["Hidden", "Background", "FullScreenImage", "Header",
                                 "Title", "BigText", "Text", "SmallText", "TinyText", "Notes",
                                 "Image", "Columns", "Table", "FullScreenWebsite", "SpeakerNote",
-                                "PrintNote", "Break", "Logo", "Blockquote"];
+                                "PrintNote", "Break", "Logo", "Blockquote", "Ref"];
   const ALL_DIRECTIVES = [...METADATA_DIRECTIVES, ...CONTENT_DIRECTIVES];
   const INLINE_MODE_DIRECTIVE_RE = /\[\[([A-Za-z][A-Za-z0-9.]*)(?::?\s*([^\]]+))?\]\]/g;
   const ALIGNMENT_MARKERS = ['<<<', '|||', '>>>'];
@@ -2019,6 +2021,9 @@ const ImageStore = {
       // Check if we clicked on an iframe or inside an iframe wrapper
       if (e.target.closest('iframe') || e.target.closest('[style*="z-index: 100"]')) return;
       
+      // Don't navigate if clicking on a link
+      if (e.target.closest('a')) return;
+      
       // Navigate based on which side was clicked
       const clickX = e.clientX;
       const screenWidth = window.innerWidth;
@@ -2031,6 +2036,46 @@ const ImageStore = {
         // Right side - go to next slide
         const nextIndex = state.currentVisibleSlideIndex + 1;
         showSlide(nextIndex, true);
+      }
+    });
+    
+    // Handle internal slide reference links (+++RefName+++)
+    $("slideshow").addEventListener('click', (e) => {
+      const refLink = e.target.closest('.slide-ref-link');
+      if (!refLink) return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const refName = refLink.dataset.ref;
+      if (!refName) return;
+      
+      // Find slide with matching Ref: directive
+      const slideNodes = state.xmlDoc.querySelectorAll("presentation > slide");
+      let targetIndex = -1;
+      
+      slideNodes.forEach((slideNode, index) => {
+        const rawText = slideNode.querySelector('raw')?.textContent || '';
+        // Look for Ref: directive (case insensitive)
+        const refMatch = rawText.match(/^Ref:\s*(.+)$/im);
+        if (refMatch && refMatch[1].trim().toLowerCase() === refName.toLowerCase()) {
+          targetIndex = index;
+        }
+      });
+      
+      if (targetIndex >= 0) {
+        if (state.editMode) {
+          showSlide(targetIndex, false);
+        } else {
+          // In presentation mode, find the visible index
+          const visibleIdx = state.visibleSlideIndices.indexOf(targetIndex);
+          if (visibleIdx >= 0) {
+            showSlide(visibleIdx, true);
+          } else {
+            // Slide might be hidden, show it anyway by absolute index
+            showSlide(targetIndex, false);
+          }
+        }
       }
     });
 
@@ -4987,18 +5032,29 @@ async function getThumbnailHTML(rawText, theme) {
     let safeText = escapeHtml(masked);
     
     // 3. Process Markdown (bold/italic) and html links
-    // Create links
-    safeText = safeText.replace(/!https?:\/\/\S+/g, (match) => {
+    // Create links - support !http://url[Link Text] for custom text
+    safeText = safeText.replace(/!https?:\/\/[^\s\[]+(?:\[[^\]]*\])?/g, (match) => {
       let raw = match.slice(1); // remove leading "!"
+      
+      // Check for [Link Text] at the end
+      const bracketMatch = raw.match(/^(.+?)\[([^\]]*)\]$/);
+      let url, displayText, trailing = "";
+      
+      if (bracketMatch) {
+        url = bracketMatch[1];
+        displayText = bracketMatch[2] || url;
+      } else {
         // Capture trailing punctuation without deleting it
-      const m = raw.match(/^(.*?)([)\].,!?;:]+)$/);
-       let url = raw;
-      let trailing = "";
-      if (m) {
-        url = m[1];        // URL without punctuation
-        trailing = m[2];   // punctuation preserved
+        const m = raw.match(/^(.*?)([)\].,!?;:]+)$/);
+        if (m) {
+          url = m[1];
+          trailing = m[2];
+        } else {
+          url = raw;
+        }
+        displayText = url;
       }
-      return `<a href="${url}" target="_blank" rel="noopener">${url}</a>${trailing}`;
+      return `<a href="${url}" target="_blank" rel="noopener">${displayText}</a>${trailing}`;
     });
     // Make inline bold/italic override any theme-level font-weight/style
     safeText = safeText.replace(
@@ -5017,6 +5073,12 @@ async function getThumbnailHTML(rawText, theme) {
       /\*(.*?)\*/g,
       '<em style="font-style:italic;">$1</em>'
     );
+    
+    // Internal slide links: +++RefName+++ or +++RefName[Display Text]+++
+    safeText = safeText.replace(/\+\+\+([^\+\[]+)(?:\[([^\]]*)\])?\+\+\+/g, (match, refName, displayText) => {
+      const display = displayText || refName;
+      return `<a href="#" class="slide-ref-link" data-ref="${escapeHtml(refName.trim())}">${display}</a>`;
+    });
 
     // 4. Process Lists (before paragraph splitting)
     const listStyle = 'margin:0; padding-left:1.2em; text-align:left;';
@@ -5321,6 +5383,9 @@ async function getThumbnailHTML(rawText, theme) {
       switch (directiveName) {
         case "Hidden":
           if (content.toLowerCase() === 'true') attributes.hidden = true;
+          break;
+        case "Ref":
+          attributes.ref = content.trim();
           break;
         case "Background":
         case "FullScreenImage":
