@@ -1,4 +1,4 @@
-# Modern Slides, Kevin Bryan, August 2025, MIT License
+# Modern Slides, Kevin Bryan, August 2025 [November 30 2025 Update], MIT License
 
 This is a modern, very computationally light slideshow maker. It completely separates style rules from content. You can edit it completely online or download the code from github.com/kevincure/ModernSlides
  or find more similar tools at kevinbryanecon.com/tools.html
@@ -71,7 +71,9 @@ Examples and common directives are shown below (use the exact directive names):
         Cell 2.1 & Cell 2.2 & $math$ is fine
         Inline modes like [[BigText]] or [[Text.75]] work within any table cell.
 
-      To include a link, write !http... with the exclamation point in front.
+      To include a link, put ! before http (e.g., !http://www.alldayta.com).  !http://www.alldayta.com[All Day TA] lets you control the text included in the link.
+
+      For internal links to slides, use +++InternalRefName[Text on Link]+++ anywhere on a slide, then Ref:InternalRefName on some other slide.  If you want two way links, of course you can just create a Ref: for the original slide as well.
 
       # --- NOTES ---
       # - Download Raw Deck and Load Deck give you your slides but you will still need any images referred to in the same folder
