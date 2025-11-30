@@ -1838,7 +1838,7 @@ const ImageStore = {
 
     notesEls.forEach((el) => {
       const pageW = el.getBoundingClientRect().width || window.innerWidth;
-      const notesHeightPx = pageW * 0.18;
+      const notesHeightPx = pageW * 0.35;
 
       el.style.setProperty('height', notesHeightPx + 'px', 'important');
       el.style.setProperty('overflow', 'hidden', 'important');
@@ -1868,6 +1868,27 @@ const ImageStore = {
       // Flush any pending debounced updates before printing
       if (typeof debouncedValidateAndUpdate !== 'undefined' && debouncedValidateAndUpdate.flush) {
         debouncedValidateAndUpdate.flush();
+      }
+
+      if (document.body.classList.contains('print-with-notes')) {
+        const activeIndex = state.currentAbsoluteSlideIndex;
+        const activeSlideEl = state.slideEls[activeIndex];
+
+       if (activeSlideEl) {
+         const rawText = getRawTextForSlide(activeIndex);
+         const { attributes } = parseRawText(rawText);
+
+       if (attributes.printNotes) {
+          let notesDiv = activeSlideEl.querySelector('.print-notes-content');
+          if (!notesDiv) {
+             notesDiv = document.createElement('div');
+             notesDiv.className = 'print-notes-content';
+             activeSlideEl.appendChild(notesDiv);
+           }
+	 // Overwrite whatever is there with the real text
+        notesDiv.innerHTML = plainTextToHtml(attributes.printNotes);
+        }
+       }
       }
 
       document.querySelectorAll('.slide iframe').forEach((f) => {
