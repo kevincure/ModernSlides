@@ -340,6 +340,31 @@ body {
   border: max(1px, calc(var(--base-font-size) * 0.03)) solid var(--h1-border-color);
   padding: calc(var(--base-font-size) * 0.3);
   text-align: left;
+  vertical-align: top;
+}
+
+.slide-content th p,
+.slide-content td p,
+.slide-content th ul,
+.slide-content th ol,
+.slide-content td ul,
+.slide-content td ol {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+}
+
+.slide-content th .text-scale,
+.slide-content td .text-scale,
+.slide-content th .large,
+.slide-content th .small,
+.slide-content th .tiny,
+.slide-content td .large,
+.slide-content td .small,
+.slide-content td .tiny {
+  width: 100%;
 }
 
 .slide-content .img-container {
@@ -570,7 +595,7 @@ body:not(.is-edit-mode) .overflow-indicator {
   height: 112.5px;
   border: 2px solid var(--editor-border-color);
   border-radius: 6px;
-  background: #000;
+  background: transparent;
   cursor: move;
   cursor: grab;
   pointer-events: auto;
@@ -639,11 +664,11 @@ body:not(.is-edit-mode) .overflow-indicator {
   position: absolute;
   top: 0;
   left: 0;
-  width: 200px;
-  height: 112.5px;
+  width: 100%;
+  height: 100%;
   border: none;
   pointer-events: none;
-  background: var(--editor-thumb-bg)
+  background: var(--editor-thumb-bg);
 }
 
 .thumb-number {
@@ -981,6 +1006,57 @@ body:not(.is-edit-mode) .overflow-indicator {
   pointer-events: none;
 }
 
+.frame-context-preview .presentation-scaler,
+.frame-context-presenter .presentation-scaler,
+.frame-context-print .presentation-scaler {
+  box-shadow: none;
+}
+
+.frame-context-preview,
+.frame-context-presenter {
+  background: transparent;
+}
+
+#mobile-nav {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 250;
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  padding: 0.4rem 0.55rem;
+  backdrop-filter: blur(3px);
+}
+
+#mobile-nav button {
+  border: none;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  min-width: 2.4rem;
+  min-height: 2.4rem;
+  padding: 0 0.7rem;
+  font-size: 0.95rem;
+}
+
+#mobile-nav .mobile-nav-status {
+  color: #fff;
+  font-family: var(--editor-mono-font);
+  font-size: 0.78rem;
+  align-self: center;
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+@media (pointer: coarse), (max-width: 900px) {
+  body.mobile-controls-enabled #mobile-nav {
+    display: inline-flex;
+  }
+}
+
 
 /* ----------------------------- */
 /* --- Presenter Mode Styles --- */
@@ -1170,7 +1246,7 @@ body.print-with-notes .print-notes-content {
   }
 
   /* Hide all on-screen UI chrome */
-  #editor, #progress-bar, .slide-counter, #company-logo, .presenter-controls {
+  #editor, #progress-bar, .slide-counter, #company-logo, .presenter-controls, #mobile-nav {
     display: none !important;
   }
 
@@ -1279,6 +1355,11 @@ body.print-with-notes .print-notes-content {
     <span id="cur">1</span>/<span id="tot">1</span>
   </div>
   <div id="progress-bar"></div>
+  <div id="mobile-nav" aria-label="Mobile slide navigation">
+    <button id="mobile-prev-btn" type="button" aria-label="Previous slide">◀</button>
+    <span id="mobile-nav-status" class="mobile-nav-status">1/1</span>
+    <button id="mobile-next-btn" type="button" aria-label="Next slide">▶</button>
+  </div>
 
   <!-- Editor View -->
   <div id="editor">
@@ -1586,6 +1667,8 @@ const ModernSlideshow = (function() {
     visibleSlideIndices: [],
     currentVisibleSlideIndex: 0,
     currentAbsoluteSlideIndex: 0,
+    mobileTouchStart: null,
+    mobileTouchTime: 0,
 
     // Undo/redo state
     undoStack: [],
@@ -1865,6 +1948,7 @@ const ImageStore = {
     initSelectionToolbar();
     // ensure print is small pdf w/ embedded websites
     window.addEventListener('beforeprint', () => {
+      document.body.classList.add('frame-context-print');
       // Flush any pending debounced updates before printing
       if (typeof debouncedValidateAndUpdate !== 'undefined' && debouncedValidateAndUpdate.flush) {
         debouncedValidateAndUpdate.flush();
@@ -1901,6 +1985,7 @@ const ImageStore = {
     });
 
     window.addEventListener('afterprint', () => {
+      document.body.classList.remove('frame-context-print');
       document.querySelectorAll('.slide iframe[data-src]').forEach((f) => {
         f.src = f.dataset.src;        // restore
         delete f.dataset.src;
@@ -2034,8 +2119,7 @@ const ImageStore = {
     };
 
 
-    // Touch navigation on left/right for mobile
-    $("slideshow").addEventListener('click', (e) => {
+    const navigateByTapZone = (e) => {
       // Don't navigate if in edit mode or clicking on interactive elements
       if (state.editMode) return;
       
@@ -2058,7 +2142,41 @@ const ImageStore = {
         const nextIndex = state.currentVisibleSlideIndex + 1;
         showSlide(nextIndex, true);
       }
-    });
+    };
+
+    // Tap navigation fallback
+    $("slideshow").addEventListener('click', navigateByTapZone);
+
+    // Swipe navigation for touch devices
+    $("slideshow").addEventListener('touchstart', (e) => {
+      if (state.editMode || !e.touches || e.touches.length === 0) return;
+      const touch = e.touches[0];
+      state.mobileTouchStart = { x: touch.clientX, y: touch.clientY };
+      state.mobileTouchTime = Date.now();
+    }, { passive: true });
+
+    $("slideshow").addEventListener('touchend', (e) => {
+      if (state.editMode || !state.mobileTouchStart || !e.changedTouches || e.changedTouches.length === 0) return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - state.mobileTouchStart.x;
+      const dy = touch.clientY - state.mobileTouchStart.y;
+      const elapsed = Date.now() - (state.mobileTouchTime || Date.now());
+
+      state.mobileTouchStart = null;
+      state.mobileTouchTime = 0;
+
+      const horizontalSwipe = Math.abs(dx) > 45 && Math.abs(dy) < 70 && elapsed < 700;
+      if (!horizontalSwipe) return;
+
+      if (dx < 0) {
+        showSlide(state.currentVisibleSlideIndex + 1, true);
+      } else {
+        showSlide(state.currentVisibleSlideIndex - 1, true);
+      }
+    }, { passive: true });
+
+    $("mobile-prev-btn").onclick = () => showSlide(state.currentVisibleSlideIndex - 1, true);
+    $("mobile-next-btn").onclick = () => showSlide(state.currentVisibleSlideIndex + 1, true);
     
     // Handle internal slide reference links (+++RefName+++)
     $("slideshow").addEventListener('click', (e) => {
@@ -2929,13 +3047,17 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
     const currentSlideEl = state.slideEls[currentIndex];
 
     // Generate standalone HTML using unified function
-    const currentSlideHTML = await generateSlideFrameHTML(currentSlideEl, themeId);
+    const currentSlideHTML = await generateSlideFrameHTML(currentSlideEl, themeId, {
+      frameContextClass: 'frame-context-presenter'
+    });
 
     // Generate next slide HTML (blank if on last slide)
     let nextSlideHTML;
     if (nextIndex !== null) {
       const nextSlideEl = state.slideEls[nextIndex];
-      nextSlideHTML = await generateSlideFrameHTML(nextSlideEl, themeId);
+      nextSlideHTML = await generateSlideFrameHTML(nextSlideEl, themeId, {
+        frameContextClass: 'frame-context-presenter'
+      });
     } else {
       // Create blank slide for "end of presentation" indicator
       nextSlideHTML = `<!DOCTYPE html>
@@ -4582,6 +4704,13 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
       state.currentAbsoluteSlideIndex + 1 : displayCur;
     $("tot").textContent = state.editMode ? 
       state.slideEls.length : displayTot;
+    const mobileStatus = $("mobile-nav-status");
+    if (mobileStatus) {
+      mobileStatus.textContent = `${$("cur").textContent}/${$("tot").textContent}`;
+    }
+
+    const enableMobileControls = !state.editMode;
+    document.body.classList.toggle('mobile-controls-enabled', enableMobileControls);
     
     let progressPercent = 0;
     if (state.editMode && state.slideEls.length > 0) {
@@ -4712,7 +4841,8 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
 async function generateSlideFrameHTML(slideContent, theme, options = {}) {
   const {
     forThumbnail = false,
-    removeHiddenClass = false
+    removeHiddenClass = false,
+    frameContextClass = ''
   } = options;
 
   // Handle both raw text input and pre-rendered HTML elements
@@ -4753,27 +4883,24 @@ async function generateSlideFrameHTML(slideContent, theme, options = {}) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <base href="${window.location.href}">
   <style>
     ${document.getElementById('core-styles').textContent}
     body { margin: 0; overflow: hidden; }
-    .slide-wrapper {
-      position: relative;
-      width: 100%;
-      height: auto;
-      aspect-ratio: 16 / 9;
-      container-type: inline-size;
-      container-name: slideshow;
-      font-size: var(--slide-base-font-size);
-    }
-    #slideshow { position: absolute; inset: 0; }
+    .presentation-viewport { width: 100vw; height: 100vh; }
+    .presentation-scaler { width: min(100vw, 177.78vh); height: auto; aspect-ratio: 16 / 9; }
+    .presentation-scaler > .slide-wrapper { width: 100%; height: 100%; }
+    #slideshow { position: relative; width: 100%; height: 100%; }
     .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
   </style>
   <link rel="stylesheet" href="${themeHref}">
 </head>
-<body class="${theme}">
-  <div class="slide-wrapper">
-    <div id="slideshow">${slideElementHTML}</div>
+<body class="${theme} ${frameContextClass}">
+  <div class="presentation-viewport">
+    <div class="presentation-scaler">
+      <div class="slide-wrapper">
+        <div id="slideshow">${slideElementHTML}</div>
+      </div>
+    </div>
   </div>
 </body>
 </html>`;
@@ -4786,7 +4913,8 @@ async function generateSlideFrameHTML(slideContent, theme, options = {}) {
 async function getThumbnailHTML(rawText, theme) {
   return generateSlideFrameHTML(rawText, theme, {
     forThumbnail: true,
-    removeHiddenClass: true
+    removeHiddenClass: true,
+    frameContextClass: 'frame-context-preview'
   });
 }
   
@@ -5349,6 +5477,59 @@ async function getThumbnailHTML(rawText, theme) {
     flushBuffer();
     return { html, mode: resolveModeState(mode) };
   }
+
+  function renderRichInlineContent(rawText, startingMode = 'Text') {
+    const rendered = renderRichTextWithModes(rawText, startingMode);
+    return rendered.html;
+  }
+
+  function renderBlockquoteHtml(text, source = '') {
+    return `
+      <div class="blockquote">
+        <div class="quote-text">${renderRichInlineContent(text || '')}</div>
+        ${source ? `<div class="quote-source">${renderRichInlineContent(source)}</div>` : ''}
+      </div>`;
+  }
+
+  function renderRichContent(rawText, startingMode = 'Text') {
+    const content = (rawText || '').trim();
+    if (!content) return '';
+
+    const blockquoteMatch = content.match(/^Blockquote(?:\(([^)]+)\))?:\s*([\s\S]*)$/i);
+    if (blockquoteMatch) {
+      return renderBlockquoteHtml(blockquoteMatch[2] || '', blockquoteMatch[1] || '');
+    }
+
+    const tableMatch = content.match(/^Table:\s*([\s\S]*)$/i);
+    if (tableMatch) {
+      return renderTableHtmlFromContent(tableMatch[1] || '');
+    }
+
+    const textModeMatch = content.match(/^([A-Za-z][A-Za-z0-9.]*):\s*([\s\S]*)$/);
+    if (textModeMatch) {
+      const modeState = interpretModeKeyword(textModeMatch[1], textModeMatch[2]);
+      if (modeState) {
+        return wrapHtmlWithMode(resolveModeState(modeState), formatWithJustify(textModeMatch[2] || ''));
+      }
+    }
+
+    return renderRichInlineContent(content, startingMode);
+  }
+
+  function renderTableHtmlFromContent(content) {
+    const rows = (content || '').split(/^\s*---\s*$/m);
+    let tableHtml = '<table>';
+    if (rows.length > 0) {
+      const headerCells = rows.shift().split('&').map(cell => `<th>${renderRichContent(cell.trim())}</th>`).join('');
+      tableHtml += `<thead><tr>${headerCells}</tr></thead>`;
+    }
+    const bodyRows = rows.map(row => {
+      const cells = row.split('&').map(cell => `<td>${renderRichContent(cell.trim())}</td>`).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+    tableHtml += `<tbody>${bodyRows}</tbody></table>`;
+    return tableHtml;
+  }
  
   function resolveDirectiveToken(rawToken) {
     if (!rawToken) return null;
@@ -5385,7 +5566,7 @@ async function getThumbnailHTML(rawText, theme) {
     let buffer = [];
 
     // Directives allowed to exist INSIDE a Column without breaking it
-    const NESTABLE_DIRECTIVES = ['Image', 'BigText', 'SmallText', 'TinyText', 'Text', 'Break'];
+    const NESTABLE_DIRECTIVES = ['Image', 'BigText', 'SmallText', 'TinyText', 'Text', 'Break', 'Blockquote', 'Table'];
 
     function processBuffer() {
       if (buffer.length === 0) return;
@@ -5452,17 +5633,13 @@ async function getThumbnailHTML(rawText, theme) {
           attributes.printNotes = content;
           break;
         case "Blockquote":
-          innerHTML += `
-            <div class="blockquote">
-              <div class="quote-text">${plainTextToHtml(content)}</div>
-              ${directiveArgs ? `<div class="quote-source">${plainTextToHtml(directiveArgs)}</div>` : ''}
-            </div>`;
+          innerHTML += renderBlockquoteHtml(content, directiveArgs || '');
           break;
         case "Image":
           const [url, ...captionParts] = content.split(/,(.*)/s);
           const caption = (captionParts[0] || '').trim();
           const resolvedUrl = resolveImagePath(url.trim(), window.presentationBaseUrl);
-          innerHTML += `<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(caption)}"><div class="caption">${plainTextToHtml(caption)}</div></div>`;
+          innerHTML += `<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(caption)}"><div class="caption">${renderRichContent(caption)}</div></div>`;
           break;
 
         case "Columns": {
@@ -5517,11 +5694,7 @@ async function getThumbnailHTML(rawText, theme) {
                 flushText();
                 const source = bqMatch[1];
                 const text   = bqMatch[2];
-                blocks.push(`
-                  <div class="blockquote">
-                    <div class="quote-text">${plainTextToHtml(text)}</div>
-                    ${source ? `<div class="quote-source">${plainTextToHtml(source)}</div>` : ''}
-                  </div>`);
+                blocks.push(renderBlockquoteHtml(text, source || ''));
                 hasTextBlock = true;
                 continue;
               }
@@ -5532,7 +5705,7 @@ async function getThumbnailHTML(rawText, theme) {
                  if (dirMatch) {
                     const dirName = dirMatch[1];
                     const lower = dirName.toLowerCase();
-                    const isTextMode = lower === 'bigtext' || lower === 'smalltext' || lower === 'tinytext' || lower === 'text' || /^text\d/.test(lower);
+                    const isTextMode = lower === 'bigtext' || lower === 'smalltext' || lower === 'tinytext' || lower === 'text' || /^text(?:\d|\.)/.test(lower);
 
                     if (isTextMode) {
                        flushText();
@@ -5540,6 +5713,31 @@ async function getThumbnailHTML(rawText, theme) {
                        currentMode = resolveModeState(modeState || 'Text');
                        pendingText = dirMatch[2] || '';
                        continue;
+                    }
+
+                    const nestedDirective = resolveDirectiveToken(dirName);
+                    if (nestedDirective?.name === 'Blockquote') {
+                      flushText();
+                      blocks.push(renderBlockquoteHtml(dirMatch[2] || '', ''));
+                      hasTextBlock = true;
+                      continue;
+                    }
+
+                    if (nestedDirective?.name === 'Image') {
+                      flushText();
+                      imageCount++;
+                      const [lineUrl, ...lineCaptionParts] = (dirMatch[2] || '').split(/,(.*)/s);
+                      const lineCaption = (lineCaptionParts[0] || '').trim();
+                      const lineResolvedUrl = resolveImagePath((lineUrl || '').trim(), window.presentationBaseUrl);
+                      blocks.push(`<div class="img-container"><img src="${escapeHtml(lineResolvedUrl)}" alt="${escapeHtml(lineCaption)}"><div class="caption">${renderRichContent(lineCaption)}</div></div>`);
+                      continue;
+                    }
+
+                    if (nestedDirective?.name === 'Table') {
+                      flushText();
+                      blocks.push(renderTableHtmlFromContent(dirMatch[2] || ''));
+                      hasTextBlock = true;
+                      continue;
                     }
                  }
               }
@@ -5552,7 +5750,7 @@ async function getThumbnailHTML(rawText, theme) {
                 const imageUrl = imgMatch[1].trim();
                 const colCaption = (imgMatch[2] || '').trim();
                 const resolvedUrl = resolveImagePath(imageUrl, window.presentationBaseUrl);
-                blocks.push(`<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(colCaption)}"><div class="caption">${plainTextToHtml(colCaption)}</div></div>`);
+                blocks.push(`<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(colCaption)}"><div class="caption">${renderRichContent(colCaption)}</div></div>`);
                 continue;
               }
 
@@ -5570,18 +5768,7 @@ async function getThumbnailHTML(rawText, theme) {
           break;
         }
         case "Table":
-          const rows = content.split(/^\s*---\s*$/m);
-          let tableHtml = '<table>';
-          if (rows.length > 0) {
-            const headerCells = rows.shift().split('&').map(cell => `<th>${plainTextToHtml(cell.trim())}</th>`).join('');
-            tableHtml += `<thead><tr>${headerCells}</tr></thead>`;
-          }
-          const bodyRows = rows.map(row => {
-            const cells = row.split('&').map(cell => `<td>${plainTextToHtml(cell.trim())}</td>`).join('');
-            return `<tr>${cells}</tr>`;
-          }).join('');
-          tableHtml += `<tbody>${bodyRows}</tbody></table>`;
-          innerHTML += tableHtml;
+          innerHTML += renderTableHtmlFromContent(content);
           break;
       }
       buffer = [];
