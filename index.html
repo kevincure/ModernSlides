@@ -1057,6 +1057,57 @@ body:not(.is-edit-mode) .overflow-indicator {
   }
 }
 
+.frame-context-preview .presentation-scaler,
+.frame-context-presenter .presentation-scaler,
+.frame-context-print .presentation-scaler {
+  box-shadow: none;
+}
+
+.frame-context-preview,
+.frame-context-presenter {
+  background: transparent;
+}
+
+#mobile-nav {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 250;
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  padding: 0.4rem 0.55rem;
+  backdrop-filter: blur(3px);
+}
+
+#mobile-nav button {
+  border: none;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  min-width: 2.4rem;
+  min-height: 2.4rem;
+  padding: 0 0.7rem;
+  font-size: 0.95rem;
+}
+
+#mobile-nav .mobile-nav-status {
+  color: #fff;
+  font-family: var(--editor-mono-font);
+  font-size: 0.78rem;
+  align-self: center;
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+@media (pointer: coarse), (max-width: 900px) {
+  body.mobile-controls-enabled #mobile-nav {
+    display: inline-flex;
+  }
+}
+
 
 /* ----------------------------- */
 /* --- Presenter Mode Styles --- */
