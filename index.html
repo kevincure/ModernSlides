@@ -1057,6 +1057,57 @@ body:not(.is-edit-mode) .overflow-indicator {
   }
 }
 
+.frame-context-preview .presentation-scaler,
+.frame-context-presenter .presentation-scaler,
+.frame-context-print .presentation-scaler {
+  box-shadow: none;
+}
+
+.frame-context-preview,
+.frame-context-presenter {
+  background: transparent;
+}
+
+#mobile-nav {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 250;
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  padding: 0.4rem 0.55rem;
+  backdrop-filter: blur(3px);
+}
+
+#mobile-nav button {
+  border: none;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  min-width: 2.4rem;
+  min-height: 2.4rem;
+  padding: 0 0.7rem;
+  font-size: 0.95rem;
+}
+
+#mobile-nav .mobile-nav-status {
+  color: #fff;
+  font-family: var(--editor-mono-font);
+  font-size: 0.78rem;
+  align-self: center;
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+@media (pointer: coarse), (max-width: 900px) {
+  body.mobile-controls-enabled #mobile-nav {
+    display: inline-flex;
+  }
+}
+
 
 /* ----------------------------- */
 /* --- Presenter Mode Styles --- */
@@ -4885,10 +4936,26 @@ async function generateSlideFrameHTML(slideContent, theme, options = {}) {
   <meta charset="UTF-8">
   <style>
     ${document.getElementById('core-styles').textContent}
+    html, body { width: 100%; height: 100%; }
     body { margin: 0; overflow: hidden; }
-    .presentation-viewport { width: 100vw; height: 100vh; }
-    .presentation-scaler { width: min(100vw, 177.78vh); height: auto; aspect-ratio: 16 / 9; }
-    .presentation-scaler > .slide-wrapper { width: 100%; height: 100%; }
+    .presentation-viewport {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .presentation-scaler {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+    }
+    .presentation-scaler > .slide-wrapper {
+      width: 100%;
+      height: 100%;
+    }
     #slideshow { position: relative; width: 100%; height: 100%; }
     .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
   </style>
@@ -5495,17 +5562,17 @@ async function getThumbnailHTML(rawText, theme) {
     const content = (rawText || '').trim();
     if (!content) return '';
 
-    const blockquoteMatch = content.match(/^Blockquote(?:\(([^)]+)\))?:\s*([\s\S]*)$/i);
+    const blockquoteMatch = content.match(/^\s*Blockquote(?:\(([^)]+)\))?:\s*([\s\S]*)$/i);
     if (blockquoteMatch) {
       return renderBlockquoteHtml(blockquoteMatch[2] || '', blockquoteMatch[1] || '');
     }
 
-    const tableMatch = content.match(/^Table:\s*([\s\S]*)$/i);
+    const tableMatch = content.match(/^\s*Table:\s*([\s\S]*)$/i);
     if (tableMatch) {
       return renderTableHtmlFromContent(tableMatch[1] || '');
     }
 
-    const textModeMatch = content.match(/^([A-Za-z][A-Za-z0-9.]*):\s*([\s\S]*)$/);
+    const textModeMatch = content.match(/^\s*([A-Za-z][A-Za-z0-9.]*):\s*([\s\S]*)$/);
     if (textModeMatch) {
       const modeState = interpretModeKeyword(textModeMatch[1], textModeMatch[2]);
       if (modeState) {
@@ -5777,7 +5844,7 @@ async function getThumbnailHTML(rawText, theme) {
     // --- MAIN PARSING LOOP ---
     for (const line of lines) {
       // Check for Directive: or Directive(Args):
-      const match = line.match(/^([A-Za-z][A-Za-z0-9.]*)(?:\(([^)]+)\))?:\s*(.*)/);
+      const match = line.match(/^\s*([A-Za-z][A-Za-z0-9.]*)(?:\(([^)]+)\))?:\s*(.*)/);
 
       if (match) {
         const rawName = match[1];
