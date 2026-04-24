@@ -80,10 +80,11 @@ body {
 /* .presentation-scaler wraps .slide-wrapper in the main presentation view */
 .presentation-scaler {
   position: relative;
-  width: min(100vw, 177.78vh);
-  height: auto;
-  aspect-ratio: 16 / 9;
+  width: 1600px;
+  height: 900px;
+  aspect-ratio: auto;
   overflow: hidden;
+  transform-origin: center center;
   box-shadow: 0 0 50px rgba(0,0,0,0.5);
 }
 
@@ -1088,6 +1089,80 @@ body.debug-metrics-enabled #debug-metrics-panel {
   }
 }
 
+#debug-metrics-panel {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 400;
+  max-width: min(42rem, 92vw);
+  max-height: 42vh;
+  overflow: auto;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.5rem;
+  background: rgba(12, 12, 14, 0.82);
+  color: #d9f7ff;
+  font: 12px/1.35 var(--editor-mono-font);
+  white-space: pre-wrap;
+  box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.35);
+  display: none;
+  pointer-events: none;
+}
+
+body.debug-metrics-enabled #debug-metrics-panel {
+  display: block;
+}
+
+.frame-context-preview .presentation-scaler,
+.frame-context-presenter .presentation-scaler,
+.frame-context-print .presentation-scaler {
+  box-shadow: none;
+}
+
+.frame-context-preview,
+.frame-context-presenter {
+  background: transparent;
+}
+
+#mobile-nav {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 250;
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  padding: 0.4rem 0.55rem;
+  backdrop-filter: blur(3px);
+}
+
+#mobile-nav button {
+  border: none;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  min-width: 2.4rem;
+  min-height: 2.4rem;
+  padding: 0 0.7rem;
+  font-size: 0.95rem;
+}
+
+#mobile-nav .mobile-nav-status {
+  color: #fff;
+  font-family: var(--editor-mono-font);
+  font-size: 0.78rem;
+  align-self: center;
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+@media (pointer: coarse), (max-width: 900px) {
+  body.mobile-controls-enabled #mobile-nav {
+    display: inline-flex;
+  }
+}
+
 .frame-context-preview .presentation-scaler,
 .frame-context-presenter .presentation-scaler,
 .frame-context-print .presentation-scaler {
@@ -1417,6 +1492,11 @@ body.print-with-notes .print-notes-content {
 .website-print-placeholder { display: none; }
 
 @media print {
+  :root {
+    --print-stage-width: min(177.78vh, 100vw);
+    --print-stage-height: calc(var(--print-stage-width) * 0.5625);
+  }
+
   @page {
     size: letter landscape;
     margin: 0;
@@ -1451,8 +1531,8 @@ body.print-with-notes .print-notes-content {
   /* Tame the inline-styled iframe wrapper used for FullScreenWebsite */
   .slide [style*="z-index: 100"] {
     /* occupy exactly the 16:9 area, no chrome */
-    width: min(177.78vh, 100vw) !important;
-    height: calc(min(177.78vh, 100vw) * 0.5625) !important;
+    width: var(--print-stage-width) !important;
+    height: var(--print-stage-height) !important;
     top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
     background: transparent !important; box-shadow: none !important; border-radius: 0 !important;
   }
@@ -1531,8 +1611,8 @@ body.print-with-notes .print-notes-content {
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
-    width: min(177.78vh, 100vw) !important;
-    height: calc(min(177.78vh, 100vw) * 0.5625) !important;
+    width: var(--print-stage-width) !important;
+    height: var(--print-stage-height) !important;
     margin: 0 auto !important;
     container-type: inline-size;
     container-name: print-slide-container;
@@ -1557,7 +1637,7 @@ body.print-with-notes .print-notes-content {
 
   /* Shrink the slide's 16:9 container to make room at the bottom. */
   body.print-with-notes .slide-content {
-    height: calc(min(177.78vh, 100vw) * 0.5625) !important;
+    height: var(--print-stage-height) !important;
   }
 
   /* ]Make the notes area visible and position it in the new empty space. */
@@ -1565,7 +1645,7 @@ body.print-with-notes .print-notes-content {
     display: block !important;
     position: absolute !important;
     left: 0 !important; right: 0 !important; bottom: 0 !important;
-    top: calc(min(177.78vh, 100vw) * 0.5625) !important; /* Start exactly where the slide content ends */
+    top: var(--print-stage-height) !important; /* Start exactly where the slide content ends */
     padding: calc(var(--base-font-size) * 0.4) calc(var(--base-font-size) * 0.8) !important;
     background: #fff !important;
     height: auto; 
@@ -1798,6 +1878,8 @@ const ModernSlideshow = (function() {
   const PREVIOUS_SESSION_META_KEY = 'modernSlides_previousSessionMeta';
   const LAST_SLIDE_INDEX_KEY = 'modernSlides_lastSlideIndex';
   const DEFAULT_NEW_SLIDE_CONTENT = "Title: New Slide\n\nText: Edit this content.";
+  const VIRTUAL_STAGE_WIDTH = 1600;
+  const VIRTUAL_STAGE_HEIGHT = 900;
 
   function clampTextScale(value) {
     if (!Number.isFinite(value)) return DEFAULT_TEXT_SCALE;
@@ -2230,6 +2312,7 @@ const ImageStore = {
     });
 
     window.addEventListener('resize', () => {
+      fitPresentationScaler(document);
       scheduleOverflowChecks();
       updateDebugMetricsPanel();
     });
@@ -2247,6 +2330,12 @@ const ImageStore = {
         "ArrowRight": 1, " ": 1, "PageDown": 1,
         "ArrowLeft": -1, "PageUp": -1
       }[e.key];
+
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        toggleDebugMetrics();
+        return;
+      }
 
       if (e.key === 'm' || e.key === 'M') {
         e.preventDefault();
@@ -5144,10 +5233,11 @@ async function generateSlideFrameHTML(slideContent, theme, options = {}) {
     }
     .presentation-scaler {
       position: relative;
-      width: min(100vw, 177.78vh);
-      height: auto;
-      aspect-ratio: 16 / 9;
+      width: ${VIRTUAL_STAGE_WIDTH}px;
+      height: ${VIRTUAL_STAGE_HEIGHT}px;
+      aspect-ratio: auto;
       overflow: hidden;
+      transform-origin: center center;
     }
     .presentation-scaler > .slide-wrapper {
       width: 100%;
@@ -5166,6 +5256,24 @@ async function generateSlideFrameHTML(slideContent, theme, options = {}) {
       </div>
     </div>
   </div>
+  <script>
+    (function() {
+      const W = ${VIRTUAL_STAGE_WIDTH};
+      const H = ${VIRTUAL_STAGE_HEIGHT};
+      const viewport = document.querySelector('.presentation-viewport');
+      const scaler = document.querySelector('.presentation-scaler');
+      if (!viewport || !scaler) return;
+      const fit = () => {
+        const vw = viewport.clientWidth || window.innerWidth || W;
+        const vh = viewport.clientHeight || window.innerHeight || H;
+        const s = Math.max(0.01, Math.min(vw / W, vh / H));
+        scaler.style.transform = 'scale(' + s + ')';
+        scaler.style.setProperty('--virtual-scale', String(s));
+      };
+      fit();
+      window.addEventListener('resize', fit);
+    })();
+  <\/script>
 </body>
 </html>`;
 }
@@ -6116,6 +6224,89 @@ async function getThumbnailHTML(rawText, theme) {
 
     const wrapperStyle = wrapper ? doc.defaultView?.getComputedStyle(wrapper) : null;
     const paragraphStyle = paragraph ? doc.defaultView?.getComputedStyle(paragraph) : null;
+    const scalerStyle = scaler ? doc.defaultView?.getComputedStyle(scaler) : null;
+
+    return {
+      scalerW: roundMetric(scalerRect?.width),
+      scalerH: roundMetric(scalerRect?.height),
+      scalerRatio: ratio,
+      wrapperW: roundMetric(wrapperRect?.width),
+      wrapperH: roundMetric(wrapperRect?.height),
+      contentW: roundMetric(contentRect?.width),
+      contentH: roundMetric(contentRect?.height),
+      flowW: roundMetric(flowRect?.width),
+      flowH: roundMetric(flowRect?.height),
+      virtualScale: scalerStyle ? scalerStyle.getPropertyValue('--virtual-scale').trim() : null,
+      baseFont: wrapperStyle ? wrapperStyle.getPropertyValue('--base-font-size').trim() : null,
+      paragraphSize: paragraphStyle ? paragraphStyle.fontSize : null,
+      paragraphLineHeight: paragraphStyle ? paragraphStyle.lineHeight : null
+    };
+  }
+
+  function renderMetricsLine(label, metrics) {
+    if (!metrics) return `${label}: unavailable`;
+    return `${label}: scaler=${metrics.scalerW}×${metrics.scalerH} (r=${metrics.scalerRatio}), wrapper=${metrics.wrapperW}×${metrics.wrapperH}, content=${metrics.contentW}×${metrics.contentH}, flow=${metrics.flowW}×${metrics.flowH}, scale=${metrics.virtualScale || 'n/a'}, base=${metrics.baseFont}, p=${metrics.paragraphSize}/${metrics.paragraphLineHeight}`;
+  }
+
+  function updateDebugMetricsPanel() {
+    if (!state.debugMetricsEnabled) return;
+    const panel = $('debug-metrics-panel');
+    if (!panel) return;
+
+    const lines = [];
+    lines.push(`debug metrics | slide ${state.currentAbsoluteSlideIndex + 1} | visible ${state.currentVisibleSlideIndex + 1}`);
+    lines.push(renderMetricsLine('main', collectFrameMetrics(document)));
+
+    if (state.presenterWindow && !state.presenterWindow.closed) {
+      try {
+        const presenterDoc = state.presenterWindow.document;
+        const currentIframe = presenterDoc.getElementById('current-slide');
+        const nextIframe = presenterDoc.getElementById('next-slide');
+        const currentDoc = currentIframe?.contentDocument || null;
+        const nextDoc = nextIframe?.contentDocument || null;
+        lines.push(renderMetricsLine('presenter.current', currentDoc ? collectFrameMetrics(currentDoc) : null));
+        lines.push(renderMetricsLine('presenter.next', nextDoc ? collectFrameMetrics(nextDoc) : null));
+      } catch (err) {
+        lines.push(`presenter: metrics unavailable (${err?.message || 'access error'})`);
+      }
+    } else {
+      lines.push('presenter: closed');
+    }
+
+    panel.textContent = lines.join('\n');
+  }
+
+  function toggleDebugMetrics() {
+    state.debugMetricsEnabled = !state.debugMetricsEnabled;
+    document.body.classList.toggle('debug-metrics-enabled', state.debugMetricsEnabled);
+    if (state.debugMetricsEnabled) {
+      updateDebugMetricsPanel();
+    }
+  }
+
+  function roundMetric(value) {
+    return Number.isFinite(value) ? Math.round(value * 100) / 100 : null;
+  }
+
+  function collectFrameMetrics(doc = document) {
+    const activeSlide = doc.querySelector('.slide.active') || doc.querySelector('.slide');
+    const scaler = doc.querySelector('.presentation-scaler');
+    const wrapper = doc.querySelector('.slide-wrapper');
+    const content = activeSlide?.querySelector('.slide-content');
+    const flow = activeSlide?.querySelector('.slide-flow-content');
+    const paragraph = activeSlide?.querySelector('.slide-flow-content p, .slide-content p');
+
+    const scalerRect = scaler?.getBoundingClientRect();
+    const wrapperRect = wrapper?.getBoundingClientRect();
+    const contentRect = content?.getBoundingClientRect();
+    const flowRect = flow?.getBoundingClientRect();
+
+    const ratio = scalerRect && scalerRect.height
+      ? roundMetric(scalerRect.width / scalerRect.height)
+      : null;
+
+    const wrapperStyle = wrapper ? doc.defaultView?.getComputedStyle(wrapper) : null;
+    const paragraphStyle = paragraph ? doc.defaultView?.getComputedStyle(paragraph) : null;
 
     return {
       scalerW: roundMetric(scalerRect?.width),
@@ -6442,6 +6633,18 @@ window.resolveImagePath = function(imageSrc, baseUrl) {
   return new URL(src, baseUrl).href;
 };
 
+  function fitPresentationScaler(doc = document) {
+    const viewport = doc.querySelector('.presentation-viewport');
+    const scaler = doc.querySelector('.presentation-scaler');
+    if (!viewport || !scaler) return;
+
+    const availableW = viewport.clientWidth || doc.defaultView?.innerWidth || VIRTUAL_STAGE_WIDTH;
+    const availableH = viewport.clientHeight || doc.defaultView?.innerHeight || VIRTUAL_STAGE_HEIGHT;
+    const scale = Math.max(0.01, Math.min(availableW / VIRTUAL_STAGE_WIDTH, availableH / VIRTUAL_STAGE_HEIGHT));
+    scaler.style.transform = `scale(${scale})`;
+    scaler.style.setProperty('--virtual-scale', String(scale));
+  }
+
   
   /* ═══════════════════════════════════════════════════════════════
                           16:9 ASPECT RATIO SETUP
@@ -6470,6 +6673,7 @@ window.resolveImagePath = function(imageSrc, baseUrl) {
       const logo = $("company-logo");
       if (logo) viewport.appendChild(logo);
     }
+    fitPresentationScaler(document);
   }
 
 
