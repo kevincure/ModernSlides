@@ -82,6 +82,9 @@ body {
   position: relative;
   width: 1600px;
   height: 900px;
+  flex: 0 0 auto;           /* never let the flex-centered viewport shrink the stage */
+  min-width: 1600px;
+  min-height: 900px;
   aspect-ratio: auto;
   overflow: hidden;
   transform-origin: center center;
