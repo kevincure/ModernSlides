@@ -5561,6 +5561,23 @@ async function getThumbnailHTML(rawText, theme) {
       return renderTableHtmlFromContent(tableMatch[1] || '');
     }
 
+    // Image: directive at the start of a cell — same syntax as top-level.
+    const imageMatch = content.match(/^\s*Image:\s*([\s\S]*)$/i);
+    if (imageMatch) {
+      const [url, ...captionParts] = (imageMatch[1] || '').split(/,(.*)/s);
+      const caption = (captionParts[0] || '').trim();
+      const resolvedUrl = resolveImagePath((url || '').trim(), window.presentationBaseUrl);
+      return `<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(caption)}"><div class="caption">${renderRichContent(caption)}</div></div>`;
+    }
+
+    // Break: N at the start of a cell — vertical space, same as top-level.
+    const breakMatch = content.match(/^\s*Break:\s*(.*)$/i);
+    if (breakMatch) {
+      const n = parseFloat((breakMatch[1] || '1').replace(',', '.'));
+      const linesAmt = Number.isFinite(n) && n > 0 ? n : 1;
+      return `<div aria-hidden="true" style="display:block;height:calc(${linesAmt} * 1lh);"></div>`;
+    }
+
     const textModeMatch = content.match(/^\s*([A-Za-z][A-Za-z0-9.]*):\s*([\s\S]*)$/);
     if (textModeMatch) {
       const modeState = interpretModeKeyword(textModeMatch[1], textModeMatch[2]);
@@ -5589,14 +5606,17 @@ async function getThumbnailHTML(rawText, theme) {
  
   function resolveDirectiveToken(rawToken) {
     if (!rawToken) return null;
+    const lower = rawToken.toLowerCase();
 
-    if (METADATA_DIRECTIVES.includes(rawToken)) {
-      return { name: rawToken, isMetadata: true };
+    const metaCanonical = METADATA_DIRECTIVES.find((d) => d.toLowerCase() === lower);
+    if (metaCanonical) {
+      return { name: metaCanonical, isMetadata: true };
     }
 
-    if (CONTENT_DIRECTIVES.includes(rawToken)) {
-      const info = { name: rawToken, isMetadata: false };
-      if (rawToken === 'Text') {
+    const contentCanonical = CONTENT_DIRECTIVES.find((d) => d.toLowerCase() === lower);
+    if (contentCanonical) {
+      const info = { name: contentCanonical, isMetadata: false };
+      if (contentCanonical === 'Text') {
         info.textScale = DEFAULT_TEXT_SCALE;
       }
       return info;
@@ -5604,7 +5624,6 @@ async function getThumbnailHTML(rawText, theme) {
 
     const modeState = interpretModeKeyword(rawToken);
     if (modeState && modeState.name === 'Text') {
-      const lower = rawToken.toLowerCase();
       if (lower.startsWith('text') && lower !== 'text') {
         return { name: 'Text', isMetadata: false, textScale: modeState.textScale };
       }
@@ -5793,6 +5812,14 @@ async function getThumbnailHTML(rawText, theme) {
                       flushText();
                       blocks.push(renderTableHtmlFromContent(dirMatch[2] || ''));
                       hasTextBlock = true;
+                      continue;
+                    }
+
+                    if (nestedDirective?.name === 'Break') {
+                      flushText();
+                      const n = parseFloat((dirMatch[2] || '1').replace(',', '.'));
+                      const linesAmt = Number.isFinite(n) && n > 0 ? n : 1;
+                      blocks.push(`<div aria-hidden="true" style="display:block;height:calc(${linesAmt} * 1lh);"></div>`);
                       continue;
                     }
                  }
