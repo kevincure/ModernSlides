@@ -83,8 +83,10 @@ Examples and common directives are shown below (use the exact directive names):
       # - If you print from your browser, it will give slides without PrintNotes. 
       # - If you print from the print icon in Edit mode, it will show the PrintNotes.
       # - If no directive is given, text defaults to `Text:`.
+      # - Directive names are case-insensitive: `Image:`, `image:`, and `IMAGE:` all work.
       # - In `Columns` and `Table`, use `---` on its own line to separate sections/rows.
-      # - You cannot nest some directives (e.g., a Table inside a Column).
+      # - A `Table:` or `Columns:` block stays open until you insert a blank line followed by another directive (e.g., `Text:` or `PrintNote:`). This means you can write `SmallText:`, `Break:`, `Image:`, etc. inside a row or column without accidentally closing the container — just don't leave a blank line before them.
+      # - Inside a table cell you can put a single block directive (`SmallText: footnote`, `Image: icon.png`, `Break: 0.5`, `Blockquote: ...`) plus any inline markers (`**bold**`, `*italic*`, `$math$`, `<<<` / `|||` / `>>>`, `[[BigText]]` / `[[Text1.5]]` / `[[Break:0.5]]`).
       # - A thin badge appears when content overflows the 16×9 frame.  Hover to see the first 20 characters that spill off the slide. This is conservative, so usually are fine with a little overflow when you are presenting in fullscreen.
       # - As you edit, your most-recently-edited slides are stored in LocalStorage via your browser.  Use the restore button to reopen the last deck from a prior session (so no problems if you have a browser crash).
       # - The status note in the lower-right reminds you about help on the default deck and reports when decks are restored.

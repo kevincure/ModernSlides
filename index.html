@@ -5640,9 +5640,6 @@ async function getThumbnailHTML(rawText, theme) {
     let currentDirective = { name: 'Text', isMetadata: false, textScale: DEFAULT_TEXT_SCALE, args: null };
     let buffer = [];
 
-    // Directives allowed to exist INSIDE a Column without breaking it
-    const NESTABLE_DIRECTIVES = ['Image', 'BigText', 'SmallText', 'TinyText', 'Text', 'Break', 'Blockquote', 'Table'];
-
     function processBuffer() {
       if (buffer.length === 0) return;
       const content = buffer.join('\n').trim();
@@ -5866,24 +5863,24 @@ async function getThumbnailHTML(rawText, theme) {
         const rawName = match[1];
         const token = resolveDirectiveToken(rawName);
 
-        if (currentDirective && currentDirective.name === 'Columns') {
-           if (token && NESTABLE_DIRECTIVES.includes(token.name)) {
-
-             // 1. Are we at the start of the first column?
-             // (Buffer contains only whitespace/empty lines so far)
-             const isStartOfColumn = buffer.every(line => line.trim() === '');
-
-             // 2. Are we immediately after a separator?
-             const lastLine = buffer.length > 0 ? buffer[buffer.length - 1].trim() : '';
-             const isAfterSeparator = (lastLine === '---' || lastLine === '----');
-
-             // If we are at the start (modifying first col) OR right after a separator, allow nesting.
-             if (isStartOfColumn || isAfterSeparator) {
-                buffer.push(line);
-                continue;
-             }
-           }
-           // Otherwise, fall through to close the column
+        // Inside Table or Columns, a directive-looking line stays as container
+        // content unless it follows an explicit blank line. This lets users
+        // write SmallText: / Break: / Image: / etc. inside a column or between
+        // table rows without accidentally exiting the container; to leave the
+        // container, insert a blank line before the next directive.
+        if (
+          currentDirective &&
+          (currentDirective.name === 'Table' || currentDirective.name === 'Columns')
+        ) {
+          const lastBufferLine = buffer.length > 0 ? buffer[buffer.length - 1] : null;
+          const lastLineIsBlank = lastBufferLine !== null && lastBufferLine.trim() === '';
+          const bufferHasContent = buffer.some((l) => l.trim() !== '');
+          const closeContainer = lastLineIsBlank && bufferHasContent;
+          if (!closeContainer) {
+            buffer.push(line);
+            continue;
+          }
+          // else: fall through to close Table/Columns and start the new directive
         }
 
         if (token) {
