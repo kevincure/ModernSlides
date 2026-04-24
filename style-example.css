@@ -510,3 +510,32 @@ body {
 .slide-content .columns {
   gap: calc(var(--slide-base-font-size) * 0.2);
 }
+
+/* --- ModernSlides rich-content normalization (tables/captions/nested text) --- */
+.slide-content th p,
+.slide-content td p,
+.slide-content th ul,
+.slide-content td ul,
+.slide-content th ol,
+.slide-content td ol {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+}
+
+.slide-content th .text-scale,
+.slide-content td .text-scale,
+.slide-content th .large,
+.slide-content td .large,
+.slide-content th .small,
+.slide-content td .small,
+.slide-content th .tiny,
+.slide-content td .tiny,
+.slide-content .caption .text-scale,
+.slide-content .caption .large,
+.slide-content .caption .small,
+.slide-content .caption .tiny {
+  width: 100%;
+}
