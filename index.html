@@ -1286,23 +1286,28 @@ body.debug-metrics-enabled #debug-metrics-panel {
     background: transparent !important; box-shadow: none !important; border-radius: 0 !important;
   }
 
-  /* Print-with-notes: top 5.5in is the slide stage, rest is notes. */
+  /* Print-with-notes: slide occupies the natural 16:9 box at 11in wide
+     (= 6.1875in tall), notes fill the remaining 2.3125in below. The scaler
+     transform also drops to that height so 1600x900 fits exactly. */
   .print-page.print-page-with-notes {
     display: flex !important;
     flex-direction: column !important;
   }
   .print-page.print-page-with-notes .presentation-viewport {
     flex: 0 0 auto;
-    height: 5.5in;
+    height: 6.1875in;
+  }
+  .print-page.print-page-with-notes .presentation-scaler {
+    transform: scale(min(calc(11in / 1600px), calc(6.1875in / 900px))) !important;
   }
   .print-page.print-page-with-notes .print-notes-content {
     display: block !important;
     flex: 1 1 auto;
     overflow: hidden;
-    padding: 0.12in 0.25in;
+    padding: 0.1in 0.25in;
     background: #fff;
     color: #cc0000;
-    line-height: 1.4;
+    line-height: 1.35;
     box-sizing: border-box;
   }
 }
