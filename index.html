@@ -599,7 +599,7 @@ body:not(.is-edit-mode) .overflow-indicator {
   position: relative;
   width: 200px;
   height: 112.5px;
-  border: 2px solid var(--editor-border-color);
+  border: 0;
   border-radius: 6px;
   background: transparent;
   cursor: move;
@@ -1014,6 +1014,80 @@ body:not(.is-edit-mode) .overflow-indicator {
   pointer-events: none;
 }
 
+#debug-metrics-panel {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 400;
+  max-width: min(42rem, 92vw);
+  max-height: 42vh;
+  overflow: auto;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.5rem;
+  background: rgba(12, 12, 14, 0.82);
+  color: #d9f7ff;
+  font: 12px/1.35 var(--editor-mono-font);
+  white-space: pre-wrap;
+  box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.35);
+  display: none;
+  pointer-events: none;
+}
+
+body.debug-metrics-enabled #debug-metrics-panel {
+  display: block;
+}
+
+.frame-context-preview .presentation-scaler,
+.frame-context-presenter .presentation-scaler,
+.frame-context-print .presentation-scaler {
+  box-shadow: none;
+}
+
+.frame-context-preview,
+.frame-context-presenter {
+  background: transparent;
+}
+
+#mobile-nav {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 250;
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  padding: 0.4rem 0.55rem;
+  backdrop-filter: blur(3px);
+}
+
+#mobile-nav button {
+  border: none;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  min-width: 2.4rem;
+  min-height: 2.4rem;
+  padding: 0 0.7rem;
+  font-size: 0.95rem;
+}
+
+#mobile-nav .mobile-nav-status {
+  color: #fff;
+  font-family: var(--editor-mono-font);
+  font-size: 0.78rem;
+  align-self: center;
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+@media (pointer: coarse), (max-width: 900px) {
+  body.mobile-controls-enabled #mobile-nav {
+    display: inline-flex;
+  }
+}
+
 .frame-context-preview .presentation-scaler,
 .frame-context-presenter .presentation-scaler,
 .frame-context-print .presentation-scaler {
@@ -1407,7 +1481,7 @@ body.print-with-notes .print-notes-content {
   }
 
   /* Hide all on-screen UI chrome */
-  #editor, #progress-bar, .slide-counter, #company-logo, .presenter-controls, #mobile-nav {
+  #editor, #progress-bar, .slide-counter, #company-logo, .presenter-controls, #mobile-nav, #debug-metrics-panel {
     display: none !important;
   }
 
@@ -1521,6 +1595,7 @@ body.print-with-notes .print-notes-content {
     <span id="mobile-nav-status" class="mobile-nav-status">1/1</span>
     <button id="mobile-next-btn" type="button" aria-label="Next slide">▶</button>
   </div>
+  <pre id="debug-metrics-panel" aria-live="polite"></pre>
 
   <!-- Editor View -->
   <div id="editor">
@@ -1579,7 +1654,7 @@ body.print-with-notes .print-notes-content {
       <h3>Modern Slides | Kevin Bryan | July 2025</h3>
       <p>This is a modern, very computationally light, slideshow maker. It completely separates style rules from content. You can edit it completely online or download the code from <a href="https://github.com/kevincure/ModernSlides">github.com/kevincure/ModernSlides</a> or find more similar tools at <a href="https://kevinbryanecon.com/tools.html">kevinbryanecon.com/tools.html</a> and create your slides locally in your browser. Once your slides are set, click download. You can upload that text file to anywhere you like, then open it with a url query of the form ?xml=...: e.g., <a href="https://kevinbryanecon.com/ModernSlides?xml=Progress2025Class1/Class1Slides.txt">this one here</a></p> 
       <p>Each slide is defined by directives in a Markdown type format. A directive starts a line, ends with a colon `:`, and its value is all text that follows until the next directive. In the text editor, you can use abbrevations, noted like [B:]. That is, if you type B: at the start of a line, Background: will automatically pop up.</p>
-      <p>Press 'e' to toggle between edit and present, 'f' to go to full screen mode, and 'p' to open a presenter mode window.
+      <p>Press 'e' to toggle between edit and present, 'f' to go to full screen mode, 'p' to open a presenter mode window, and 'm' to toggle debug metrics.
       <pre>
       # --- METADATA (place at the top) ---
       Background: image-url.jpg (B:)
@@ -1830,6 +1905,7 @@ const ModernSlideshow = (function() {
     currentAbsoluteSlideIndex: 0,
     mobileTouchStart: null,
     mobileTouchTime: 0,
+    debugMetricsEnabled: false,
 
     // Undo/redo state
     undoStack: [],
@@ -2153,7 +2229,10 @@ const ImageStore = {
       });
     });
 
-    window.addEventListener('resize', () => scheduleOverflowChecks());
+    window.addEventListener('resize', () => {
+      scheduleOverflowChecks();
+      updateDebugMetricsPanel();
+    });
 
     // Keyboard navigation
     // Navigate between slides using arrow keys or page up/down
@@ -2168,6 +2247,12 @@ const ImageStore = {
         "ArrowRight": 1, " ": 1, "PageDown": 1,
         "ArrowLeft": -1, "PageUp": -1
       }[e.key];
+
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        toggleDebugMetrics();
+        return;
+      }
 
       if (navAction) {
         e.preventDefault();
@@ -3248,6 +3333,7 @@ $("raw-text-editor").addEventListener('paste', async (e) => {
     // Update iframes
     state.presenterWindow.document.getElementById('current-slide').srcdoc = currentSlideHTML;
     state.presenterWindow.document.getElementById('next-slide').srcdoc = nextSlideHTML;
+    window.setTimeout(updateDebugMetricsPanel, 60);
 
     // Update notes
     const rawText = getRawTextForSlide(currentIndex);
@@ -4814,6 +4900,7 @@ ${(s.querySelector('raw')?.textContent || '').trim()}`;
     
     updateHUD();
     updatePresenterView();
+    updateDebugMetricsPanel();
     
     if (state.editMode) {
       highlightThumb(state.currentAbsoluteSlideIndex);
@@ -6005,6 +6092,87 @@ async function getThumbnailHTML(rawText, theme) {
      ═══════════════════════════════════════════════════════════════ */
   
   const $ = (id) => document.getElementById(id);
+
+  function roundMetric(value) {
+    return Number.isFinite(value) ? Math.round(value * 100) / 100 : null;
+  }
+
+  function collectFrameMetrics(doc = document) {
+    const activeSlide = doc.querySelector('.slide.active') || doc.querySelector('.slide');
+    const scaler = doc.querySelector('.presentation-scaler');
+    const wrapper = doc.querySelector('.slide-wrapper');
+    const content = activeSlide?.querySelector('.slide-content');
+    const flow = activeSlide?.querySelector('.slide-flow-content');
+    const paragraph = activeSlide?.querySelector('.slide-flow-content p, .slide-content p');
+
+    const scalerRect = scaler?.getBoundingClientRect();
+    const wrapperRect = wrapper?.getBoundingClientRect();
+    const contentRect = content?.getBoundingClientRect();
+    const flowRect = flow?.getBoundingClientRect();
+
+    const ratio = scalerRect && scalerRect.height
+      ? roundMetric(scalerRect.width / scalerRect.height)
+      : null;
+
+    const wrapperStyle = wrapper ? doc.defaultView?.getComputedStyle(wrapper) : null;
+    const paragraphStyle = paragraph ? doc.defaultView?.getComputedStyle(paragraph) : null;
+
+    return {
+      scalerW: roundMetric(scalerRect?.width),
+      scalerH: roundMetric(scalerRect?.height),
+      scalerRatio: ratio,
+      wrapperW: roundMetric(wrapperRect?.width),
+      wrapperH: roundMetric(wrapperRect?.height),
+      contentW: roundMetric(contentRect?.width),
+      contentH: roundMetric(contentRect?.height),
+      flowW: roundMetric(flowRect?.width),
+      flowH: roundMetric(flowRect?.height),
+      baseFont: wrapperStyle ? wrapperStyle.getPropertyValue('--base-font-size').trim() : null,
+      paragraphSize: paragraphStyle ? paragraphStyle.fontSize : null,
+      paragraphLineHeight: paragraphStyle ? paragraphStyle.lineHeight : null
+    };
+  }
+
+  function renderMetricsLine(label, metrics) {
+    if (!metrics) return `${label}: unavailable`;
+    return `${label}: scaler=${metrics.scalerW}×${metrics.scalerH} (r=${metrics.scalerRatio}), wrapper=${metrics.wrapperW}×${metrics.wrapperH}, content=${metrics.contentW}×${metrics.contentH}, flow=${metrics.flowW}×${metrics.flowH}, base=${metrics.baseFont}, p=${metrics.paragraphSize}/${metrics.paragraphLineHeight}`;
+  }
+
+  function updateDebugMetricsPanel() {
+    if (!state.debugMetricsEnabled) return;
+    const panel = $('debug-metrics-panel');
+    if (!panel) return;
+
+    const lines = [];
+    lines.push(`debug metrics | slide ${state.currentAbsoluteSlideIndex + 1} | visible ${state.currentVisibleSlideIndex + 1}`);
+    lines.push(renderMetricsLine('main', collectFrameMetrics(document)));
+
+    if (state.presenterWindow && !state.presenterWindow.closed) {
+      try {
+        const presenterDoc = state.presenterWindow.document;
+        const currentIframe = presenterDoc.getElementById('current-slide');
+        const nextIframe = presenterDoc.getElementById('next-slide');
+        const currentDoc = currentIframe?.contentDocument || null;
+        const nextDoc = nextIframe?.contentDocument || null;
+        lines.push(renderMetricsLine('presenter.current', currentDoc ? collectFrameMetrics(currentDoc) : null));
+        lines.push(renderMetricsLine('presenter.next', nextDoc ? collectFrameMetrics(nextDoc) : null));
+      } catch (err) {
+        lines.push(`presenter: metrics unavailable (${err?.message || 'access error'})`);
+      }
+    } else {
+      lines.push('presenter: closed');
+    }
+
+    panel.textContent = lines.join('\n');
+  }
+
+  function toggleDebugMetrics() {
+    state.debugMetricsEnabled = !state.debugMetricsEnabled;
+    document.body.classList.toggle('debug-metrics-enabled', state.debugMetricsEnabled);
+    if (state.debugMetricsEnabled) {
+      updateDebugMetricsPanel();
+    }
+  }
 
   const SPELLCHECK_GUARD_CHAR = String.fromCodePoint(0x200B);
   const SPELLCHECK_GUARD_CODE = SPELLCHECK_GUARD_CHAR.codePointAt(0);
