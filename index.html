@@ -1089,285 +1089,6 @@ body.debug-metrics-enabled #debug-metrics-panel {
   }
 }
 
-#debug-metrics-panel {
-  position: fixed;
-  top: 0.5rem;
-  left: 0.5rem;
-  z-index: 400;
-  max-width: min(42rem, 92vw);
-  max-height: 42vh;
-  overflow: auto;
-  padding: 0.55rem 0.7rem;
-  border-radius: 0.5rem;
-  background: rgba(12, 12, 14, 0.82);
-  color: #d9f7ff;
-  font: 12px/1.35 var(--editor-mono-font);
-  white-space: pre-wrap;
-  box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.35);
-  display: none;
-  pointer-events: none;
-}
-
-body.debug-metrics-enabled #debug-metrics-panel {
-  display: block;
-}
-
-.frame-context-preview .presentation-scaler,
-.frame-context-presenter .presentation-scaler,
-.frame-context-print .presentation-scaler {
-  box-shadow: none;
-}
-
-.frame-context-preview,
-.frame-context-presenter {
-  background: transparent;
-}
-
-#mobile-nav {
-  display: none;
-  position: fixed;
-  left: 50%;
-  bottom: 1rem;
-  transform: translateX(-50%);
-  z-index: 250;
-  gap: 0.6rem;
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 999px;
-  padding: 0.4rem 0.55rem;
-  backdrop-filter: blur(3px);
-}
-
-#mobile-nav button {
-  border: none;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  min-width: 2.4rem;
-  min-height: 2.4rem;
-  padding: 0 0.7rem;
-  font-size: 0.95rem;
-}
-
-#mobile-nav .mobile-nav-status {
-  color: #fff;
-  font-family: var(--editor-mono-font);
-  font-size: 0.78rem;
-  align-self: center;
-  min-width: 3.5rem;
-  text-align: center;
-}
-
-@media (pointer: coarse), (max-width: 900px) {
-  body.mobile-controls-enabled #mobile-nav {
-    display: inline-flex;
-  }
-}
-
-.frame-context-preview .presentation-scaler,
-.frame-context-presenter .presentation-scaler,
-.frame-context-print .presentation-scaler {
-  box-shadow: none;
-}
-
-.frame-context-preview,
-.frame-context-presenter {
-  background: transparent;
-}
-
-#mobile-nav {
-  display: none;
-  position: fixed;
-  left: 50%;
-  bottom: 1rem;
-  transform: translateX(-50%);
-  z-index: 250;
-  gap: 0.6rem;
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 999px;
-  padding: 0.4rem 0.55rem;
-  backdrop-filter: blur(3px);
-}
-
-#mobile-nav button {
-  border: none;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  min-width: 2.4rem;
-  min-height: 2.4rem;
-  padding: 0 0.7rem;
-  font-size: 0.95rem;
-}
-
-#mobile-nav .mobile-nav-status {
-  color: #fff;
-  font-family: var(--editor-mono-font);
-  font-size: 0.78rem;
-  align-self: center;
-  min-width: 3.5rem;
-  text-align: center;
-}
-
-@media (pointer: coarse), (max-width: 900px) {
-  body.mobile-controls-enabled #mobile-nav {
-    display: inline-flex;
-  }
-}
-
-.frame-context-preview .presentation-scaler,
-.frame-context-presenter .presentation-scaler,
-.frame-context-print .presentation-scaler {
-  box-shadow: none;
-}
-
-.frame-context-preview,
-.frame-context-presenter {
-  background: transparent;
-}
-
-#mobile-nav {
-  display: none;
-  position: fixed;
-  left: 50%;
-  bottom: 1rem;
-  transform: translateX(-50%);
-  z-index: 250;
-  gap: 0.6rem;
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 999px;
-  padding: 0.4rem 0.55rem;
-  backdrop-filter: blur(3px);
-}
-
-#mobile-nav button {
-  border: none;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  min-width: 2.4rem;
-  min-height: 2.4rem;
-  padding: 0 0.7rem;
-  font-size: 0.95rem;
-}
-
-#mobile-nav .mobile-nav-status {
-  color: #fff;
-  font-family: var(--editor-mono-font);
-  font-size: 0.78rem;
-  align-self: center;
-  min-width: 3.5rem;
-  text-align: center;
-}
-
-@media (pointer: coarse), (max-width: 900px) {
-  body.mobile-controls-enabled #mobile-nav {
-    display: inline-flex;
-  }
-}
-
-.frame-context-preview .presentation-scaler,
-.frame-context-presenter .presentation-scaler,
-.frame-context-print .presentation-scaler {
-  box-shadow: none;
-}
-
-.frame-context-preview,
-.frame-context-presenter {
-  background: transparent;
-}
-
-#mobile-nav {
-  display: none;
-  position: fixed;
-  left: 50%;
-  bottom: 1rem;
-  transform: translateX(-50%);
-  z-index: 250;
-  gap: 0.6rem;
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 999px;
-  padding: 0.4rem 0.55rem;
-  backdrop-filter: blur(3px);
-}
-
-#mobile-nav button {
-  border: none;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  min-width: 2.4rem;
-  min-height: 2.4rem;
-  padding: 0 0.7rem;
-  font-size: 0.95rem;
-}
-
-#mobile-nav .mobile-nav-status {
-  color: #fff;
-  font-family: var(--editor-mono-font);
-  font-size: 0.78rem;
-  align-self: center;
-  min-width: 3.5rem;
-  text-align: center;
-}
-
-@media (pointer: coarse), (max-width: 900px) {
-  body.mobile-controls-enabled #mobile-nav {
-    display: inline-flex;
-  }
-}
-
-.frame-context-preview .presentation-scaler,
-.frame-context-presenter .presentation-scaler,
-.frame-context-print .presentation-scaler {
-  box-shadow: none;
-}
-
-.frame-context-preview,
-.frame-context-presenter {
-  background: transparent;
-}
-
-#mobile-nav {
-  display: none;
-  position: fixed;
-  left: 50%;
-  bottom: 1rem;
-  transform: translateX(-50%);
-  z-index: 250;
-  gap: 0.6rem;
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 999px;
-  padding: 0.4rem 0.55rem;
-  backdrop-filter: blur(3px);
-}
-
-#mobile-nav button {
-  border: none;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  min-width: 2.4rem;
-  min-height: 2.4rem;
-  padding: 0 0.7rem;
-  font-size: 0.95rem;
-}
-
-#mobile-nav .mobile-nav-status {
-  color: #fff;
-  font-family: var(--editor-mono-font);
-  font-size: 0.78rem;
-  align-self: center;
-  min-width: 3.5rem;
-  text-align: center;
-}
-
-@media (pointer: coarse), (max-width: 900px) {
-  body.mobile-controls-enabled #mobile-nav {
-    display: inline-flex;
-  }
-}
-
-
 /* ----------------------------- */
 /* --- Presenter Mode Styles --- */
 /* ----------------------------- */
@@ -1471,38 +1192,21 @@ body.debug-metrics-enabled #debug-metrics-panel {
 /* --- PRINT STYLES --- */
 /* ----------------------------- */
 
-/* Hide injected print notes on screen */
+/* Speaker notes only render inside the purpose-built print DOM; see .print-page. */
 .print-notes-content { display: none; }
-
-body.print-with-notes .print-notes-content {
-  display: block !important;
-  position: absolute !important;
-  left: 0 !important; 
-  right: 0 !important; 
-  bottom: 0 !important;
-  /* This calculation matches your print layout (16:9 aspect ratio offset) */
-  top: calc(min(177.78vh, 100vw) * 0.5625) !important; 
-  padding: calc(var(--slide-base-font-size) * 0.4) !important;
-  background: #fff !important;
-  z-index: 2147483647 !important; /* Show on top of everything */
-  overflow: hidden !important; /* Essential for scrollHeight measurement */
-}
 
 /* Hide the website placeholder on screen */
 .website-print-placeholder { display: none; }
 
-@media print {
-  :root {
-    --print-stage-width: min(177.78vh, 100vw);
-    --print-stage-height: calc(var(--print-stage-width) * 0.5625);
-  }
+/* .print-page is only visible during @media print; the main DOM hides it. */
+.print-page { display: none; }
 
+@media print {
   @page {
     size: letter landscape;
     margin: 0;
   }
 
-  /* Allow the printer to see all slides */
   html, body {
     height: auto !important;
     overflow: visible !important;
@@ -1511,148 +1215,92 @@ body.print-with-notes .print-notes-content {
     padding: 0 !important;
   }
 
-  #overflow-measure-stage, .modal, #editor {
+  /* Hide the live app entirely — we render from a purpose-built print DOM. */
+  body > *:not(.print-page) {
     display: none !important;
   }
 
-  .slide.is-fullscreen-image-slide .slide-content {
-    background-size: contain !important;   /* override the generic 'cover' in print */
-    background-color: transparent !important;
-  }
-
-  /* Fix flex-min-height behavior so the 16:9 box never grows on print */
-  .slide > .slide-content {
-    min-height: 0 !important;
-    min-width: 0 !important;
-    flex: 0 0 auto !important;   /* don't stretch to fit content */
-    overflow: hidden !important;  /* hard clip, like the screen view */
-  }
-
-  /* Tame the inline-styled iframe wrapper used for FullScreenWebsite */
-  .slide [style*="z-index: 100"] {
-    /* occupy exactly the 16:9 area, no chrome */
-    width: var(--print-stage-width) !important;
-    height: var(--print-stage-height) !important;
-    top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
-    background: transparent !important; box-shadow: none !important; border-radius: 0 !important;
-  }
-
-  /* When printing with notes, the slide is at the top—align the placeholder with it */
-  body.print-with-notes .slide [style*="z-index: 100"] {
-    top: 0 !important; left: 50% !important; transform: translate(-50%, 0) !important;
-  }
-
-  /* Center the placeholder message fully within the 16:9 area */
-  .slide .website-print-placeholder {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-    width: 100% !important;
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    font-size: calc(var(--base-font-size) * 0.9) !important;
-  }
-  
-  /* Use the exact same container-relative unit for printing */
-  .slide {
-    --base-font-size: var(--slide-base-font-size);
-  }
-
-  /* Hide all on-screen UI chrome */
-  #editor, #progress-bar, .slide-counter, #company-logo, .presenter-controls, #mobile-nav, #debug-metrics-panel {
-    display: none !important;
-  }
-
-  /* Ensure all colors and backgrounds print */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
 
-  /* Flatten on-screen layout containers */
-  .presentation-viewport, .presentation-scaler, .slide-wrapper, #slideshow {
-    position: static !important; display: block !important;
-    width: auto !important; height: auto !important;
-    background: transparent !important; box-shadow: none !important;
-    aspect-ratio: unset !important;
-  }
-
-  /* --- SLIDE PAGE STRUCTURE --- */
-  .slide {
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important; /* Center slide vertically by default */
-    justify-content: center !important;
-    width: 100vw !important; height: 100vh !important;
-    overflow: hidden !important;
-    margin: 0 !important; padding: 0 !important;
-    opacity: 1 !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
+  /* One physical page per slide, each containing its own 1600x900 stage. */
+  .print-page {
+    display: block;
+    position: relative;
+    width: 11in;
+    height: 8.5in;
+    overflow: hidden;
+    background: #fff;
     page-break-after: always;
     break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .print-page:last-of-type {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  /* The stage itself keeps its 1600x900 virtual size so container queries
+     (3cqw, etc.) resolve identically to every screen view. Only the final
+     transform differs: it maps 1600x900 -> the letter landscape page. */
+  .print-page .presentation-viewport {
+    width: 100%;
+    height: 100%;
     background: transparent !important;
-    background-image: none !important; /* keep imagery inside the 16:9 box */
-  }
-  .slide:last-of-type { 
-    page-break-after: auto !important; 
-    break-after: auto !important; 
-  }
-  .slide.hidden-in-presentation { display: none !important; }
-  
-  /* --- 16:9 CONTENT BOX (THE "PRINTABLE SCREEN") --- */
-  .slide-content {
-    position: relative !important; display: flex !important;
-    box-sizing: border-box !important; overflow: hidden !important;
-    background-color: var(--bg-color) !important;
-    background-size: cover !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-    width: var(--print-stage-width) !important;
-    height: var(--print-stage-height) !important;
-    margin: 0 auto !important;
-    container-type: inline-size;
-    container-name: print-slide-container;
+    box-shadow: none !important;
   }
 
-  .slide-content.has-background-image {
-    background-color: var(--slide-content-bg-if-image) !important;
+  .print-page .presentation-scaler {
+    box-shadow: none !important;
+    transform: scale(min(calc(11in / 1600px), calc(8.5in / 900px))) !important;
+    transform-origin: center center;
   }
 
-  .slide.is-fullscreen-image-slide .slide-content {
-    background-color: transparent !important;
+  .print-page .slide {
+    opacity: 1 !important;
   }
 
-  /* Show iframes and hide their placeholders */
-  .slide iframe { display: none !important; }
-  .website-print-placeholder { display: flex !important; }
-
-  /* When printing with notes, push the slide to the top of the page */
-  body.print-with-notes .slide {
-    align-items: flex-start !important;
+  /* Fullscreen website iframes can't print; swap for placeholder. */
+  .print-page .slide iframe { display: none !important; }
+  .print-page .website-print-placeholder {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    font-size: calc(var(--base-font-size) * 0.9) !important;
   }
-
-  /* Shrink the slide's 16:9 container to make room at the bottom. */
-  body.print-with-notes .slide-content {
-    height: var(--print-stage-height) !important;
-  }
-
-  /* ]Make the notes area visible and position it in the new empty space. */
-  body.print-with-notes .print-notes-content {
-    display: block !important;
+  .print-page .slide [style*="z-index: 100"] {
     position: absolute !important;
-    left: 0 !important; right: 0 !important; bottom: 0 !important;
-    top: var(--print-stage-height) !important; /* Start exactly where the slide content ends */
-    padding: calc(var(--base-font-size) * 0.4) calc(var(--base-font-size) * 0.8) !important;
-    background: #fff !important;
-    height: auto; 
-    font-size: calc(var(--base-font-size) * 0.8);
-    line-height: 1.4 !important;
-    z-index: 2147483647 !important;
-    color: #cc0000 !important; 
+    inset: 0 !important;
+    width: 100% !important; height: 100% !important;
+    transform: none !important;
+    background: transparent !important; box-shadow: none !important; border-radius: 0 !important;
+  }
+
+  /* Print-with-notes: top 5.5in is the slide stage, rest is notes. */
+  .print-page.print-page-with-notes {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .print-page.print-page-with-notes .presentation-viewport {
+    flex: 0 0 auto;
+    height: 5.5in;
+  }
+  .print-page.print-page-with-notes .print-notes-content {
+    display: block !important;
+    flex: 1 1 auto;
+    overflow: hidden;
+    padding: 0.12in 0.25in;
+    background: #fff;
+    color: #cc0000;
+    line-height: 1.4;
+    box-sizing: border-box;
   }
 }
 </style>
@@ -1880,6 +1528,22 @@ const ModernSlideshow = (function() {
   const DEFAULT_NEW_SLIDE_CONTENT = "Title: New Slide\n\nText: Edit this content.";
   const VIRTUAL_STAGE_WIDTH = 1600;
   const VIRTUAL_STAGE_HEIGHT = 900;
+
+  // Single source of truth for fitting the 1600x900 stage into any viewport.
+  // Stringified and embedded into iframe srcdoc so every rendering context uses
+  // identical math. Do not read from closure variables in this function body.
+  function fitStage(viewport, scaler, W, H) {
+    if (!viewport || !scaler) return 0;
+    W = W || 1600;
+    H = H || 900;
+    var view = viewport.ownerDocument && viewport.ownerDocument.defaultView;
+    var vw = viewport.clientWidth || (view && view.innerWidth) || W;
+    var vh = viewport.clientHeight || (view && view.innerHeight) || H;
+    var s = Math.max(0.01, Math.min(vw / W, vh / H));
+    scaler.style.transform = 'scale(' + s + ')';
+    scaler.style.setProperty('--virtual-scale', String(s));
+    return s;
+  }
 
   function clampTextScale(value) {
     if (!Number.isFinite(value)) return DEFAULT_TEXT_SCALE;
@@ -2235,28 +1899,105 @@ const ImageStore = {
   function fitPrintNotesToBox() {
     if (!document.body.classList.contains('print-with-notes')) return;
 
-    const notesEls = document.querySelectorAll('.print-notes-content');
+    const notesEls = document.querySelectorAll('.print-page .print-notes-content');
     if (!notesEls.length) return;
 
     notesEls.forEach((el) => {
-      const pageW = el.getBoundingClientRect().width || window.innerWidth;
-      const notesHeightPx = pageW * 0.35;
-
-      el.style.setProperty('height', notesHeightPx + 'px', 'important');
       el.style.setProperty('overflow', 'hidden', 'important');
 
-      // Start large and shrink
+      // Start large and shrink to fit the reserved notes area.
       let fontSizePx = 36;
       el.style.setProperty('font-size', fontSizePx + 'px', 'important');
 
       const minFontPx = 8;
-
-      // Shrink until it fits
       while (el.scrollHeight > el.clientHeight && fontSizePx > minFontPx) {
         fontSizePx -= 1;
         el.style.setProperty('font-size', fontSizePx + 'px', 'important');
       }
     });
+  }
+
+  // Build a purpose-built print DOM: one .print-page per visible slide, each
+  // containing an independent 1600x900 stage (viewport/scaler/wrapper/slide).
+  // The @media print CSS scales each stage to fit letter landscape. Because
+  // the stage is the same 1600x900 everywhere, container queries (3cqw, etc.)
+  // resolve identically to screen and iframe views — so line wraps match.
+  function buildPrintDOM() {
+    teardownPrintDOM();
+
+    const withNotes = document.body.classList.contains('print-with-notes');
+    const slides = state.slideEls || [];
+    if (!slides.length) return;
+
+    const frag = document.createDocumentFragment();
+
+    slides.forEach((slideEl, idx) => {
+      if (!slideEl) return;
+      if (slideEl.classList.contains('hidden-in-presentation')) return;
+
+      const page = document.createElement('div');
+      page.className = 'print-page';
+      if (withNotes) page.classList.add('print-page-with-notes');
+
+      const viewport = document.createElement('div');
+      viewport.className = 'presentation-viewport';
+
+      const scaler = document.createElement('div');
+      scaler.className = 'presentation-scaler';
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'slide-wrapper';
+
+      const slideshow = document.createElement('div');
+      slideshow.className = 'print-slideshow';
+      slideshow.style.position = 'relative';
+      slideshow.style.width = '100%';
+      slideshow.style.height = '100%';
+
+      const slideClone = slideEl.cloneNode(true);
+      slideClone.classList.add('active');
+      slideClone.classList.remove('hidden-in-presentation');
+      // Swap embedded iframes (FullScreenWebsite) for their placeholders.
+      slideClone.querySelectorAll('iframe').forEach((f) => {
+        const parent = f.parentElement;
+        const placeholder = parent && parent.querySelector('.website-print-placeholder');
+        if (placeholder) placeholder.style.display = 'flex';
+        f.remove();
+      });
+      // Drop any notes that were cloned from screen DOM; we re-inject below.
+      slideClone.querySelectorAll('.print-notes-content').forEach((n) => n.remove());
+
+      slideshow.appendChild(slideClone);
+      wrapper.appendChild(slideshow);
+      scaler.appendChild(wrapper);
+      viewport.appendChild(scaler);
+      page.appendChild(viewport);
+
+      if (withNotes) {
+        try {
+          const rawText = getRawTextForSlide(idx);
+          const { attributes } = parseRawText(rawText);
+          if (attributes && attributes.printNotes) {
+            const notesEl = document.createElement('div');
+            notesEl.className = 'print-notes-content';
+            notesEl.innerHTML = plainTextToHtml(attributes.printNotes);
+            page.appendChild(notesEl);
+          }
+        } catch (e) { /* ignore per-slide notes failure */ }
+      }
+
+      frag.appendChild(page);
+    });
+
+    document.body.appendChild(frag);
+    // Note: math is already typeset in the live .slide nodes (see
+    // buildSlidesFromXMLDoc), and cloneNode(true) preserves the rendered SVG,
+    // so no MathJax.typesetPromise call is needed here — and a call would be
+    // async, racing the synchronous window.print().
+  }
+
+  function teardownPrintDOM() {
+    document.querySelectorAll('.print-page').forEach((n) => n.remove());
   }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2265,39 +2006,15 @@ const ImageStore = {
 
   function setupEventHandlers() {
     initSelectionToolbar();
-    // ensure print is small pdf w/ embedded websites
     window.addEventListener('beforeprint', () => {
       document.body.classList.add('frame-context-print');
-      // Flush any pending debounced updates before printing
+      // Flush pending edits so the print DOM reflects the latest content.
       if (typeof debouncedValidateAndUpdate !== 'undefined' && debouncedValidateAndUpdate.flush) {
         debouncedValidateAndUpdate.flush();
       }
 
-      if (document.body.classList.contains('print-with-notes')) {
-        const activeIndex = state.currentAbsoluteSlideIndex;
-        const activeSlideEl = state.slideEls[activeIndex];
+      buildPrintDOM();
 
-       if (activeSlideEl) {
-         const rawText = getRawTextForSlide(activeIndex);
-         const { attributes } = parseRawText(rawText);
-
-       if (attributes.printNotes) {
-          let notesDiv = activeSlideEl.querySelector('.print-notes-content');
-          if (!notesDiv) {
-             notesDiv = document.createElement('div');
-             notesDiv.className = 'print-notes-content';
-             activeSlideEl.appendChild(notesDiv);
-           }
-	 // Overwrite whatever is there with the real text
-        notesDiv.innerHTML = plainTextToHtml(attributes.printNotes);
-        }
-       }
-      }
-
-      document.querySelectorAll('.slide iframe').forEach((f) => {
-        f.dataset.src = f.src;        // remember
-        f.src = 'about:blank';        // blank it so nothing gets rasterized
-      });
       if (document.body.classList.contains('print-with-notes')) {
         fitPrintNotesToBox();
       }
@@ -2305,10 +2022,7 @@ const ImageStore = {
 
     window.addEventListener('afterprint', () => {
       document.body.classList.remove('frame-context-print');
-      document.querySelectorAll('.slide iframe[data-src]').forEach((f) => {
-        f.src = f.dataset.src;        // restore
-        delete f.dataset.src;
-      });
+      teardownPrintDOM();
     });
 
     window.addEventListener('resize', () => {
@@ -2745,38 +2459,19 @@ $("download-txt-btn").onclick = async () => {
 };
 
 
-    // Print with PrintNote class notes button
+    // Print with PrintNote class notes button. buildPrintDOM() (called by the
+    // beforeprint handler) reads attributes.printNotes for each slide and
+    // injects them into the generated print DOM.
     $("print-notes-btn").onclick = () => {
-      //  Save the current textarea 
-      updateGroundTruth('SAVE');          
-      buildSlidesFromXMLDoc();  
+      updateGroundTruth('SAVE');
+      buildSlidesFromXMLDoc();
 
-      // Add print notes class to body
       document.body.classList.add('print-with-notes');
-      
-      // Inject print notes into slides
-      state.slideEls.forEach((slideEl, index) => {
-        const rawText = getRawTextForSlide(index);
-        const { attributes } = parseRawText(rawText);
-        
-        // Remove any existing print notes div
-        const existingNotes = slideEl.querySelector('.print-notes-content');
-        if (existingNotes) existingNotes.remove();
-        
-        if (attributes.printNotes) {
-          const printNotesDiv = document.createElement('div');
-          printNotesDiv.className = 'print-notes-content';
-          printNotesDiv.innerHTML = plainTextToHtml(attributes.printNotes);
-          slideEl.appendChild(printNotesDiv);
-        }
-      });
 
-      // Clean up after print
       setTimeout(() => {
         window.print();
         document.body.classList.remove('print-with-notes');
-        document.querySelectorAll('.print-notes-content').forEach(el => el.remove());
-      }, 1000);
+      }, 100);
     };
 
 
@@ -5182,22 +4877,21 @@ async function generateSlideFrameHTML(slideContent, theme, options = {}) {
     frameContextClass = ''
   } = options;
 
-  // Handle both raw text input and pre-rendered HTML elements
   let slideElement;
   if (typeof slideContent === 'string') {
-    // Raw text - create new slide element
     slideElement = createSlideElement(slideContent);
   } else {
-    // Pre-rendered HTML element - clone it
     slideElement = slideContent.cloneNode(true);
   }
 
-  // Remove hidden-in-presentation class if requested (for thumbnails)
   if (removeHiddenClass) {
     slideElement.classList.remove('hidden-in-presentation');
   }
 
-  // For thumbnails: remove iframes and show placeholders
+  // The iframe shows exactly one slide; mark it active so the normal
+  // .slide/.slide.active opacity transition resolves to visible.
+  slideElement.classList.add('active');
+
   if (forThumbnail) {
     slideElement.querySelectorAll('iframe').forEach((iframe) => {
       const wrapper = iframe.parentElement;
@@ -5210,43 +4904,27 @@ async function generateSlideFrameHTML(slideContent, theme, options = {}) {
   }
 
   const slideElementHTML = slideElement.outerHTML;
-
-  // Get the theme CSS
   const themeLink = document.getElementById(`${theme}-stylesheet`);
   const themeHref = themeLink ? themeLink.href : '';
+  const coreStyles = document.getElementById('core-styles').textContent;
 
-  // Generate complete standalone HTML document
+  // MathJax config must mirror the parent document's <head> config (line ~22)
+  const mathJaxConfig = `window.MathJax = {
+    tex: { inlineMath: [["$", "$"], ["\\\\(", "\\\\)"]], displayMath: [["$$", "$$"], ["\\\\[", "\\\\]"]], processEscapes: true },
+    svg: { fontCache: "global" }
+  };`;
+
+  // Embed parent's fitStage source verbatim so scaling math is bit-identical.
+  const fitStageSource = fitStage.toString();
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <style>
-    ${document.getElementById('core-styles').textContent}
-    html, body { width: 100%; height: 100%; }
-    body { margin: 0; overflow: hidden; }
-    .presentation-viewport {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .presentation-scaler {
-      position: relative;
-      width: ${VIRTUAL_STAGE_WIDTH}px;
-      height: ${VIRTUAL_STAGE_HEIGHT}px;
-      aspect-ratio: auto;
-      overflow: hidden;
-      transform-origin: center center;
-    }
-    .presentation-scaler > .slide-wrapper {
-      width: 100%;
-      height: 100%;
-    }
-    #slideshow { position: relative; width: 100%; height: 100%; }
-    .slide { position: absolute; inset: 0; display: flex !important; opacity: 1 !important; }
-  </style>
+  <style>${coreStyles}</style>
   <link rel="stylesheet" href="${themeHref}">
+  <script>${mathJaxConfig}<\/script>
+  <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"><\/script>
 </head>
 <body class="${theme} ${frameContextClass}">
   <div class="presentation-viewport">
@@ -5257,21 +4935,19 @@ async function generateSlideFrameHTML(slideContent, theme, options = {}) {
     </div>
   </div>
   <script>
+    ${fitStageSource}
     (function() {
-      const W = ${VIRTUAL_STAGE_WIDTH};
-      const H = ${VIRTUAL_STAGE_HEIGHT};
-      const viewport = document.querySelector('.presentation-viewport');
-      const scaler = document.querySelector('.presentation-scaler');
-      if (!viewport || !scaler) return;
-      const fit = () => {
-        const vw = viewport.clientWidth || window.innerWidth || W;
-        const vh = viewport.clientHeight || window.innerHeight || H;
-        const s = Math.max(0.01, Math.min(vw / W, vh / H));
-        scaler.style.transform = 'scale(' + s + ')';
-        scaler.style.setProperty('--virtual-scale', String(s));
-      };
-      fit();
-      window.addEventListener('resize', fit);
+      var W = ${VIRTUAL_STAGE_WIDTH};
+      var H = ${VIRTUAL_STAGE_HEIGHT};
+      function runFit() {
+        fitStage(
+          document.querySelector('.presentation-viewport'),
+          document.querySelector('.presentation-scaler'),
+          W, H
+        );
+      }
+      runFit();
+      window.addEventListener('resize', runFit);
     })();
   <\/script>
 </body>
@@ -6248,85 +5924,41 @@ async function getThumbnailHTML(rawText, theme) {
     return `${label}: scaler=${metrics.scalerW}×${metrics.scalerH} (r=${metrics.scalerRatio}), wrapper=${metrics.wrapperW}×${metrics.wrapperH}, content=${metrics.contentW}×${metrics.contentH}, flow=${metrics.flowW}×${metrics.flowH}, scale=${metrics.virtualScale || 'n/a'}, base=${metrics.baseFont}, p=${metrics.paragraphSize}/${metrics.paragraphLineHeight}`;
   }
 
-  function updateDebugMetricsPanel() {
-    if (!state.debugMetricsEnabled) return;
-    const panel = $('debug-metrics-panel');
-    if (!panel) return;
+  // Parse a computed font-size string like "48px" into a number.
+  function parsePxLike(value) {
+    if (!value) return null;
+    const match = String(value).match(/([-\d.]+)/);
+    if (!match) return null;
+    const n = parseFloat(match[1]);
+    return Number.isFinite(n) ? n : null;
+  }
 
-    const lines = [];
-    lines.push(`debug metrics | slide ${state.currentAbsoluteSlideIndex + 1} | visible ${state.currentVisibleSlideIndex + 1}`);
-    lines.push(renderMetricsLine('main', collectFrameMetrics(document)));
+  // The whole point of the shared 1600x900 stage is that wrapper width and
+  // paragraph font-size resolve to the same values in every view. If those
+  // diverge by more than a sub-pixel, wrapping will differ — warn loudly so
+  // regressions can't hide.
+  function checkStageParity(metricsByLabel) {
+    const entries = Object.entries(metricsByLabel).filter(([, m]) => m && m.wrapperW && m.paragraphSize);
+    if (entries.length < 2) return null;
 
-    if (state.presenterWindow && !state.presenterWindow.closed) {
-      try {
-        const presenterDoc = state.presenterWindow.document;
-        const currentIframe = presenterDoc.getElementById('current-slide');
-        const nextIframe = presenterDoc.getElementById('next-slide');
-        const currentDoc = currentIframe?.contentDocument || null;
-        const nextDoc = nextIframe?.contentDocument || null;
-        lines.push(renderMetricsLine('presenter.current', currentDoc ? collectFrameMetrics(currentDoc) : null));
-        lines.push(renderMetricsLine('presenter.next', nextDoc ? collectFrameMetrics(nextDoc) : null));
-      } catch (err) {
-        lines.push(`presenter: metrics unavailable (${err?.message || 'access error'})`);
+    const baseline = entries[0];
+    const warnings = [];
+    for (let i = 1; i < entries.length; i++) {
+      const [label, m] = entries[i];
+      const wrapperDelta = Math.abs((m.wrapperW || 0) - (baseline[1].wrapperW || 0));
+      const fontDelta = Math.abs(
+        (parsePxLike(m.paragraphSize) || 0) - (parsePxLike(baseline[1].paragraphSize) || 0)
+      );
+      if (wrapperDelta > 0.5 || fontDelta > 0.5) {
+        warnings.push(
+          `${label} vs ${baseline[0]}: wrapperΔ=${wrapperDelta.toFixed(2)}px, fontΔ=${fontDelta.toFixed(2)}px`
+        );
       }
-    } else {
-      lines.push('presenter: closed');
     }
-
-    panel.textContent = lines.join('\n');
-  }
-
-  function toggleDebugMetrics() {
-    state.debugMetricsEnabled = !state.debugMetricsEnabled;
-    document.body.classList.toggle('debug-metrics-enabled', state.debugMetricsEnabled);
-    if (state.debugMetricsEnabled) {
-      updateDebugMetricsPanel();
-    }
-  }
-
-  function roundMetric(value) {
-    return Number.isFinite(value) ? Math.round(value * 100) / 100 : null;
-  }
-
-  function collectFrameMetrics(doc = document) {
-    const activeSlide = doc.querySelector('.slide.active') || doc.querySelector('.slide');
-    const scaler = doc.querySelector('.presentation-scaler');
-    const wrapper = doc.querySelector('.slide-wrapper');
-    const content = activeSlide?.querySelector('.slide-content');
-    const flow = activeSlide?.querySelector('.slide-flow-content');
-    const paragraph = activeSlide?.querySelector('.slide-flow-content p, .slide-content p');
-
-    const scalerRect = scaler?.getBoundingClientRect();
-    const wrapperRect = wrapper?.getBoundingClientRect();
-    const contentRect = content?.getBoundingClientRect();
-    const flowRect = flow?.getBoundingClientRect();
-
-    const ratio = scalerRect && scalerRect.height
-      ? roundMetric(scalerRect.width / scalerRect.height)
-      : null;
-
-    const wrapperStyle = wrapper ? doc.defaultView?.getComputedStyle(wrapper) : null;
-    const paragraphStyle = paragraph ? doc.defaultView?.getComputedStyle(paragraph) : null;
-
-    return {
-      scalerW: roundMetric(scalerRect?.width),
-      scalerH: roundMetric(scalerRect?.height),
-      scalerRatio: ratio,
-      wrapperW: roundMetric(wrapperRect?.width),
-      wrapperH: roundMetric(wrapperRect?.height),
-      contentW: roundMetric(contentRect?.width),
-      contentH: roundMetric(contentRect?.height),
-      flowW: roundMetric(flowRect?.width),
-      flowH: roundMetric(flowRect?.height),
-      baseFont: wrapperStyle ? wrapperStyle.getPropertyValue('--base-font-size').trim() : null,
-      paragraphSize: paragraphStyle ? paragraphStyle.fontSize : null,
-      paragraphLineHeight: paragraphStyle ? paragraphStyle.lineHeight : null
-    };
-  }
-
-  function renderMetricsLine(label, metrics) {
-    if (!metrics) return `${label}: unavailable`;
-    return `${label}: scaler=${metrics.scalerW}×${metrics.scalerH} (r=${metrics.scalerRatio}), wrapper=${metrics.wrapperW}×${metrics.wrapperH}, content=${metrics.contentW}×${metrics.contentH}, flow=${metrics.flowW}×${metrics.flowH}, base=${metrics.baseFont}, p=${metrics.paragraphSize}/${metrics.paragraphLineHeight}`;
+    if (!warnings.length) return null;
+    const msg = 'stage parity drift: ' + warnings.join(' | ');
+    console.warn('[ModernSlides]', msg);
+    return msg;
   }
 
   function updateDebugMetricsPanel() {
@@ -6336,7 +5968,10 @@ async function getThumbnailHTML(rawText, theme) {
 
     const lines = [];
     lines.push(`debug metrics | slide ${state.currentAbsoluteSlideIndex + 1} | visible ${state.currentVisibleSlideIndex + 1}`);
-    lines.push(renderMetricsLine('main', collectFrameMetrics(document)));
+
+    const metricsByLabel = {};
+    metricsByLabel.main = collectFrameMetrics(document);
+    lines.push(renderMetricsLine('main', metricsByLabel.main));
 
     if (state.presenterWindow && !state.presenterWindow.closed) {
       try {
@@ -6345,14 +5980,19 @@ async function getThumbnailHTML(rawText, theme) {
         const nextIframe = presenterDoc.getElementById('next-slide');
         const currentDoc = currentIframe?.contentDocument || null;
         const nextDoc = nextIframe?.contentDocument || null;
-        lines.push(renderMetricsLine('presenter.current', currentDoc ? collectFrameMetrics(currentDoc) : null));
-        lines.push(renderMetricsLine('presenter.next', nextDoc ? collectFrameMetrics(nextDoc) : null));
+        if (currentDoc) metricsByLabel['presenter.current'] = collectFrameMetrics(currentDoc);
+        if (nextDoc) metricsByLabel['presenter.next'] = collectFrameMetrics(nextDoc);
+        lines.push(renderMetricsLine('presenter.current', metricsByLabel['presenter.current'] || null));
+        lines.push(renderMetricsLine('presenter.next', metricsByLabel['presenter.next'] || null));
       } catch (err) {
         lines.push(`presenter: metrics unavailable (${err?.message || 'access error'})`);
       }
     } else {
       lines.push('presenter: closed');
     }
+
+    const parityWarning = checkStageParity(metricsByLabel);
+    if (parityWarning) lines.push('WARN ' + parityWarning);
 
     panel.textContent = lines.join('\n');
   }
@@ -6634,15 +6274,12 @@ window.resolveImagePath = function(imageSrc, baseUrl) {
 };
 
   function fitPresentationScaler(doc = document) {
-    const viewport = doc.querySelector('.presentation-viewport');
-    const scaler = doc.querySelector('.presentation-scaler');
-    if (!viewport || !scaler) return;
-
-    const availableW = viewport.clientWidth || doc.defaultView?.innerWidth || VIRTUAL_STAGE_WIDTH;
-    const availableH = viewport.clientHeight || doc.defaultView?.innerHeight || VIRTUAL_STAGE_HEIGHT;
-    const scale = Math.max(0.01, Math.min(availableW / VIRTUAL_STAGE_WIDTH, availableH / VIRTUAL_STAGE_HEIGHT));
-    scaler.style.transform = `scale(${scale})`;
-    scaler.style.setProperty('--virtual-scale', String(scale));
+    fitStage(
+      doc.querySelector('.presentation-viewport'),
+      doc.querySelector('.presentation-scaler'),
+      VIRTUAL_STAGE_WIDTH,
+      VIRTUAL_STAGE_HEIGHT
+    );
   }
 
   
