@@ -1286,23 +1286,28 @@ body.debug-metrics-enabled #debug-metrics-panel {
     background: transparent !important; box-shadow: none !important; border-radius: 0 !important;
   }
 
-  /* Print-with-notes: top 5.5in is the slide stage, rest is notes. */
+  /* Print-with-notes: slide occupies the natural 16:9 box at 11in wide
+     (= 6.1875in tall), notes fill the remaining 2.3125in below. The scaler
+     transform also drops to that height so 1600x900 fits exactly. */
   .print-page.print-page-with-notes {
     display: flex !important;
     flex-direction: column !important;
   }
   .print-page.print-page-with-notes .presentation-viewport {
     flex: 0 0 auto;
-    height: 5.5in;
+    height: 6.1875in;
+  }
+  .print-page.print-page-with-notes .presentation-scaler {
+    transform: scale(min(calc(11in / 1600px), calc(6.1875in / 900px))) !important;
   }
   .print-page.print-page-with-notes .print-notes-content {
     display: block !important;
     flex: 1 1 auto;
     overflow: hidden;
-    padding: 0.12in 0.25in;
+    padding: 0.1in 0.25in;
     background: #fff;
     color: #cc0000;
-    line-height: 1.4;
+    line-height: 1.35;
     box-sizing: border-box;
   }
 }
@@ -5556,6 +5561,23 @@ async function getThumbnailHTML(rawText, theme) {
       return renderTableHtmlFromContent(tableMatch[1] || '');
     }
 
+    // Image: directive at the start of a cell — same syntax as top-level.
+    const imageMatch = content.match(/^\s*Image:\s*([\s\S]*)$/i);
+    if (imageMatch) {
+      const [url, ...captionParts] = (imageMatch[1] || '').split(/,(.*)/s);
+      const caption = (captionParts[0] || '').trim();
+      const resolvedUrl = resolveImagePath((url || '').trim(), window.presentationBaseUrl);
+      return `<div class="img-container"><img src="${escapeHtml(resolvedUrl)}" alt="${escapeHtml(caption)}"><div class="caption">${renderRichContent(caption)}</div></div>`;
+    }
+
+    // Break: N at the start of a cell — vertical space, same as top-level.
+    const breakMatch = content.match(/^\s*Break:\s*(.*)$/i);
+    if (breakMatch) {
+      const n = parseFloat((breakMatch[1] || '1').replace(',', '.'));
+      const linesAmt = Number.isFinite(n) && n > 0 ? n : 1;
+      return `<div aria-hidden="true" style="display:block;height:calc(${linesAmt} * 1lh);"></div>`;
+    }
+
     const textModeMatch = content.match(/^\s*([A-Za-z][A-Za-z0-9.]*):\s*([\s\S]*)$/);
     if (textModeMatch) {
       const modeState = interpretModeKeyword(textModeMatch[1], textModeMatch[2]);
@@ -5584,14 +5606,17 @@ async function getThumbnailHTML(rawText, theme) {
  
   function resolveDirectiveToken(rawToken) {
     if (!rawToken) return null;
+    const lower = rawToken.toLowerCase();
 
-    if (METADATA_DIRECTIVES.includes(rawToken)) {
-      return { name: rawToken, isMetadata: true };
+    const metaCanonical = METADATA_DIRECTIVES.find((d) => d.toLowerCase() === lower);
+    if (metaCanonical) {
+      return { name: metaCanonical, isMetadata: true };
     }
 
-    if (CONTENT_DIRECTIVES.includes(rawToken)) {
-      const info = { name: rawToken, isMetadata: false };
-      if (rawToken === 'Text') {
+    const contentCanonical = CONTENT_DIRECTIVES.find((d) => d.toLowerCase() === lower);
+    if (contentCanonical) {
+      const info = { name: contentCanonical, isMetadata: false };
+      if (contentCanonical === 'Text') {
         info.textScale = DEFAULT_TEXT_SCALE;
       }
       return info;
@@ -5599,7 +5624,6 @@ async function getThumbnailHTML(rawText, theme) {
 
     const modeState = interpretModeKeyword(rawToken);
     if (modeState && modeState.name === 'Text') {
-      const lower = rawToken.toLowerCase();
       if (lower.startsWith('text') && lower !== 'text') {
         return { name: 'Text', isMetadata: false, textScale: modeState.textScale };
       }
@@ -5615,9 +5639,6 @@ async function getThumbnailHTML(rawText, theme) {
 
     let currentDirective = { name: 'Text', isMetadata: false, textScale: DEFAULT_TEXT_SCALE, args: null };
     let buffer = [];
-
-    // Directives allowed to exist INSIDE a Column without breaking it
-    const NESTABLE_DIRECTIVES = ['Image', 'BigText', 'SmallText', 'TinyText', 'Text', 'Break', 'Blockquote', 'Table'];
 
     function processBuffer() {
       if (buffer.length === 0) return;
@@ -5790,6 +5811,14 @@ async function getThumbnailHTML(rawText, theme) {
                       hasTextBlock = true;
                       continue;
                     }
+
+                    if (nestedDirective?.name === 'Break') {
+                      flushText();
+                      const n = parseFloat((dirMatch[2] || '1').replace(',', '.'));
+                      const linesAmt = Number.isFinite(n) && n > 0 ? n : 1;
+                      blocks.push(`<div aria-hidden="true" style="display:block;height:calc(${linesAmt} * 1lh);"></div>`);
+                      continue;
+                    }
                  }
               }
 
@@ -5834,24 +5863,24 @@ async function getThumbnailHTML(rawText, theme) {
         const rawName = match[1];
         const token = resolveDirectiveToken(rawName);
 
-        if (currentDirective && currentDirective.name === 'Columns') {
-           if (token && NESTABLE_DIRECTIVES.includes(token.name)) {
-
-             // 1. Are we at the start of the first column?
-             // (Buffer contains only whitespace/empty lines so far)
-             const isStartOfColumn = buffer.every(line => line.trim() === '');
-
-             // 2. Are we immediately after a separator?
-             const lastLine = buffer.length > 0 ? buffer[buffer.length - 1].trim() : '';
-             const isAfterSeparator = (lastLine === '---' || lastLine === '----');
-
-             // If we are at the start (modifying first col) OR right after a separator, allow nesting.
-             if (isStartOfColumn || isAfterSeparator) {
-                buffer.push(line);
-                continue;
-             }
-           }
-           // Otherwise, fall through to close the column
+        // Inside Table or Columns, a directive-looking line stays as container
+        // content unless it follows an explicit blank line. This lets users
+        // write SmallText: / Break: / Image: / etc. inside a column or between
+        // table rows without accidentally exiting the container; to leave the
+        // container, insert a blank line before the next directive.
+        if (
+          currentDirective &&
+          (currentDirective.name === 'Table' || currentDirective.name === 'Columns')
+        ) {
+          const lastBufferLine = buffer.length > 0 ? buffer[buffer.length - 1] : null;
+          const lastLineIsBlank = lastBufferLine !== null && lastBufferLine.trim() === '';
+          const bufferHasContent = buffer.some((l) => l.trim() !== '');
+          const closeContainer = lastLineIsBlank && bufferHasContent;
+          if (!closeContainer) {
+            buffer.push(line);
+            continue;
+          }
+          // else: fall through to close Table/Columns and start the new directive
         }
 
         if (token) {
