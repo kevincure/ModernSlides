@@ -1696,6 +1696,100 @@ body.edit-mode #presentation-view { visibility: hidden; pointer-events: none; }
 .help-gallery-link { display:inline-flex; align-items:center; gap:.4rem; margin-top:.35rem; padding:.55rem .75rem; border:1px solid #bbb; border-radius:.3rem; background:#faf9f5; color:#222; font-weight:700; text-decoration:none; }
 .help-gallery-link:hover { border-color:#222; background:#fff; }
 
+.publish-card {
+  width: min(620px, 96vw);
+}
+
+.publish-intro {
+  margin: -.2rem 0 1rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+.publish-field {
+  display: grid;
+  gap: .38rem;
+  margin: 1rem 0;
+}
+
+.publish-field label {
+  color: #444;
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.publish-field input {
+  width: 100%;
+  padding: .7rem .75rem;
+  border: 1px solid #bbb;
+  border-radius: .28rem;
+  background: #fff;
+  color: #222;
+  font: 16px/1.35 var(--ui-font);
+}
+
+.publish-field input:focus {
+  outline: 2px solid #222;
+  outline-offset: 1px;
+  border-color: #222;
+}
+
+.publish-field-help {
+  color: #777;
+  font-size: .78rem;
+  line-height: 1.4;
+}
+
+.publish-destination {
+  margin: .85rem 0;
+  padding: .75rem .85rem;
+  border: 1px solid #ddd;
+  border-radius: .3rem;
+  background: #f7f5ef;
+  line-height: 1.45;
+}
+
+.publish-destination-label {
+  display: block;
+  margin-bottom: .25rem;
+  color: #666;
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.publish-destination code {
+  font-family: var(--ui-mono);
+  font-size: .86rem;
+  overflow-wrap: anywhere;
+}
+
+.publish-readme {
+  margin: 1rem 0 .25rem;
+  padding-top: .85rem;
+  border-top: 1px solid #e0ddd5;
+  color: #555;
+  font-size: .84rem;
+  line-height: 1.45;
+}
+
+.publish-readme a {
+  color: #222;
+  font-weight: 700;
+}
+
+.publish-error {
+  margin: .8rem 0 0;
+  padding: .65rem .75rem;
+  border: 1px solid #d6aaaa;
+  border-radius: .28rem;
+  background: #fff3f3;
+  color: #8a2020;
+  font-size: .84rem;
+  line-height: 1.4;
+}
+
 /* ---------- Hidden canonical render bank ---------- */
 #render-bank { position:fixed; left:-20000px; top:0; width:1600px; visibility:hidden; pointer-events:none; z-index:-999; }
 
@@ -1827,8 +1921,8 @@ body.edit-mode #presentation-view { visibility: hidden; pointer-events: none; }
         </div>
         <div id="notes-pane">
           <div id="notes-tabs">
-            <button id="speaker-tab" type="button" class="active">Speaker</button>
-            <button id="print-tab" type="button">Print</button>
+            <button id="speaker-tab" type="button" class="active">Speaker Notes</button>
+            <button id="print-tab" type="button">Print Annotations</button>
           </div>
           <textarea id="speaker-editor" class="notes-editor" aria-label="Speaker notes" placeholder="Speaker notes"></textarea>
           <textarea id="print-editor" class="notes-editor hidden" aria-label="Print notes" placeholder="Print notes"></textarea>
@@ -1858,7 +1952,8 @@ body.edit-mode #presentation-view { visibility: hidden; pointer-events: none; }
       <button id="restore-deck" type="button" title="Restore previous deck" aria-label="Restore previous deck" disabled><i class="fa-solid fa-clock-rotate-left"></i></button>
       <button id="manage-assets" type="button" title="Manage pasted images" aria-label="Manage images"><i class="fa-solid fa-images"></i></button>
       <button id="view-json" type="button" title="View canonical JSON" aria-label="View JSON"><i class="fa-solid fa-code"></i></button>
-      <button id="save-deck" type="button" title="Save JSON" aria-label="Save deck"><i class="fa-solid fa-floppy-disk"></i></button>
+      <button id="save-deck" type="button" title="Save deck" aria-label="Save deck"><i class="fa-solid fa-floppy-disk"></i></button>
+      <button id="publish-deck" type="button" title="Publish deck" aria-label="Publish deck"><i class="fa-solid fa-cloud-arrow-up"></i></button>
       <button id="speaker-button" type="button" title="Speaker view (S)" aria-label="Speaker view"><i class="fa-solid fa-person-chalkboard"></i></button>
       <button id="print-deck" type="button" title="Print slides (P)" aria-label="Print slides"><i class="fa-solid fa-print"></i></button>
       <button id="print-notes" type="button" title="Print slides with notes (N)" aria-label="Print slides with notes"><i class="fa-regular fa-note-sticky"></i></button>
@@ -1871,6 +1966,49 @@ body.edit-mode #presentation-view { visibility: hidden; pointer-events: none; }
       <span id="save-status">Ready</span>
     </div>
   </main>
+</div>
+
+<div id="publish-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="publish-title">
+  <div class="modal-card publish-card">
+    <h2 id="publish-title">Publish deck</h2>
+
+    <p class="publish-intro">
+      Publish this deck directly to this website. Embedded pasted images are already
+      contained inside the deck, so only one JSON file is uploaded.
+    </p>
+
+    <div class="publish-field">
+      <label for="publish-name">Filename / folder name</label>
+      <input
+        id="publish-name"
+        type="text"
+        maxlength="64"
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <div class="publish-field-help">
+        Spaces are converted to hyphens. The published folder and JSON file use the same name.
+      </div>
+    </div>
+
+    <div class="publish-destination">
+      <span class="publish-destination-label">Will publish to</span>
+      <code id="publish-destination">ModernSlides/example/example.json</code>
+    </div>
+
+    <p class="publish-readme">
+      <strong>First time using Publish?</strong>
+      Read the <a href="README.md" target="_blank" rel="noopener">ModernSlides README</a>
+      before setting up server publishing.
+    </p>
+
+    <p id="publish-error" class="publish-error hidden"></p>
+
+    <div class="modal-actions">
+      <button type="button" data-close-modal="publish-modal">Cancel</button>
+      <button id="confirm-publish" type="button">Publish</button>
+    </div>
+  </div>
 </div>
 
 <div id="help-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
@@ -2026,6 +2164,8 @@ Code(python): labels the code block as Python.</pre>
 
 const FORMAT = 'modernslides';
 const VERSION = 2;
+const PUBLISH_LOGIN_URL = './api/login.php';
+const PUBLISH_URL = './api/publish.php';
 const STAGE_W = 1600;
 const STAGE_H = 900;
 const STORAGE_CURRENT = 'modernslides.v2.current';
@@ -2323,7 +2463,8 @@ const state = {
   dirty: false,
   lastAutosaveOk: true,
   autosaveChain: Promise.resolve(),
-  fileHandle: null
+  fileHandle: null,
+  publishAuthenticated: false
 };
 
 function normalizeBlock(block) {
@@ -4485,7 +4626,7 @@ function candidateUrls(deckValue) {
   if (!value) return [];
   const hasSlash = value.includes('/');
   const hasExtension = /\.[A-Za-z0-9]+(?:[?#].*)?$/.test(value);
-  if (!hasSlash && !hasExtension) return [`${value}/${value}.txt`, `${value}/${value}.json`];
+  if (!hasSlash && !hasExtension) return [`${value}/${value}.json`, `${value}/${value}.txt`];
   if (!hasExtension) return [value, `${value}.json`, `${value}.txt`];
   return [value];
 }
@@ -4546,7 +4687,258 @@ async function saveDeck() {
     console.warn('Save File Picker failed; falling back to download.', error);
   }
   fallbackDownloadDeck(text);
-  setStatus('Downloaded JSON', 'saved');
+  setStatus('Downloaded deck', 'saved');
+}
+function normalizePublishName(value) {
+  let name = String(value ?? '').trim();
+
+  name = name.replace(/\.json$/i, '');
+  name = name.replace(/\s+/g, '-');
+  name = name.replace(/[^A-Za-z0-9_-]+/g, '-');
+  name = name.replace(/-+/g, '-');
+  name = name.replace(/^[-_]+|[-_]+$/g, '');
+
+  return name.slice(0, 64);
+}
+
+function defaultPublishName() {
+  const filename = String(state.filename || '')
+    .split(/[\\/]/)
+    .pop()
+    .replace(/\.(json|txt)$/i, '');
+
+  return (
+    normalizePublishName(filename) ||
+    normalizePublishName(state.deck?.meta?.title) ||
+    'presentation'
+  );
+}
+
+function publishNameFromField() {
+  return normalizePublishName($('publish-name').value);
+}
+
+function updatePublishDestination() {
+  const name = publishNameFromField();
+
+  $('publish-destination').textContent = name
+    ? `ModernSlides/${name}/${name}.json`
+    : 'ModernSlides/…/….json';
+}
+
+function setPublishError(message = '') {
+  const target = $('publish-error');
+  target.textContent = message;
+  target.classList.toggle('hidden', !message);
+}
+
+function openPublishDialog() {
+  if (state.editMode) commitEditor({record:true});
+
+  $('publish-name').value = defaultPublishName();
+
+  setPublishError('');
+  updatePublishDestination();
+  openModal('publish-modal');
+
+  requestAnimationFrame(() => {
+    $('publish-name').focus();
+    $('publish-name').select();
+  });
+}
+
+function authorizePublishing() {
+  return new Promise((resolve, reject) => {
+    const popup = window.open(
+      PUBLISH_LOGIN_URL,
+      'ModernSlidesPublishLogin',
+      'popup=yes,width=520,height=600'
+    );
+
+    if (!popup) {
+      reject(
+        new Error(
+          'The browser blocked the publishing authorization window. Allow popups for this site and try again.'
+        )
+      );
+      return;
+    }
+
+    let finished = false;
+
+    const cleanup = () => {
+      window.removeEventListener('message', onMessage);
+      clearInterval(closeWatcher);
+      clearTimeout(timeout);
+    };
+
+    const finish = (result, error = null) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+
+      if (error) reject(error);
+      else resolve(result);
+    };
+
+    const onMessage = event => {
+      if (event.origin !== location.origin) return;
+      if (event.source !== popup) return;
+      if (event.data?.type !== 'modernslides-publish-auth') return;
+
+      finish(true);
+    };
+
+    window.addEventListener('message', onMessage);
+
+    const closeWatcher = window.setInterval(() => {
+      if (popup.closed) {
+        finish(
+          false,
+          new Error('Publishing authorization was cancelled.')
+        );
+      }
+    }, 300);
+
+    const timeout = window.setTimeout(() => {
+      try {
+        popup.close();
+      } catch {}
+
+      finish(
+        false,
+        new Error('Publishing authorization timed out.')
+      );
+    }, 180000);
+  });
+}
+
+async function sendPublishedDeck(name) {
+  const controller = new AbortController();
+
+  const timeout = window.setTimeout(
+    () => controller.abort(),
+    90000
+  );
+
+  try {
+    return await fetch(PUBLISH_URL, {
+      method: 'POST',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-ModernSlides-Publish': '1',
+        'X-ModernSlides-Name': name
+      },
+      body: JSON.stringify(state.deck, null, 2)
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function publishDeck() {
+  setPublishError('');
+
+  if (location.protocol !== 'https:') {
+    setPublishError(
+      'Publishing is available only when ModernSlides is running from this website over HTTPS.'
+    );
+    return;
+  }
+
+  if (state.editMode) commitEditor({record:true});
+
+  const name = publishNameFromField();
+
+  if (!name) {
+    setPublishError('Enter a filename for the published deck.');
+    return;
+  }
+
+  if (name.toLowerCase() === 'api') {
+    setPublishError('"api" is reserved and cannot be used as a deck name.');
+    return;
+  }
+
+  /*
+   * Put the normalized value back into the field so the user sees
+   * exactly what will be used.
+   */
+  $('publish-name').value = name;
+  updatePublishDestination();
+
+  const button = $('confirm-publish');
+  button.disabled = true;
+  button.textContent = 'Publishing…';
+
+  try {
+    /*
+     * On the first publish after loading index.html, authorize first.
+     *
+     * If the server session from a previous page load is still alive,
+     * login.php notices that and immediately closes itself, so this
+     * remains quick.
+     */
+    if (!state.publishAuthenticated) {
+      await authorizePublishing();
+      state.publishAuthenticated = true;
+    }
+
+    setStatus(`Publishing ${name}…`, 'working');
+
+    const response = await sendPublishedDeck(name);
+
+    let result = null;
+
+    try {
+      result = await response.json();
+    } catch {}
+
+    if (response.status === 401) {
+      /*
+       * Do not attempt to open a popup here, because this response
+       * arrives after the original user gesture and some browsers
+       * would block it.
+       */
+      state.publishAuthenticated = false;
+
+      throw new Error(
+        'Publishing authorization expired. Press Publish again to re-authorize.'
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error ||
+        `The server returned HTTP ${response.status}.`
+      );
+    }
+
+    closeModal('publish-modal');
+
+    setStatus(
+      `Published ${name}/${name}.json`,
+      'saved'
+    );
+
+  } catch (error) {
+    console.error('Publishing failed:', error);
+
+    const message =
+      error?.name === 'AbortError'
+        ? 'Publishing timed out.'
+        : error?.message || 'Publishing failed.';
+
+    setPublishError(message);
+    setStatus(`Publish failed: ${message}`, 'error');
+
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Publish';
+  }
 }
 async function openDeck() {
   if ('showOpenFilePicker' in window) {
@@ -5381,6 +5773,16 @@ function setupEvents() {
     openModal('json-modal');
   });
   $('save-deck').addEventListener('click', saveDeck);
+  $('publish-deck').addEventListener('click', openPublishDialog);
+  $('confirm-publish').addEventListener('click', publishDeck);
+  $('publish-name').addEventListener('input', updatePublishDestination);
+
+  $('publish-name').addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      publishDeck();
+    }
+  });
   $('print-deck').addEventListener('click', () => preparePrint(false));
   $('print-notes').addEventListener('click', () => preparePrint(true));
   $('speaker-button').addEventListener('click', openSpeaker);
